@@ -20,7 +20,7 @@ class SubscriptionManager: ObservableObject {
     }
 
     private func observeSubscriptionStatus() {
-        Superwall.shared.subscriptionStatus
+        Superwall.shared.$subscriptionStatus
             .sink { [weak self] status in
                 switch status {
                 case .active:
@@ -36,6 +36,6 @@ class SubscriptionManager: ObservableObject {
 
     func showPaywall() {
         // Présenter le paywall avec le placement configuré
-        Superwall.shared.register(event: "campaign_trigger")
+        Superwall.shared.register(placement: "campaign_trigger")
     }
 }
