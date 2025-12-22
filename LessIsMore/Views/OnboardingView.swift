@@ -6,282 +6,707 @@
 //
 
 import SwiftUI
+import SuperwallKit
+
+// Couleurs Instagram
+extension Color {
+    static let instagramPurple = Color(red: 131/255, green: 58/255, blue: 180/255)
+    static let instagramPink = Color(red: 193/255, green: 53/255, blue: 132/255)
+    static let instagramOrange = Color(red: 253/255, green: 89/255, blue: 73/255)
+    static let instagramYellow = Color(red: 252/255, green: 175/255, blue: 69/255)
+}
 
 struct OnboardingView: View {
     @ObservedObject var authManager: AuthenticationManager
     @State private var currentPage = 0
-    
+    @State private var animateContent = false
+    @State private var showSkip = false
+
+    private let totalPages = 4
+
     var body: some View {
-        TabView(selection: $currentPage) {
-            // Page 1: Bienvenue
-            VStack(spacing: 30) {
-                Spacer()
-                
-                // Logo et titre
-                VStack(spacing: 20) {
-                    Image("OnboardingImages")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 200, height: 200)
-                        .clipShape(RoundedRectangle(cornerRadius: 20))
-                        .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
+        ZStack {
+            // Fond animé
+            AnimatedGradientBackground()
+                .ignoresSafeArea()
 
-                    Text("LessIsMore")
-                        .font(AppFonts.title())
-                        .foregroundColor(.primary)
-                }
-
-                VStack(spacing: 16) {
-                    Text("Reprenez le contrôle")
-                        .font(AppFonts.title2())
-                        .multilineTextAlignment(.center)
-
-                    Text("Utilisez Instagram sans les distractions. Concentrez-vous sur ce qui compte vraiment.")
-                        .font(AppFonts.body())
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 20)
-                }
-                
-                Spacer()
-                
-                // Indicateur de page
-                PageIndicator(currentPage: currentPage, totalPages: 3)
-                
-                // Bouton suivant
-                Button(action: {
-                    withAnimation(.easeInOut) {
-                        currentPage = 1
+            VStack(spacing: 0) {
+                // Header avec skip
+                HStack {
+                    Spacer()
+                    if showSkip && currentPage < totalPages - 1 {
+                        Button(action: {
+                            withAnimation(.easeInOut(duration: 0.4)) {
+                                currentPage = totalPages - 1
+                            }
+                        }) {
+                            Text("Passer")
+                                .font(AppFonts.subheadline())
+                                .foregroundColor(.secondary)
+                        }
+                        .transition(.opacity)
                     }
-                }) {
-                    Text("Commencer")
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 16)
+                .frame(height: 44)
+
+                // Contenu principal
+                TabView(selection: $currentPage) {
+                    // Page 1: Le problème
+                    ProblemPage(animateContent: $animateContent)
+                        .tag(0)
+
+                    // Page 2: La solution
+                    SolutionPage(animateContent: $animateContent)
+                        .tag(1)
+
+                    // Page 3: Les bénéfices
+                    BenefitsPage(animateContent: $animateContent)
+                        .tag(2)
+
+                    // Page 4: CTA Premium
+                    PremiumCTAPage(authManager: authManager, animateContent: $animateContent)
+                        .tag(3)
+                }
+                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                .animation(.easeInOut(duration: 0.3), value: currentPage)
+
+                // Footer avec indicateurs et boutons
+                VStack(spacing: 20) {
+                    // Indicateurs de page améliorés
+                    OnboardingPageIndicator(currentPage: currentPage, totalPages: totalPages)
+
+                    // Bouton principal (sauf dernière page)
+                    if currentPage < totalPages - 1 {
+                        Button(action: {
+                            withAnimation(.easeInOut(duration: 0.4)) {
+                                currentPage += 1
+                            }
+                        }) {
+                            HStack(spacing: 8) {
+                                Text(currentPage == 0 ? "Découvrir" : "Continuer")
+                                    .font(AppFonts.headline())
+                                Image(systemName: "arrow.right")
+                                    .font(.system(size: 14, weight: .semibold))
+                            }
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 56)
+                            .background(
+                                LinearGradient(
+                                    colors: [.instagramPurple, .instagramPink, .instagramOrange],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .cornerRadius(16)
+                            .shadow(color: Color.instagramPink.opacity(0.4), radius: 12, x: 0, y: 6)
+                        }
+                        .buttonStyle(ScaleButtonStyle())
+                    }
+                }
+                .padding(.horizontal, 32)
+                .padding(.bottom, 40)
+            }
+        }
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.5).delay(0.3)) {
+                animateContent = true
+            }
+            withAnimation(.easeOut(duration: 0.3).delay(1.5)) {
+                showSkip = true
+            }
+        }
+        .onChange(of: currentPage) {
+            animateContent = false
+            withAnimation(.easeOut(duration: 0.4).delay(0.1)) {
+                animateContent = true
+            }
+        }
+    }
+}
+
+// MARK: - Page 1: Le Problème
+struct ProblemPage: View {
+    @Binding var animateContent: Bool
+    @State private var timeCounter: Int = 0
+    @State private var isCounterAnimating = false
+
+    var body: some View {
+        VStack(spacing: 24) {
+            Spacer()
+
+            // Icône animée
+            ZStack {
+                Circle()
+                    .fill(Color.red.opacity(0.1))
+                    .frame(width: 120, height: 120)
+                    .scaleEffect(animateContent ? 1 : 0.5)
+
+                Circle()
+                    .fill(Color.red.opacity(0.2))
+                    .frame(width: 80, height: 80)
+                    .scaleEffect(animateContent ? 1 : 0.5)
+
+                Image(systemName: "hourglass.tophalf.filled")
+                    .font(.system(size: 40))
+                    .foregroundColor(.red)
+                    .rotationEffect(.degrees(animateContent ? 0 : -30))
+            }
+            .opacity(animateContent ? 1 : 0)
+            .animation(.spring(response: 0.6, dampingFraction: 0.7).delay(0.1), value: animateContent)
+
+            VStack(spacing: 12) {
+                Text("Saviez-vous que...")
+                    .font(AppFonts.subheadline())
+                    .foregroundColor(.secondary)
+                    .opacity(animateContent ? 1 : 0)
+                    .offset(y: animateContent ? 0 : 20)
+
+                // Compteur animé
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text("\(timeCounter)")
+                        .font(AppFonts.title(50))
+                        .foregroundColor(.red)
+                        .contentTransition(.numericText())
+
+                    Text("min/jour")
+                        .font(AppFonts.title3())
+                        .foregroundColor(.secondary)
+                }
+                .opacity(animateContent ? 1 : 0)
+                .offset(y: animateContent ? 0 : 20)
+
+                Text("C'est le temps moyen perdu\nsur Instagram chaque jour")
+                    .font(AppFonts.body())
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .opacity(animateContent ? 1 : 0)
+                    .offset(y: animateContent ? 0 : 20)
+            }
+            .animation(.easeOut(duration: 0.5).delay(0.2), value: animateContent)
+
+            // Stats persuasives
+            VStack(spacing: 10) {
+                StatBadge(icon: "brain.head.profile", text: "Réduit l'anxiété de 40%", color: .orange)
+                StatBadge(icon: "clock.arrow.circlepath", text: "Récupérez 2h par semaine", color: .green)
+                StatBadge(icon: "bolt.fill", text: "Productivité x2", color: .blue)
+            }
+            .padding(.top, 8)
+            .opacity(animateContent ? 1 : 0)
+            .offset(y: animateContent ? 0 : 30)
+            .animation(.easeOut(duration: 0.5).delay(0.4), value: animateContent)
+
+            Spacer()
+            Spacer()
+        }
+        .padding(.horizontal, 24)
+        .onAppear {
+            startCounterAnimation()
+        }
+    }
+
+    private func startCounterAnimation() {
+        guard !isCounterAnimating else { return }
+        isCounterAnimating = true
+        timeCounter = 0
+
+        Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { timer in
+            if timeCounter < 53 {
+                withAnimation(.easeOut(duration: 0.05)) {
+                    timeCounter += 1
+                }
+            } else {
+                timer.invalidate()
+            }
+        }
+    }
+}
+
+// MARK: - Page 2: La Solution (Scrollable)
+struct SolutionPage: View {
+    @Binding var animateContent: Bool
+    @State private var selectedFilters: Set<String> = []
+
+    let filters = [
+        ("film.fill", "Reels", "Vidéos addictives", Color.pink),
+        ("safari.fill", "Explorer", "Contenu aléatoire", Color.orange),
+        ("circle.dashed", "Stories", "Distractions", Color.purple),
+        ("heart.fill", "Likes", "Comparaison", Color.red)
+    ]
+
+    var body: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 20) {
+                VStack(spacing: 6) {
+                    Text("Votre Instagram,")
+                        .font(AppFonts.title2())
+                    Text("vos règles")
+                        .font(AppFonts.title())
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.instagramPurple, .instagramPink],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                }
+                .opacity(animateContent ? 1 : 0)
+                .offset(y: animateContent ? 0 : 20)
+                .animation(.easeOut(duration: 0.5), value: animateContent)
+                .padding(.top, 20)
+
+                Text("Touchez pour bloquer")
+                    .font(AppFonts.subheadline())
+                    .foregroundColor(.secondary)
+                    .opacity(animateContent ? 1 : 0)
+
+                // Grille de filtres interactifs (2x2)
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                    ForEach(Array(filters.enumerated()), id: \.offset) { index, filter in
+                        InteractiveFilterCard(
+                            icon: filter.0,
+                            title: filter.1,
+                            subtitle: filter.2,
+                            color: filter.3,
+                            isSelected: selectedFilters.contains(filter.1),
+                            delay: Double(index) * 0.1
+                        ) {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                if selectedFilters.contains(filter.1) {
+                                    selectedFilters.remove(filter.1)
+                                } else {
+                                    selectedFilters.insert(filter.1)
+                                    let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+                                    impactFeedback.impactOccurred()
+                                }
+                            }
+                        }
+                        .opacity(animateContent ? 1 : 0)
+                        .offset(y: animateContent ? 0 : 30)
+                        .animation(.spring(response: 0.5, dampingFraction: 0.8).delay(Double(index) * 0.08), value: animateContent)
+                    }
+                }
+                .padding(.horizontal, 8)
+
+                // Compteur de filtres sélectionnés
+                if !selectedFilters.isEmpty {
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                        Text("\(selectedFilters.count) bloquée\(selectedFilters.count > 1 ? "s" : "")")
+                            .font(AppFonts.subheadline())
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 16)
+                    .background(Color.green.opacity(0.1))
+                    .cornerRadius(20)
+                    .transition(.scale.combined(with: .opacity))
+                }
+
+                // Espace pour le footer
+                Spacer()
+                    .frame(height: 60)
+            }
+            .padding(.horizontal, 24)
+        }
+    }
+}
+
+// MARK: - Page 3: Les Bénéfices (Scrollable)
+struct BenefitsPage: View {
+    @Binding var animateContent: Bool
+
+    let testimonials = [
+        ("Je récupère 1h30 par jour !", "Marie, 24 ans"),
+        ("Fini le scroll infini le soir", "Thomas, 31 ans")
+    ]
+
+    var body: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 16) {
+                // Titre
+                VStack(spacing: 4) {
+                    Text("Rejoignez")
+                        .font(AppFonts.title3())
+                    HStack(spacing: 6) {
+                        Text("10 000+")
+                            .font(AppFonts.title())
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.green, .blue],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                        Text("utilisateurs")
+                            .font(AppFonts.title3())
+                    }
+                }
+                .opacity(animateContent ? 1 : 0)
+                .offset(y: animateContent ? 0 : 20)
+                .animation(.easeOut(duration: 0.5), value: animateContent)
+                .padding(.top, 20)
+
+                // Note moyenne
+                HStack(spacing: 4) {
+                    ForEach(0..<5, id: \.self) { index in
+                        Image(systemName: "star.fill")
+                            .foregroundColor(.yellow)
+                            .font(.system(size: 18))
+                            .opacity(animateContent ? 1 : 0)
+                            .scaleEffect(animateContent ? 1 : 0.5)
+                            .animation(.spring(response: 0.4, dampingFraction: 0.6).delay(Double(index) * 0.08), value: animateContent)
+                    }
+                    Text("4.9")
                         .font(AppFonts.headline())
+                        .padding(.leading, 6)
+                }
+                .padding(.vertical, 4)
+
+                // Témoignages (réduits à 2)
+                VStack(spacing: 12) {
+                    ForEach(Array(testimonials.enumerated()), id: \.offset) { index, testimonial in
+                        CompactTestimonialCard(
+                            quote: testimonial.0,
+                            author: testimonial.1
+                        )
+                        .opacity(animateContent ? 1 : 0)
+                        .offset(x: animateContent ? 0 : (index % 2 == 0 ? -50 : 50))
+                        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(Double(index) * 0.12 + 0.2), value: animateContent)
+                    }
+                }
+
+                // Badge de confiance
+                HStack(spacing: 10) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "lock.shield.fill")
+                            .foregroundColor(.green)
+                            .font(.system(size: 14))
+                        Text("Vie privée")
+                            .font(AppFonts.caption())
+                            .foregroundColor(.secondary)
+                    }
+
+                    Text("•")
+                        .foregroundColor(.secondary)
+
+                    HStack(spacing: 4) {
+                        Image(systemName: "checkmark.seal.fill")
+                            .foregroundColor(.blue)
+                            .font(.system(size: 14))
+                        Text("Sans pub")
+                            .font(AppFonts.caption())
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(.top, 8)
+                .opacity(animateContent ? 1 : 0)
+                .animation(.easeOut(duration: 0.5).delay(0.5), value: animateContent)
+
+                // Espace pour le footer
+                Spacer()
+                    .frame(height: 60)
+            }
+            .padding(.horizontal, 24)
+        }
+    }
+}
+
+// MARK: - Page 4: CTA Premium
+struct PremiumCTAPage: View {
+    @ObservedObject var authManager: AuthenticationManager
+    @Binding var animateContent: Bool
+    @State private var isPulsing = false
+
+    var body: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 20) {
+                Spacer()
+                    .frame(height: 20)
+
+                // Badge Premium
+                HStack(spacing: 8) {
+                    Image(systemName: "crown.fill")
+                        .foregroundColor(.yellow)
+                    Text("PREMIUM")
+                        .font(AppFonts.caption())
+                        .fontWeight(.bold)
+                        .foregroundColor(.yellow)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(Color.yellow.opacity(0.2))
+                .cornerRadius(20)
+                .opacity(animateContent ? 1 : 0)
+                .scaleEffect(animateContent ? 1 : 0.8)
+                .animation(.spring(response: 0.5, dampingFraction: 0.7), value: animateContent)
+
+                // Titre
+                VStack(spacing: 4) {
+                    Text("Débloquez tout")
+                        .font(AppFonts.title())
+                    Text("le potentiel")
+                        .font(AppFonts.title())
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.instagramOrange, .instagramPink],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                }
+                .multilineTextAlignment(.center)
+                .opacity(animateContent ? 1 : 0)
+                .offset(y: animateContent ? 0 : 20)
+                .animation(.easeOut(duration: 0.5).delay(0.1), value: animateContent)
+
+                // Features Premium
+                VStack(spacing: 14) {
+                    PremiumFeatureRow(icon: "checkmark.circle.fill", text: "Tous les filtres illimités", color: .green)
+                    PremiumFeatureRow(icon: "bolt.circle.fill", text: "Activation instantanée", color: .orange)
+                    PremiumFeatureRow(icon: "arrow.triangle.2.circlepath.circle.fill", text: "Sync multi-appareils", color: .blue)
+                    PremiumFeatureRow(icon: "heart.circle.fill", text: "Support prioritaire", color: .pink)
+                }
+                .padding(.vertical, 18)
+                .padding(.horizontal, 20)
+                .background(
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(Color(.systemBackground))
+                        .shadow(color: Color.black.opacity(0.1), radius: 20, x: 0, y: 10)
+                )
+                .opacity(animateContent ? 1 : 0)
+                .offset(y: animateContent ? 0 : 30)
+                .animation(.easeOut(duration: 0.5).delay(0.2), value: animateContent)
+
+                Spacer()
+                    .frame(height: 20)
+
+                // Bouton CTA Premium
+                VStack(spacing: 10) {
+                    Button(action: {
+                        // Ouvrir le paywall Superwall
+                        Superwall.shared.register(placement: "onboarding_premium") {
+                            // Terminer l'onboarding après le paywall
+                            authManager.completeOnboarding()
+                        }
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "crown.fill")
+                            Text("Essai gratuit de 3 jours")
+                                .font(AppFonts.headline())
+                        }
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
-                        .frame(minHeight: 50)
-                        .background(Color.blue)
-                        .cornerRadius(12)
+                        .frame(height: 56)
+                        .background(
+                            LinearGradient(
+                                colors: [.instagramPurple, .instagramPink, .instagramOrange],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .cornerRadius(16)
+                        .shadow(color: Color.instagramPink.opacity(0.4), radius: 12, x: 0, y: 6)
+                        .scaleEffect(isPulsing ? 1.02 : 1)
+                    }
+                    .buttonStyle(ScaleButtonStyle())
+                    .opacity(animateContent ? 1 : 0)
+                    .animation(.easeOut(duration: 0.5).delay(0.4), value: animateContent)
+
+                    // Mention légale
+                    Text("Annulez à tout moment. Aucun engagement.")
+                        .font(AppFonts.caption2())
+                        .foregroundColor(.secondary.opacity(0.7))
+                        .opacity(animateContent ? 1 : 0)
+                        .padding(.top, 4)
                 }
-                .padding(.horizontal, 40)
-                .padding(.bottom, 40)
-                .buttonStyle(PlainButtonStyle())
+
+                Spacer()
+                    .frame(height: 60)
             }
-            .tag(0)
-            
-            // Page 2: Fonctionnalités
-            VStack(spacing: 30) {
-                Spacer()
-
-                Text("Filtres Intelligents")
-                    .font(AppFonts.title())
-                    .multilineTextAlignment(.center)
-                
-                VStack(spacing: 24) {
-                    FeatureRow(icon: "film.circle.fill", 
-                             title: "Bloquer les Reels", 
-                             description: "Évitez les vidéos addictives")
-                    
-                    FeatureRow(icon: "safari.fill", 
-                             title: "Masquer Explorer", 
-                             description: "Pas de contenu aléatoire")
-                    
-                    FeatureRow(icon: "person.circle.fill", 
-                             title: "Supprimer les Stories", 
-                             description: "Focus sur vos abonnements")
-                    
-                    FeatureRow(icon: "message.circle.fill", 
-                             title: "Masquer les Messages", 
-                             description: "Évitez les distractions des DM")
-                    
-                    FeatureRow(icon: "person.2.circle.fill", 
-                             title: "Mode Following", 
-                             description: "Voir uniquement vos abonnements")
-                }
-                .padding(.horizontal, 20)
-                
-                Spacer()
-                
-                // Indicateur de page
-                PageIndicator(currentPage: currentPage, totalPages: 3)
-                
-                // Boutons navigation
-                HStack {
-                    Button(action: {
-                        withAnimation(.easeInOut) {
-                            currentPage = 0
-                        }
-                    }) {
-                        Text("Retour")
-                            .font(AppFonts.body())
-                            .foregroundColor(.blue)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 12)
-                    }
-                    .buttonStyle(PlainButtonStyle())
-
-                    Spacer()
-
-                    Button(action: {
-                        withAnimation(.easeInOut) {
-                            currentPage = 2
-                        }
-                    }) {
-                        Text("Suivant")
-                            .font(AppFonts.headline())
-                            .foregroundColor(.white)
-                            .frame(minWidth: 120, minHeight: 50)
-                            .background(Color.blue)
-                            .cornerRadius(12)
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                }
-                .padding(.horizontal, 40)
-                .padding(.bottom, 40)
-            }
-            .tag(1)
-            
-            // Page 3: Comment ça marche
-            VStack(spacing: 30) {
-                Spacer()
-
-                Text("Comment ça marche ?")
-                    .font(AppFonts.title())
-                    .multilineTextAlignment(.center)
-                
-                VStack(spacing: 24) {
-                    StepRow(number: "1", 
-                           title: "Configurez vos filtres", 
-                           description: "Choisissez ce que vous voulez masquer")
-                    
-                    StepRow(number: "2", 
-                           title: "Naviguez normalement", 
-                           description: "Instagram fonctionne comme d'habitude")
-                    
-                    StepRow(number: "3", 
-                           title: "Restez concentré", 
-                           description: "Plus de distractions, plus de productivité")
-                }
-                .padding(.horizontal, 20)
-                
-                Spacer()
-                
-                // Indicateur de page
-                PageIndicator(currentPage: currentPage, totalPages: 3)
-                
-                // Boutons navigation
-                HStack {
-                    Button(action: {
-                        withAnimation(.easeInOut) {
-                            currentPage = 1
-                        }
-                    }) {
-                        Text("Retour")
-                            .font(AppFonts.body())
-                            .foregroundColor(.blue)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 12)
-                    }
-                    .buttonStyle(PlainButtonStyle())
-
-                    Spacer()
-
-                    Button(action: {
-                        // Marquer l'onboarding comme terminé
-                        authManager.completeOnboarding()
-                    }) {
-                        Text("C'est parti !")
-                            .font(AppFonts.headline())
-                            .foregroundColor(.white)
-                            .frame(minWidth: 140, minHeight: 50)
-                            .background(Color.green)
-                            .cornerRadius(12)
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                }
-                .padding(.horizontal, 40)
-                .padding(.bottom, 40)
-            }
-            .tag(2)
+            .padding(.horizontal, 24)
         }
-        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-        .background(
-            LinearGradient(
-                gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+        .onAppear {
+            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+                isPulsing = true
+            }
+        }
+    }
+}
+
+// MARK: - Composants réutilisables
+
+struct AnimatedGradientBackground: View {
+    @State private var animateGradient = false
+
+    var body: some View {
+        LinearGradient(
+            colors: [
+                Color.instagramPurple.opacity(0.06),
+                Color.instagramPink.opacity(0.06),
+                Color.instagramOrange.opacity(0.04)
+            ],
+            startPoint: animateGradient ? .topLeading : .bottomLeading,
+            endPoint: animateGradient ? .bottomTrailing : .topTrailing
         )
-    }
-}
-
-struct FeatureRow: View {
-    let icon: String
-    let title: String
-    let description: String
-
-    var body: some View {
-        HStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.system(size: 24))
-                .foregroundColor(.blue)
-                .frame(width: 30)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(AppFonts.headline())
-
-                Text(description)
-                    .font(AppFonts.subheadline())
-                    .foregroundColor(.secondary)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 5).repeatForever(autoreverses: true)) {
+                animateGradient = true
             }
-
-            Spacer()
         }
-        .padding(.vertical, 8)
     }
 }
 
-struct StepRow: View {
-    let number: String
-    let title: String
-    let description: String
-
-    var body: some View {
-        HStack(spacing: 16) {
-            Text(number)
-                .font(AppFonts.title2())
-                .foregroundColor(.white)
-                .frame(width: 40, height: 40)
-                .background(Color.blue)
-                .clipShape(Circle())
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(AppFonts.headline())
-
-                Text(description)
-                    .font(AppFonts.subheadline())
-                    .foregroundColor(.secondary)
-            }
-
-            Spacer()
-        }
-        .padding(.vertical, 8)
-    }
-}
-
-struct PageIndicator: View {
+struct OnboardingPageIndicator: View {
     let currentPage: Int
     let totalPages: Int
-    
+
     var body: some View {
         HStack(spacing: 8) {
             ForEach(0..<totalPages, id: \.self) { page in
-                Circle()
-                    .fill(page == currentPage ? Color.blue : Color.gray.opacity(0.3))
-                    .frame(width: 8, height: 8)
+                Capsule()
+                    .fill(
+                        page == currentPage ?
+                        AnyShapeStyle(LinearGradient(colors: [.instagramPurple, .instagramPink], startPoint: .leading, endPoint: .trailing)) :
+                        AnyShapeStyle(Color.gray.opacity(0.3))
+                    )
+                    .frame(width: page == currentPage ? 24 : 8, height: 8)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: currentPage)
             }
         }
+    }
+}
+
+struct StatBadge: View {
+    let icon: String
+    let text: String
+    let color: Color
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 16))
+                .foregroundColor(color)
+                .frame(width: 28)
+
+            Text(text)
+                .font(AppFonts.subheadline())
+                .foregroundColor(.primary)
+
+            Spacer()
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(color.opacity(0.1))
+        .cornerRadius(12)
+    }
+}
+
+struct InteractiveFilterCard: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    let color: Color
+    let isSelected: Bool
+    let delay: Double
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 6) {
+                ZStack {
+                    Circle()
+                        .fill(isSelected ? color : color.opacity(0.1))
+                        .frame(width: 44, height: 44)
+
+                    Image(systemName: isSelected ? "xmark" : icon)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(isSelected ? .white : color)
+                }
+
+                Text(title)
+                    .font(AppFonts.headline())
+                    .foregroundColor(isSelected ? color : .primary)
+
+                Text(subtitle)
+                    .font(AppFonts.caption2())
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+            }
+            .padding(.vertical, 12)
+            .padding(.horizontal, 6)
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(isSelected ? color.opacity(0.1) : Color(.systemGray6).opacity(0.5))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(isSelected ? color : Color.clear, lineWidth: 2)
+                    )
+            )
+        }
+        .buttonStyle(ScaleButtonStyle())
+    }
+}
+
+struct CompactTestimonialCard: View {
+    let quote: String
+    let author: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 2) {
+                ForEach(0..<5, id: \.self) { _ in
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 10))
+                        .foregroundColor(.yellow)
+                }
+            }
+
+            Text("\"\(quote)\"")
+                .font(AppFonts.subheadline())
+                .foregroundColor(.primary)
+                .italic()
+
+            Text("— \(author)")
+                .font(AppFonts.caption())
+                .foregroundColor(.secondary)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.systemGray6).opacity(0.5))
+        .cornerRadius(14)
+    }
+}
+
+struct PremiumFeatureRow: View {
+    let icon: String
+    let text: String
+    let color: Color
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 20))
+                .foregroundColor(color)
+
+            Text(text)
+                .font(AppFonts.body())
+                .foregroundColor(.primary)
+
+            Spacer()
+        }
+    }
+}
+
+struct ScaleButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.96 : 1)
+            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
     }
 }
 
