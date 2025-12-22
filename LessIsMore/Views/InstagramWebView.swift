@@ -25,7 +25,9 @@ struct InstagramWebViewContainer: View {
     @ObservedObject var webViewManager: WebViewManager
     @ObservedObject var authManager: AuthenticationManager
     @ObservedObject var subscriptionManager: SubscriptionManager
+    @StateObject private var statisticsManager = StatisticsManager.shared
     @State private var showSettings = false
+    @State private var showStatistics = false
     @Environment(\.colorScheme) var colorScheme
     
     // Couleur adaptée au thème Instagram
@@ -61,10 +63,21 @@ struct InstagramWebViewContainer: View {
                     
                     Spacer()
                     
+                    // Bouton Settings
                     Button(action: {
                         showSettings = true
                     }) {
                         Image(systemName: "gearshape.fill")
+                            .foregroundColor(iconColor)
+                            .frame(width: 44, height: 44)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    
+                    // Bouton Statistiques
+                    Button(action: {
+                        showStatistics = true
+                    }) {
+                        Image(systemName: "chart.bar.fill")
                             .foregroundColor(iconColor)
                             .frame(width: 44, height: 44)
                     }
@@ -92,6 +105,9 @@ struct InstagramWebViewContainer: View {
         .navigationBarHidden(true)
         .sheet(isPresented: $showSettings) {
             SettingsView(webViewManager: webViewManager, authManager: authManager, subscriptionManager: subscriptionManager)
+        }
+        .sheet(isPresented: $showStatistics) {
+            StatisticsView()
         }
         .alert(
             webViewManager.currentError?.title ?? "Erreur",
