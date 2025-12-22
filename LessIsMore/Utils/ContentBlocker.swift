@@ -30,15 +30,15 @@ enum FilterType: String, CaseIterable {
     
     var isEnabled: Bool {
         get {
-            UserDefaults.standard.bool(forKey: "filter_\(self.rawValue)")
+            PersistenceService.shared.isFilterEnabled(self.rawValue)
         }
         set {
-            UserDefaults.standard.set(newValue, forKey: "filter_\(self.rawValue)")
+            PersistenceService.shared.setFilterEnabled(newValue, for: self.rawValue)
         }
     }
-    
+
     func setEnabled(_ enabled: Bool) {
-        UserDefaults.standard.set(enabled, forKey: "filter_\(self.rawValue)")
+        PersistenceService.shared.setFilterEnabled(enabled, for: self.rawValue)
     }
 }
 

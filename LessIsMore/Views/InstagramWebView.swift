@@ -56,8 +56,7 @@ struct InstagramWebViewContainer: View {
                     Spacer()
                     
                     Text("LessIsMore")
-                        .font(.caption)
-                        .fontWeight(.medium)
+                        .font(AppFonts.caption())
                         .foregroundColor(iconColor.opacity(0.4))
                     
                     Spacer()
@@ -93,6 +92,26 @@ struct InstagramWebViewContainer: View {
         .navigationBarHidden(true)
         .sheet(isPresented: $showSettings) {
             SettingsView(webViewManager: webViewManager, authManager: authManager, subscriptionManager: subscriptionManager)
+        }
+        .alert(
+            webViewManager.currentError?.title ?? "Erreur",
+            isPresented: $webViewManager.showError,
+            presenting: webViewManager.currentError
+        ) { error in
+            if error.isRecoverable {
+                Button("Réessayer") {
+                    webViewManager.retryAfterError()
+                }
+                Button("Annuler", role: .cancel) {
+                    webViewManager.dismissError()
+                }
+            } else {
+                Button("OK", role: .cancel) {
+                    webViewManager.dismissError()
+                }
+            }
+        } message: { error in
+            Text(error.message)
         }
     }
 }

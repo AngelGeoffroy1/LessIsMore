@@ -35,9 +35,22 @@
 		111EF8FD2E698EFC004B0CFE /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		110A99D62EF95AC300BC998C /* Exceptions for "LessIsMore" folder in "LessIsMore" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 111EF8C52E68B4DC004B0CFE /* LessIsMore */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		111EF8C82E68B4DC004B0CFE /* LessIsMore */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				110A99D62EF95AC300BC998C /* Exceptions for "LessIsMore" folder in "LessIsMore" target */,
+			);
 			path = LessIsMore;
 			sourceTree = "<group>";
 		};
@@ -425,6 +438,7 @@
 				DEVELOPMENT_TEAM = TYR3BN2ZH2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LessIsMore/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = LessIsMore;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -459,6 +473,7 @@
 				DEVELOPMENT_TEAM = TYR3BN2ZH2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LessIsMore/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = LessIsMore;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

@@ -25,21 +25,19 @@ struct OnboardingView: View {
                         .frame(width: 200, height: 200)
                         .clipShape(RoundedRectangle(cornerRadius: 20))
                         .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
-                    
+
                     Text("LessIsMore")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
+                        .font(AppFonts.title())
                         .foregroundColor(.primary)
                 }
-                
+
                 VStack(spacing: 16) {
                     Text("Reprenez le contrôle")
-                        .font(.title2)
-                        .fontWeight(.semibold)
+                        .font(AppFonts.title2())
                         .multilineTextAlignment(.center)
-                    
+
                     Text("Utilisez Instagram sans les distractions. Concentrez-vous sur ce qui compte vraiment.")
-                        .font(.body)
+                        .font(AppFonts.body())
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 20)
@@ -57,7 +55,7 @@ struct OnboardingView: View {
                     }
                 }) {
                     Text("Commencer")
-                        .font(.headline)
+                        .font(AppFonts.headline())
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .frame(minHeight: 50)
@@ -73,10 +71,9 @@ struct OnboardingView: View {
             // Page 2: Fonctionnalités
             VStack(spacing: 30) {
                 Spacer()
-                
+
                 Text("Filtres Intelligents")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
+                    .font(AppFonts.title())
                     .multilineTextAlignment(.center)
                 
                 VStack(spacing: 24) {
@@ -115,21 +112,22 @@ struct OnboardingView: View {
                         }
                     }) {
                         Text("Retour")
+                            .font(AppFonts.body())
                             .foregroundColor(.blue)
                             .padding(.horizontal, 20)
                             .padding(.vertical, 12)
                     }
                     .buttonStyle(PlainButtonStyle())
-                    
+
                     Spacer()
-                    
+
                     Button(action: {
                         withAnimation(.easeInOut) {
                             currentPage = 2
                         }
                     }) {
                         Text("Suivant")
-                            .font(.headline)
+                            .font(AppFonts.headline())
                             .foregroundColor(.white)
                             .frame(minWidth: 120, minHeight: 50)
                             .background(Color.blue)
@@ -145,10 +143,9 @@ struct OnboardingView: View {
             // Page 3: Comment ça marche
             VStack(spacing: 30) {
                 Spacer()
-                
+
                 Text("Comment ça marche ?")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
+                    .font(AppFonts.title())
                     .multilineTextAlignment(.center)
                 
                 VStack(spacing: 24) {
@@ -179,20 +176,21 @@ struct OnboardingView: View {
                         }
                     }) {
                         Text("Retour")
+                            .font(AppFonts.body())
                             .foregroundColor(.blue)
                             .padding(.horizontal, 20)
                             .padding(.vertical, 12)
                     }
                     .buttonStyle(PlainButtonStyle())
-                    
+
                     Spacer()
-                    
+
                     Button(action: {
                         // Marquer l'onboarding comme terminé
                         authManager.completeOnboarding()
                     }) {
                         Text("C'est parti !")
-                            .font(.headline)
+                            .font(AppFonts.headline())
                             .foregroundColor(.white)
                             .frame(minWidth: 140, minHeight: 50)
                             .background(Color.green)
@@ -220,24 +218,23 @@ struct FeatureRow: View {
     let icon: String
     let title: String
     let description: String
-    
+
     var body: some View {
         HStack(spacing: 16) {
             Image(systemName: icon)
                 .font(.system(size: 24))
                 .foregroundColor(.blue)
                 .frame(width: 30)
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                
+                    .font(AppFonts.headline())
+
                 Text(description)
-                    .font(.subheadline)
+                    .font(AppFonts.subheadline())
                     .foregroundColor(.secondary)
             }
-            
+
             Spacer()
         }
         .padding(.vertical, 8)
@@ -248,27 +245,25 @@ struct StepRow: View {
     let number: String
     let title: String
     let description: String
-    
+
     var body: some View {
         HStack(spacing: 16) {
             Text(number)
-                .font(.title2)
-                .fontWeight(.bold)
+                .font(AppFonts.title2())
                 .foregroundColor(.white)
                 .frame(width: 40, height: 40)
                 .background(Color.blue)
                 .clipShape(Circle())
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                
+                    .font(AppFonts.headline())
+
                 Text(description)
-                    .font(.subheadline)
+                    .font(AppFonts.subheadline())
                     .foregroundColor(.secondary)
             }
-            
+
             Spacer()
         }
         .padding(.vertical, 8)

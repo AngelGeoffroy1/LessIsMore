@@ -25,15 +25,13 @@ struct AuthenticationView: View {
                     .frame(width: 200, height: 200)
                     .clipShape(RoundedRectangle(cornerRadius: 20))
                     .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
-                
+
                 Text("LessIsMore")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
+                    .font(AppFonts.title())
                     .foregroundColor(.primary)
-                
+
                 Text("Choisissez votre méthode de connexion")
-                    .font(.title2)
-                    .fontWeight(.medium)
+                    .font(AppFonts.title2(22))
                     .multilineTextAlignment(.center)
                     .foregroundColor(.secondary)
             }
@@ -64,7 +62,7 @@ struct AuthenticationView: View {
                         Image(systemName: "camera.fill")
                         Text("Continuer avec Instagram")
                     }
-                    .font(.headline)
+                    .font(AppFonts.headline())
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)
@@ -83,24 +81,24 @@ struct AuthenticationView: View {
             // Texte informatif
             VStack(spacing: 8) {
                 Text("En continuant, vous acceptez nos")
-                    .font(.caption)
+                    .font(AppFonts.caption())
                     .foregroundColor(.secondary)
-                
+
                 HStack(spacing: 4) {
                     Button("Conditions d'utilisation") {
                         // Ouvrir les conditions d'utilisation
                     }
-                    .font(.caption)
+                    .font(AppFonts.caption())
                     .foregroundColor(.blue)
-                    
+
                     Text("et")
-                        .font(.caption)
+                        .font(AppFonts.caption())
                         .foregroundColor(.secondary)
-                    
+
                     Button("Politique de confidentialité") {
                         // Ouvrir la politique de confidentialité
                     }
-                    .font(.caption)
+                    .font(AppFonts.caption())
                     .foregroundColor(.blue)
                 }
             }

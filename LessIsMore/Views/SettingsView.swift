@@ -42,13 +42,12 @@ struct SettingsView: View {
                                 Image(systemName: "shield.checkerboard")
                                     .font(.system(size: 50))
                                     .foregroundColor(.blue)
-                                
+
                                 Text("LessIsMore")
-                                    .font(.largeTitle)
-                                    .fontWeight(.bold)
-                                
+                                    .font(AppFonts.title())
+
                                 Text("Contrôlez votre expérience Instagram")
-                                    .font(.subheadline)
+                                    .font(AppFonts.subheadline())
                                     .foregroundColor(.secondary)
                                     .multilineTextAlignment(.center)
                             }
@@ -63,8 +62,7 @@ struct SettingsView: View {
                                 VStack(alignment: .leading, spacing: 12) {
                                     HStack {
                                         Text("Filtres de Contenu")
-                                            .font(.headline)
-                                            .fontWeight(.semibold)
+                                            .font(AppFonts.headline())
 
                                         if !subscriptionManager.isPremium {
                                             Image(systemName: "crown.fill")
@@ -79,15 +77,14 @@ struct SettingsView: View {
                                             Image(systemName: "lock.fill")
                                                 .foregroundColor(.orange)
                                             Text("Devenez Premium pour débloquer tous les filtres")
-                                                .font(.caption)
+                                                .font(AppFonts.caption())
                                                 .foregroundColor(.secondary)
                                             Spacer()
                                             Button(action: {
                                                 subscriptionManager.showPaywall()
                                             }) {
                                                 Text("Premium")
-                                                    .font(.caption)
-                                                    .fontWeight(.semibold)
+                                                    .font(AppFonts.caption())
                                                     .foregroundColor(.white)
                                                     .padding(.horizontal, 12)
                                                     .padding(.vertical, 6)
@@ -189,39 +186,38 @@ struct SettingsView: View {
                                 // Section à propos
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("À propos")
-                                        .font(.headline)
-                                        .fontWeight(.semibold)
-                                    
+                                        .font(AppFonts.headline())
+
                                     Text("LessIsMore vous aide à utiliser Instagram de manière plus focalisée en masquant les sources de distraction.")
-                                        .font(.caption)
+                                        .font(AppFonts.caption())
                                         .foregroundColor(.secondary)
-                                    
+
                                     Text("• Reels : Masque l'accès aux vidéos courtes")
-                                        .font(.caption2)
+                                        .font(AppFonts.caption2())
                                         .foregroundColor(.secondary)
-                                    
+
                                     Text("• Explorer : Masque la page de découverte")
-                                        .font(.caption2)
+                                        .font(AppFonts.caption2())
                                         .foregroundColor(.secondary)
-                                    
+
                                     Text("• Stories : Masque les stories en haut du feed")
-                                        .font(.caption2)
+                                        .font(AppFonts.caption2())
                                         .foregroundColor(.secondary)
-                                    
+
                                     Text("• Likes : Masque les compteurs de likes sur les posts")
-                                        .font(.caption2)
+                                        .font(AppFonts.caption2())
                                         .foregroundColor(.secondary)
-                                    
+
                                     Text("• Following : Force le mode Following uniquement")
-                                        .font(.caption2)
+                                        .font(AppFonts.caption2())
                                         .foregroundColor(.secondary)
-                                    
+
                                     Text("• Suggestions : Masque les suggestions de comptes")
-                                        .font(.caption2)
+                                        .font(AppFonts.caption2())
                                         .foregroundColor(.secondary)
-                                    
+
                                     Text("• Messages : Masque l'onglet Messages dans la navigation")
-                                        .font(.caption2)
+                                        .font(AppFonts.caption2())
                                         .foregroundColor(.secondary)
                                 }
                                 .padding(.vertical, 16)
@@ -312,8 +308,7 @@ struct FilterToggleRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 4) {
                     Text(filterType.displayName)
-                        .font(.body)
-                        .fontWeight(.medium)
+                        .font(AppFonts.body())
 
                     if isDisabled {
                         Image(systemName: "lock.fill")
@@ -323,7 +318,7 @@ struct FilterToggleRow: View {
                 }
 
                 Text(filterDescription)
-                    .font(.caption)
+                    .font(AppFonts.caption())
                     .foregroundColor(.secondary)
             }
 

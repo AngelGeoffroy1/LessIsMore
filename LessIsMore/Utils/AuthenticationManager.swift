@@ -9,36 +9,39 @@ import Foundation
 import Combine
 
 class AuthenticationManager: ObservableObject {
+    private let persistence: PersistenceService
+
     @Published var isAuthenticated: Bool {
         didSet {
-            UserDefaults.standard.set(isAuthenticated, forKey: "isAuthenticated")
+            persistence.isAuthenticated = isAuthenticated
         }
     }
-    
+
     @Published var hasSeenOnboarding: Bool {
         didSet {
-            UserDefaults.standard.set(hasSeenOnboarding, forKey: "hasSeenOnboarding")
+            persistence.hasSeenOnboarding = hasSeenOnboarding
         }
     }
-    
-    init() {
-        self.isAuthenticated = UserDefaults.standard.bool(forKey: "isAuthenticated")
-        self.hasSeenOnboarding = UserDefaults.standard.bool(forKey: "hasSeenOnboarding")
+
+    init(persistence: PersistenceService = .shared) {
+        self.persistence = persistence
+        self.isAuthenticated = persistence.isAuthenticated
+        self.hasSeenOnboarding = persistence.hasSeenOnboarding
     }
-    
+
     func logout() {
         isAuthenticated = false
         hasSeenOnboarding = false
     }
-    
+
     func login() {
         isAuthenticated = true
     }
-    
+
     func completeOnboarding() {
         hasSeenOnboarding = true
     }
-    
+
     func resetOnboarding() {
         hasSeenOnboarding = false
     }

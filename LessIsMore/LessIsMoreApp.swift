@@ -12,8 +12,14 @@ import SuperwallKit
 @main
 struct LessIsMoreApp: App {
     init() {
-        // Configuration de Superwall au lancement de l'app
-        Superwall.configure(apiKey: "pk_RyjdqJMj414PB37Pgr5GF")
+        // Configuration de Superwall avec la clé depuis Info.plist
+        if let apiKey = Bundle.main.object(forInfoDictionaryKey: "SUPERWALL_API_KEY") as? String {
+            Superwall.configure(apiKey: apiKey)
+        } else {
+            #if DEBUG
+            fatalError("SUPERWALL_API_KEY manquante dans Info.plist")
+            #endif
+        }
     }
 
     var body: some Scene {
