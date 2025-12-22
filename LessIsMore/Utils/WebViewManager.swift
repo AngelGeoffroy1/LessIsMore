@@ -185,10 +185,9 @@ class WebViewManager: NSObject, ObservableObject {
         guard let webView = webView else { return }
 
         let script = ContentBlocker.getApplyAllFiltersScript()
-        webView.evaluateJavaScript(script) { [weak self] result, error in
+        webView.evaluateJavaScript(script) { _, error in
             if let error = error {
                 print("Erreur application des filtres: \(error.localizedDescription)")
-                // Ne pas afficher d'erreur ici car c'est souvent bénin
             } else {
                 print("Tous les filtres appliqués avec succès")
             }

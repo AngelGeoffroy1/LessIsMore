@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SuperwallKit
 
 struct SettingsView: View {
     @ObservedObject var webViewManager: WebViewManager
@@ -109,7 +110,11 @@ struct SettingsView: View {
                                                     webViewManager.toggleFilter(filterType)
                                                 }
                                             ),
-                                            isDisabled: !subscriptionManager.isPremium
+                                            isLocked: !subscriptionManager.isPremium,
+                                            onLockedTap: {
+                                                // Ouvrir le paywall Superwall
+                                                Superwall.shared.register(placement: "settings_premium")
+                                            }
                                         )
                                     }
                                 }
@@ -301,7 +306,8 @@ struct SettingsView: View {
 struct FilterToggleRow: View {
     let filterType: FilterType
     @Binding var isEnabled: Bool
-    var isDisabled: Bool = false
+    var isLocked: Bool = false
+    var onLockedTap: (() -> Void)?
 
     var body: some View {
         HStack {
@@ -310,7 +316,7 @@ struct FilterToggleRow: View {
                     Text(filterType.displayName)
                         .font(AppFonts.body())
 
-                    if isDisabled {
+                    if isLocked {
                         Image(systemName: "lock.fill")
                             .font(.caption2)
                             .foregroundColor(.orange)
@@ -324,12 +330,36 @@ struct FilterToggleRow: View {
 
             Spacer()
 
-            Toggle("", isOn: $isEnabled)
-                .toggleStyle(SwitchToggleStyle(tint: .blue))
-                .disabled(isDisabled)
+            if isLocked {
+                // Toggle factice qui ouvre le paywall au tap
+                Toggle("", isOn: .constant(false))
+                    .toggleStyle(SwitchToggleStyle(tint: .blue))
+                    .disabled(true)
+                    .overlay(
+                        Color.clear
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                // Haptic feedback
+                                let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                                impactFeedback.impactOccurred()
+                                onLockedTap?()
+                            }
+                    )
+            } else {
+                Toggle("", isOn: $isEnabled)
+                    .toggleStyle(SwitchToggleStyle(tint: .blue))
+            }
         }
         .padding(.vertical, 4)
-        .opacity(isDisabled ? 0.5 : 1.0)
+        .opacity(isLocked ? 0.6 : 1.0)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if isLocked {
+                let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                impactFeedback.impactOccurred()
+                onLockedTap?()
+            }
+        }
     }
     
     private var filterDescription: String {
