@@ -42,6 +42,8 @@ struct StatisticsView: View {
                         TotalTimeSavedCard(
                             totalMinutes: animatedMinutes,
                             isSimulation: statisticsManager.isSimulationMode,
+                            chartData: statisticsManager.dailyChartData,
+                            showChart: statisticsManager.shouldShowChart,
                             animateContent: $animateContent
                         )
                         
@@ -175,43 +177,63 @@ struct AnimatedStatisticsBackground: View {
 struct TotalTimeSavedCard: View {
     let totalMinutes: Int
     var isSimulation: Bool = false
+    let chartData: [DailyDataPoint]
+    var showChart: Bool = true
     @Binding var animateContent: Bool
     
     private var hours: Int { totalMinutes / 60 }
     private var minutes: Int { totalMinutes % 60 }
     
     var body: some View {
-        VStack(spacing: 16) {
-            // Icône
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [.green, .blue],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+        VStack(spacing: 20) {
+            // Header avec icône et compteur
+            HStack(spacing: 16) {
+                // Icône
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [.green, .blue],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
                         )
-                    )
-                    .frame(width: 80, height: 80)
-                    .shadow(color: .green.opacity(0.4), radius: 15, x: 0, y: 8)
+                        .frame(width: 60, height: 60)
+                        .shadow(color: .green.opacity(0.3), radius: 10, x: 0, y: 5)
+                    
+                    Image(systemName: "clock.badge.checkmark.fill")
+                        .font(.system(size: 26))
+                        .foregroundColor(.white)
+                }
+                .scaleEffect(animateContent ? 1 : 0.5)
+                .opacity(animateContent ? 1 : 0)
                 
-                Image(systemName: "clock.badge.checkmark.fill")
-                    .font(.system(size: 35))
-                    .foregroundColor(.white)
-            }
-            .scaleEffect(animateContent ? 1 : 0.5)
-            .opacity(animateContent ? 1 : 0)
-            
-            VStack(spacing: 8) {
-                Text("Temps économisé")
-                    .font(AppFonts.subheadline())
-                    .foregroundColor(.secondary)
-                
-                // Compteur animé
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    if hours > 0 {
-                        Text("\(hours)")
-                            .font(AppFonts.title(50))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Temps économisé")
+                        .font(AppFonts.subheadline())
+                        .foregroundColor(.secondary)
+                    
+                    // Compteur animé
+                    HStack(alignment: .firstTextBaseline, spacing: 2) {
+                        if hours > 0 {
+                            Text("\(hours)")
+                                .font(AppFonts.title(36))
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [.green, .blue],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .contentTransition(.numericText())
+                            
+                            Text("h")
+                                .font(AppFonts.body())
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Text("\(minutes)")
+                            .font(AppFonts.title(hours > 0 ? 24 : 36))
                             .foregroundStyle(
                                 LinearGradient(
                                     colors: [.green, .blue],
@@ -221,35 +243,41 @@ struct TotalTimeSavedCard: View {
                             )
                             .contentTransition(.numericText())
                         
-                        Text("h")
-                            .font(AppFonts.title3())
+                        Text("min")
+                            .font(AppFonts.body())
                             .foregroundColor(.secondary)
                     }
-                    
-                    Text("\(minutes)")
-                        .font(AppFonts.title(hours > 0 ? 30 : 50))
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [.green, .blue],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .contentTransition(.numericText())
-                    
-                    Text("min")
-                        .font(AppFonts.title3())
-                        .foregroundColor(.secondary)
                 }
                 
-                if totalMinutes > 0 {
-                    Text(isSimulation ? "estimation sur 7 jours avec tous les filtres" : "depuis l'activation des filtres")
+                Spacer()
+            }
+            
+            // Graphique en courbe
+            if showChart && !chartData.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Évolution sur 7 jours")
                         .font(AppFonts.caption())
                         .foregroundColor(.secondary)
+                    
+                    LineChartView(data: chartData, animateContent: animateContent)
+                        .frame(height: 100)
                 }
             }
+            
+            // Sous-texte
+            if totalMinutes > 0 {
+                Text(isSimulation ? "📊 Estimation avec tous les filtres actifs" : "✅ Données réelles depuis l'activation")
+                    .font(AppFonts.caption())
+                    .foregroundColor(isSimulation ? .orange : .green)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(
+                        Capsule()
+                            .fill(isSimulation ? Color.orange.opacity(0.1) : Color.green.opacity(0.1))
+                    )
+            }
         }
-        .padding(.vertical, 24)
+        .padding(.vertical, 20)
         .padding(.horizontal, 20)
         .frame(maxWidth: .infinity)
         .background(
@@ -260,6 +288,162 @@ struct TotalTimeSavedCard: View {
         .opacity(animateContent ? 1 : 0)
         .offset(y: animateContent ? 0 : 30)
         .animation(.spring(response: 0.6, dampingFraction: 0.8), value: animateContent)
+    }
+}
+
+// MARK: - Graphique en courbe
+
+struct LineChartView: View {
+    let data: [DailyDataPoint]
+    let animateContent: Bool
+    
+    @State private var animatedProgress: CGFloat = 0
+    
+    private var maxMinutes: Int {
+        data.map { $0.minutesSaved }.max() ?? 1
+    }
+    
+    var body: some View {
+        GeometryReader { geometry in
+            let width = geometry.size.width
+            let height = geometry.size.height
+            let stepX = width / CGFloat(data.count - 1)
+            
+            ZStack {
+                // Grille de fond
+                VStack {
+                    ForEach(0..<4) { i in
+                        Spacer()
+                        if i < 3 {
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.1))
+                                .frame(height: 1)
+                        }
+                    }
+                }
+                
+                // Zone remplie sous la courbe
+                Path { path in
+                    guard data.count > 1 else { return }
+                    
+                    path.move(to: CGPoint(x: 0, y: height))
+                    
+                    for (index, point) in data.enumerated() {
+                        let x = CGFloat(index) * stepX
+                        let y = height - (CGFloat(point.minutesSaved) / CGFloat(maxMinutes) * height * 0.85)
+                        
+                        if index == 0 {
+                            path.addLine(to: CGPoint(x: x, y: y))
+                        } else {
+                            let prevX = CGFloat(index - 1) * stepX
+                            let prevPoint = data[index - 1]
+                            let prevY = height - (CGFloat(prevPoint.minutesSaved) / CGFloat(maxMinutes) * height * 0.85)
+                            
+                            let controlX1 = prevX + stepX * 0.5
+                            let controlX2 = x - stepX * 0.5
+                            
+                            path.addCurve(
+                                to: CGPoint(x: x, y: y),
+                                control1: CGPoint(x: controlX1, y: prevY),
+                                control2: CGPoint(x: controlX2, y: y)
+                            )
+                        }
+                    }
+                    
+                    path.addLine(to: CGPoint(x: width, y: height))
+                    path.closeSubpath()
+                }
+                .fill(
+                    LinearGradient(
+                        colors: [Color.green.opacity(0.3), Color.blue.opacity(0.1)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .mask(
+                    Rectangle()
+                        .frame(width: width * animatedProgress)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                )
+                
+                // Ligne de la courbe
+                Path { path in
+                    guard data.count > 1 else { return }
+                    
+                    for (index, point) in data.enumerated() {
+                        let x = CGFloat(index) * stepX
+                        let y = height - (CGFloat(point.minutesSaved) / CGFloat(maxMinutes) * height * 0.85)
+                        
+                        if index == 0 {
+                            path.move(to: CGPoint(x: x, y: y))
+                        } else {
+                            let prevX = CGFloat(index - 1) * stepX
+                            let prevPoint = data[index - 1]
+                            let prevY = height - (CGFloat(prevPoint.minutesSaved) / CGFloat(maxMinutes) * height * 0.85)
+                            
+                            let controlX1 = prevX + stepX * 0.5
+                            let controlX2 = x - stepX * 0.5
+                            
+                            path.addCurve(
+                                to: CGPoint(x: x, y: y),
+                                control1: CGPoint(x: controlX1, y: prevY),
+                                control2: CGPoint(x: controlX2, y: y)
+                            )
+                        }
+                    }
+                }
+                .trim(from: 0, to: animatedProgress)
+                .stroke(
+                    LinearGradient(
+                        colors: [.green, .blue],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    ),
+                    style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round)
+                )
+                
+                // Points sur la courbe
+                ForEach(Array(data.enumerated()), id: \.element.id) { index, point in
+                    let x = CGFloat(index) * stepX
+                    let y = height - (CGFloat(point.minutesSaved) / CGFloat(maxMinutes) * height * 0.85)
+                    
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 8, height: 8)
+                        .overlay(
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [.green, .blue],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .frame(width: 6, height: 6)
+                        )
+                        .position(x: x, y: y)
+                        .opacity(animatedProgress > CGFloat(index) / CGFloat(data.count - 1) ? 1 : 0)
+                        .scaleEffect(animatedProgress > CGFloat(index) / CGFloat(data.count - 1) ? 1 : 0.5)
+                        .animation(.spring(response: 0.4, dampingFraction: 0.7).delay(Double(index) * 0.1), value: animatedProgress)
+                }
+                
+                // Labels des jours
+                HStack {
+                    ForEach(data) { point in
+                        Text(point.shortDay)
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundColor(.secondary)
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+                .offset(y: height / 2 + 8)
+            }
+        }
+        .onAppear {
+            withAnimation(.easeOut(duration: 1.2).delay(0.3)) {
+                animatedProgress = 1
+            }
+        }
     }
 }
 

@@ -46,13 +46,13 @@ class StatisticsManager: ObservableObject {
     
     // Temps moyen économisé par jour pour chaque filtre (en minutes)
     private let dailySavings: [FilterType: Int] = [
-        .reels: 15,      // Reels sont très addictifs
-        .stories: 10,    // Stories consomment beaucoup de temps
-        .explore: 8,     // Page Explore peut être chronophage
-        .suggestions: 5, // Suggestions créent des distractions
-        .likes: 3,       // Masquer les likes réduit la comparaison sociale
-        .following: 5,   // Mode Following réduit les contenus algorithmiques
-        .messages: 4     // Masquer les messages réduit les interruptions
+        .reels: 35,      // Reels sont très addictifs - scroll infini
+        .stories: 25,    // Stories consomment beaucoup de temps
+        .explore: 20,    // Page Explore peut être très chronophage
+        .suggestions: 12, // Suggestions créent des distractions fréquentes
+        .likes: 8,       // Masquer les likes réduit la comparaison sociale
+        .following: 15,  // Mode Following réduit les contenus algorithmiques
+        .messages: 10    // Masquer les messages réduit les interruptions
     ]
     
     // Couleurs pour chaque filtre
@@ -212,5 +212,86 @@ class StatisticsManager: ObservableObject {
     /// Retourne les statistiques triées par temps économisé
     var sortedStatistics: [FilterStatistics] {
         displayStatistics.sorted { $0.totalMinutesSaved > $1.totalMinutesSaved }
+    }
+    
+    // MARK: - Données pour le graphique en courbe
+    
+    /// Données quotidiennes pour le graphique en courbe (7 derniers jours)
+    var dailyChartData: [DailyDataPoint] {
+        let calendar = Calendar.current
+        let today = Date()
+        
+        if isSimulationMode {
+            // Mode simulation : progression linéaire sur 7 jours
+            let dailyTotal = displayStatistics.reduce(0) { $0 + $1.dailyMinutesSaved }
+            
+            return (0..<7).reversed().map { daysAgo in
+                let date = calendar.date(byAdding: .day, value: -daysAgo, to: today) ?? today
+                let dayNumber = 7 - daysAgo
+                let cumulativeMinutes = dailyTotal * dayNumber
+                
+                return DailyDataPoint(
+                    date: date,
+                    dayNumber: dayNumber,
+                    minutesSaved: cumulativeMinutes
+                )
+            }
+        } else {
+            // Mode réel : calcul basé sur les vraies dates d'activation
+            return (0..<7).reversed().map { daysAgo in
+                let date = calendar.date(byAdding: .day, value: -daysAgo, to: today) ?? today
+                let dayNumber = 7 - daysAgo
+                
+                // Calculer le temps économisé pour chaque filtre à cette date
+                var minutesForDay = 0
+                for stat in statistics {
+                    if let activationDate = stat.activationDate {
+                        // Nombre de jours depuis l'activation jusqu'à cette date
+                        let daysActive = calendar.dateComponents([.day], from: activationDate, to: date).day ?? 0
+                        if daysActive >= 0 {
+                            minutesForDay += max(0, daysActive) * stat.dailyMinutesSaved
+                        }
+                    }
+                }
+                
+                return DailyDataPoint(
+                    date: date,
+                    dayNumber: dayNumber,
+                    minutesSaved: minutesForDay
+                )
+            }
+        }
+    }
+    
+    /// Vérifie si le graphique doit être affiché (au moins 1 jour de données)
+    var shouldShowChart: Bool {
+        if isSimulationMode {
+            return true
+        }
+        // En mode réel, afficher seulement si au moins un filtre est actif depuis au moins 1 jour
+        return dailyChartData.last?.minutesSaved ?? 0 > 0
+    }
+}
+
+// MARK: - Structure pour les données quotidiennes
+
+struct DailyDataPoint: Identifiable {
+    let id = UUID()
+    let date: Date
+    let dayNumber: Int
+    let minutesSaved: Int
+    
+    var formattedDay: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "E"
+        formatter.locale = Locale(identifier: "fr_FR")
+        return formatter.string(from: date)
+    }
+    
+    var shortDay: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE"
+        formatter.locale = Locale(identifier: "fr_FR")
+        return String(formatter.string(from: date).prefix(3))
     }
 }
