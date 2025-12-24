@@ -19,11 +19,11 @@ enum FilterType: String, CaseIterable {
     var displayName: String {
         switch self {
         case .reels: return "Reels"
-        case .explore: return "Explorer"
+        case .explore: return "Explore"
         case .stories: return "Stories"
         case .suggestions: return "Suggestions"
-        case .likes: return "Compteur de likes"
-        case .following: return "Mode Following uniquement"
+        case .likes: return "Like Counter"
+        case .following: return "Following Only Mode"
         case .messages: return "Messages"
         }
     }

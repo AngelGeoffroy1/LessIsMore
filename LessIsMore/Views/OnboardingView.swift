@@ -40,7 +40,7 @@ struct OnboardingView: View {
                                 currentPage = totalPages - 1
                             }
                         }) {
-                            Text("Passer")
+                            Text("Skip")
                                 .font(AppFonts.subheadline())
                                 .foregroundColor(.secondary)
                         }
@@ -85,7 +85,7 @@ struct OnboardingView: View {
                             }
                         }) {
                             HStack(spacing: 8) {
-                                Text(currentPage == 0 ? "Découvrir" : "Continuer")
+                                Text(currentPage == 0 ? "Discover" : "Continue")
                                     .font(AppFonts.headline())
                                 Image(systemName: "arrow.right")
                                     .font(.system(size: 14, weight: .semibold))
@@ -158,7 +158,7 @@ struct ProblemPage: View {
             .animation(.spring(response: 0.6, dampingFraction: 0.7).delay(0.1), value: animateContent)
 
             VStack(spacing: 12) {
-                Text("Saviez-vous que...")
+                Text("Did you know...")
                     .font(AppFonts.subheadline())
                     .foregroundColor(.secondary)
                     .opacity(animateContent ? 1 : 0)
@@ -171,14 +171,14 @@ struct ProblemPage: View {
                         .foregroundColor(.red)
                         .contentTransition(.numericText())
 
-                    Text("min/jour")
+                    Text("min/day")
                         .font(AppFonts.title3())
                         .foregroundColor(.secondary)
                 }
                 .opacity(animateContent ? 1 : 0)
                 .offset(y: animateContent ? 0 : 20)
 
-                Text("C'est le temps moyen perdu\nsur Instagram chaque jour")
+                Text("That's the average time wasted\non Instagram every day")
                     .font(AppFonts.body())
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -189,9 +189,9 @@ struct ProblemPage: View {
 
             // Stats persuasives
             VStack(spacing: 10) {
-                StatBadge(icon: "brain.head.profile", text: "Réduit l'anxiété de 40%", color: .orange)
-                StatBadge(icon: "clock.arrow.circlepath", text: "Récupérez 2h par semaine", color: .green)
-                StatBadge(icon: "bolt.fill", text: "Productivité x2", color: .blue)
+                StatBadge(icon: "brain.head.profile", text: "Reduces anxiety by 40%", color: .orange)
+                StatBadge(icon: "clock.arrow.circlepath", text: "Recover 2h per week", color: .green)
+                StatBadge(icon: "bolt.fill", text: "2x Productivity", color: .blue)
             }
             .padding(.top, 8)
             .opacity(animateContent ? 1 : 0)
@@ -230,19 +230,19 @@ struct SolutionPage: View {
     @State private var selectedFilters: Set<String> = []
 
     let filters = [
-        ("film.fill", "Reels", "Vidéos addictives", Color.pink),
-        ("safari.fill", "Explorer", "Contenu aléatoire", Color.orange),
+        ("film.fill", "Reels", "Addictive videos", Color.pink),
+        ("safari.fill", "Explore", "Random content", Color.orange),
         ("circle.dashed", "Stories", "Distractions", Color.purple),
-        ("heart.fill", "Likes", "Comparaison", Color.red)
+        ("heart.fill", "Likes", "Comparison", Color.red)
     ]
 
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 20) {
                 VStack(spacing: 6) {
-                    Text("Votre Instagram,")
+                    Text("Your Instagram,")
                         .font(AppFonts.title2())
-                    Text("vos règles")
+                    Text("Your Rules")
                         .font(AppFonts.title())
                         .foregroundStyle(
                             LinearGradient(
@@ -257,7 +257,7 @@ struct SolutionPage: View {
                 .animation(.easeOut(duration: 0.5), value: animateContent)
                 .padding(.top, 20)
 
-                Text("Touchez pour bloquer")
+                Text("Tap to block")
                     .font(AppFonts.subheadline())
                     .foregroundColor(.secondary)
                     .opacity(animateContent ? 1 : 0)
@@ -295,7 +295,7 @@ struct SolutionPage: View {
                     HStack(spacing: 8) {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundColor(.green)
-                        Text("\(selectedFilters.count) bloquée\(selectedFilters.count > 1 ? "s" : "")")
+                        Text("\(selectedFilters.count) blocked")
                             .font(AppFonts.subheadline())
                             .foregroundColor(.secondary)
                     }
@@ -320,8 +320,8 @@ struct BenefitsPage: View {
     @Binding var animateContent: Bool
 
     let testimonials = [
-        ("Je récupère 1h30 par jour !", "Marie, 24 ans"),
-        ("Fini le scroll infini le soir", "Thomas, 31 ans")
+        ("I get back 1h30 per day!", "Marie, 24 years old"),
+        ("No more endless scrolling at night", "Thomas, 31 years old")
     ]
 
     var body: some View {
@@ -329,7 +329,7 @@ struct BenefitsPage: View {
             VStack(spacing: 16) {
                 // Titre
                 VStack(spacing: 4) {
-                    Text("Rejoignez")
+                    Text("Join")
                         .font(AppFonts.title3())
                     HStack(spacing: 6) {
                         Text("10 000+")
@@ -341,7 +341,7 @@ struct BenefitsPage: View {
                                     endPoint: .trailing
                                 )
                             )
-                        Text("utilisateurs")
+                        Text("users")
                             .font(AppFonts.title3())
                     }
                 }
@@ -385,7 +385,7 @@ struct BenefitsPage: View {
                         Image(systemName: "lock.shield.fill")
                             .foregroundColor(.green)
                             .font(.system(size: 14))
-                        Text("Vie privée")
+                        Text("Privacy")
                             .font(AppFonts.caption())
                             .foregroundColor(.secondary)
                     }
@@ -397,7 +397,7 @@ struct BenefitsPage: View {
                         Image(systemName: "checkmark.seal.fill")
                             .foregroundColor(.blue)
                             .font(.system(size: 14))
-                        Text("Sans pub")
+                        Text("No ads")
                             .font(AppFonts.caption())
                             .foregroundColor(.secondary)
                     }
@@ -446,9 +446,9 @@ struct PremiumCTAPage: View {
 
                 // Titre
                 VStack(spacing: 4) {
-                    Text("Débloquez tout")
+                    Text("Unlock the")
                         .font(AppFonts.title())
-                    Text("le potentiel")
+                    Text("Full Potential")
                         .font(AppFonts.title())
                         .foregroundStyle(
                             LinearGradient(
@@ -465,10 +465,10 @@ struct PremiumCTAPage: View {
 
                 // Features Premium
                 VStack(spacing: 14) {
-                    PremiumFeatureRow(icon: "checkmark.circle.fill", text: "Tous les filtres illimités", color: .green)
-                    PremiumFeatureRow(icon: "bolt.circle.fill", text: "Activation instantanée", color: .orange)
-                    PremiumFeatureRow(icon: "arrow.triangle.2.circlepath.circle.fill", text: "Sync multi-appareils", color: .blue)
-                    PremiumFeatureRow(icon: "heart.circle.fill", text: "Support prioritaire", color: .pink)
+                    PremiumFeatureRow(icon: "checkmark.circle.fill", text: "All filters unlimited", color: .green)
+                    PremiumFeatureRow(icon: "bolt.circle.fill", text: "Instant activation", color: .orange)
+                    PremiumFeatureRow(icon: "arrow.triangle.2.circlepath.circle.fill", text: "Multi-device sync", color: .blue)
+                    PremiumFeatureRow(icon: "heart.circle.fill", text: "Priority support", color: .pink)
                 }
                 .padding(.vertical, 18)
                 .padding(.horizontal, 20)
@@ -495,7 +495,7 @@ struct PremiumCTAPage: View {
                     }) {
                         HStack(spacing: 8) {
                             Image(systemName: "crown.fill")
-                            Text("Essai gratuit de 3 jours")
+                            Text("3-day free trial")
                                 .font(AppFonts.headline())
                         }
                         .foregroundColor(.white)
@@ -517,7 +517,7 @@ struct PremiumCTAPage: View {
                     .animation(.easeOut(duration: 0.5).delay(0.4), value: animateContent)
 
                     // Mention légale
-                    Text("Annulez à tout moment. Aucun engagement.")
+                    Text("Cancel anytime. No commitment.")
                         .font(AppFonts.caption2())
                         .foregroundColor(.secondary.opacity(0.7))
                         .opacity(animateContent ? 1 : 0)

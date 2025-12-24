@@ -72,10 +72,10 @@ struct StatisticsView: View {
                     .padding(.horizontal, 20)
                 }
             }
-            .navigationTitle("Statistiques")
+            .navigationTitle("Statistics")
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarItems(
-                trailing: Button("Fermer") {
+                trailing: Button("Close") {
                     presentationMode.wrappedValue.dismiss()
                 }
             )
@@ -122,7 +122,7 @@ struct SimulationModeBadge: View {
                 Image(systemName: isSimulationMode ? "eye.fill" : "chart.line.uptrend.xyaxis")
                     .font(.system(size: 14, weight: .semibold))
                 
-                Text(isSimulationMode ? "Mode Prévisualisation (7 jours)" : "Vos données réelles")
+                Text(isSimulationMode ? "Preview Mode (7 days)" : "Your real data")
                     .font(AppFonts.caption())
                     .fontWeight(.medium)
                 
@@ -209,7 +209,7 @@ struct TotalTimeSavedCard: View {
                 .opacity(animateContent ? 1 : 0)
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Temps économisé")
+                    Text("Time Saved")
                         .font(AppFonts.subheadline())
                         .foregroundColor(.secondary)
                     
@@ -255,7 +255,7 @@ struct TotalTimeSavedCard: View {
             // Graphique en courbe
             if showChart && !chartData.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Évolution sur 7 jours")
+                    Text("7-day Progress")
                         .font(AppFonts.caption())
                         .foregroundColor(.secondary)
                     
@@ -266,7 +266,7 @@ struct TotalTimeSavedCard: View {
             
             // Sous-texte
             if totalMinutes > 0 {
-                Text(isSimulation ? "📊 Estimation avec tous les filtres actifs" : "✅ Données réelles depuis l'activation")
+                Text(isSimulation ? "📊 Estimate with all filters active" : "✅ Real data since activation")
                     .font(AppFonts.caption())
                     .foregroundColor(isSimulation ? .orange : .green)
                     .padding(.horizontal, 12)
@@ -459,7 +459,7 @@ struct FilterBarChart: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Par filtre")
+            Text("By Filter")
                 .font(AppFonts.headline())
                 .padding(.horizontal, 4)
             
@@ -554,7 +554,7 @@ struct TimeSavedPieChart: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Répartition")
+            Text("Distribution")
                 .font(AppFonts.headline())
                 .padding(.horizontal, 4)
             
@@ -665,7 +665,7 @@ struct EstimatedGainsCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Gains potentiels")
+                Text("Potential Gains")
                     .font(AppFonts.headline())
                 
                 Spacer()
@@ -677,20 +677,20 @@ struct EstimatedGainsCard: View {
             HStack(spacing: 16) {
                 GainBadge(
                     icon: "calendar.badge.clock",
-                    label: "Cette semaine",
+                    label: "This Week",
                     value: formatMinutes(weeklyMinutes),
                     color: .blue
                 )
                 
                 GainBadge(
                     icon: "calendar",
-                    label: "Ce mois",
+                    label: "This Month",
                     value: formatMinutes(monthlyMinutes),
                     color: .purple
                 )
             }
             
-            Text("Estimation basée sur vos filtres actifs")
+            Text("Estimate based on your active filters")
                 .font(AppFonts.caption2())
                 .foregroundColor(.secondary)
         }
@@ -751,11 +751,11 @@ struct EmptyStatisticsView: View {
                 .font(.system(size: 50))
                 .foregroundColor(.secondary)
             
-            Text("Aucun filtre actif")
+            Text("No Active Filters")
                 .font(AppFonts.headline())
                 .foregroundColor(.primary)
             
-            Text("Activez des filtres dans les paramètres pour commencer à économiser du temps")
+            Text("Enable filters in settings to start saving time")
                 .font(AppFonts.subheadline())
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)

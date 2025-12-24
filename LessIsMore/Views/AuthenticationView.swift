@@ -30,7 +30,7 @@ struct AuthenticationView: View {
                     .font(AppFonts.title())
                     .foregroundColor(.primary)
 
-                Text("Choisissez votre méthode de connexion")
+                Text("Choose your login method")
                     .font(AppFonts.title2(22))
                     .multilineTextAlignment(.center)
                     .foregroundColor(.secondary)
@@ -60,7 +60,7 @@ struct AuthenticationView: View {
                 }) {
                     HStack {
                         Image(systemName: "camera.fill")
-                        Text("Continuer avec Instagram")
+                        Text("Continue with Instagram")
                     }
                     .font(AppFonts.headline())
                     .foregroundColor(.white)
@@ -80,22 +80,22 @@ struct AuthenticationView: View {
             
             // Texte informatif
             VStack(spacing: 8) {
-                Text("En continuant, vous acceptez nos")
+                Text("By continuing, you agree to our")
                     .font(AppFonts.caption())
                     .foregroundColor(.secondary)
 
                 HStack(spacing: 4) {
-                    Button("Conditions d'utilisation") {
+                    Button("Terms of Service") {
                         // Ouvrir les conditions d'utilisation
                     }
                     .font(AppFonts.caption())
                     .foregroundColor(.blue)
 
-                    Text("et")
+                    Text("and")
                         .font(AppFonts.caption())
                         .foregroundColor(.secondary)
 
-                    Button("Politique de confidentialité") {
+                    Button("Privacy Policy") {
                         // Ouvrir la politique de confidentialité
                     }
                     .font(AppFonts.caption())
@@ -114,7 +114,7 @@ struct AuthenticationView: View {
                 endPoint: .bottomTrailing
             )
         )
-        .alert("Erreur de connexion", isPresented: $showError) {
+        .alert("Login Error", isPresented: $showError) {
             Button("OK") { }
         } message: {
             Text(errorMessage)
@@ -131,7 +131,7 @@ struct AuthenticationView: View {
             }
         case .failure(let error):
             print("Erreur Sign in with Apple: \(error.localizedDescription)")
-            errorMessage = "Erreur lors de la connexion avec Apple. Veuillez réessayer."
+            errorMessage = "Error signing in with Apple. Please try again."
             showError = true
         }
     }

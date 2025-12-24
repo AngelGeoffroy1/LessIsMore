@@ -284,14 +284,14 @@ struct DailyDataPoint: Identifiable {
     var formattedDay: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "E"
-        formatter.locale = Locale(identifier: "fr_FR")
+        formatter.locale = Locale(identifier: "en_US")
         return formatter.string(from: date)
     }
     
     var shortDay: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "EEE"
-        formatter.locale = Locale(identifier: "fr_FR")
+        formatter.locale = Locale(identifier: "en_US")
         return String(formatter.string(from: date).prefix(3))
     }
 }

@@ -47,7 +47,7 @@ struct SettingsView: View {
                                 Text("LessIsMore")
                                     .font(AppFonts.title())
 
-                                Text("Contrôlez votre expérience Instagram")
+                                Text("Control your Instagram experience")
                                     .font(AppFonts.subheadline())
                                     .foregroundColor(.secondary)
                                     .multilineTextAlignment(.center)
@@ -62,7 +62,7 @@ struct SettingsView: View {
                                 // Section des filtres
                                 VStack(alignment: .leading, spacing: 12) {
                                     HStack {
-                                        Text("Filtres de Contenu")
+                                        Text("Content Filters")
                                             .font(AppFonts.headline())
 
                                         if !subscriptionManager.isPremium {
@@ -77,7 +77,7 @@ struct SettingsView: View {
                                         HStack {
                                             Image(systemName: "lock.fill")
                                                 .foregroundColor(.orange)
-                                            Text("Devenez Premium pour débloquer tous les filtres")
+                                            Text("Go Premium to unlock all filters")
                                                 .font(AppFonts.caption())
                                                 .foregroundColor(.secondary)
                                             Spacer()
@@ -130,7 +130,7 @@ struct SettingsView: View {
                                     }) {
                                         HStack {
                                             Image(systemName: "arrow.clockwise")
-                                            Text("Recharger Instagram")
+                                            Text("Reload Instagram")
                                             Spacer()
                                         }
                                         .padding()
@@ -144,7 +144,7 @@ struct SettingsView: View {
                                     }) {
                                         HStack {
                                             Image(systemName: "arrow.counterclockwise")
-                                            Text("Réinitialiser les filtres")
+                                            Text("Reset Filters")
                                             Spacer()
                                         }
                                         .padding()
@@ -158,7 +158,7 @@ struct SettingsView: View {
                                     }) {
                                         HStack {
                                             Image(systemName: "info.circle")
-                                            Text("Reset le onboarding")
+                                            Text("Reset Onboarding")
                                             Spacer()
                                         }
                                         .padding()
@@ -173,7 +173,7 @@ struct SettingsView: View {
                                     }) {
                                         HStack {
                                             Image(systemName: "rectangle.portrait.and.arrow.right")
-                                            Text("Se déconnecter")
+                                            Text("Log Out")
                                             Spacer()
                                         }
                                         .padding()
@@ -190,38 +190,38 @@ struct SettingsView: View {
                                 
                                 // Section à propos
                                 VStack(alignment: .leading, spacing: 8) {
-                                    Text("À propos")
+                                    Text("About")
                                         .font(AppFonts.headline())
 
-                                    Text("LessIsMore vous aide à utiliser Instagram de manière plus focalisée en masquant les sources de distraction.")
+                                    Text("LessIsMore helps you use Instagram more mindfully by hiding sources of distraction.")
                                         .font(AppFonts.caption())
                                         .foregroundColor(.secondary)
 
-                                    Text("• Reels : Masque l'accès aux vidéos courtes")
+                                    Text("• Reels: Hides access to short videos")
                                         .font(AppFonts.caption2())
                                         .foregroundColor(.secondary)
 
-                                    Text("• Explorer : Masque la page de découverte")
+                                    Text("• Explore: Hides the discovery page")
                                         .font(AppFonts.caption2())
                                         .foregroundColor(.secondary)
 
-                                    Text("• Stories : Masque les stories en haut du feed")
+                                    Text("• Stories: Hides stories at the top of the feed")
                                         .font(AppFonts.caption2())
                                         .foregroundColor(.secondary)
 
-                                    Text("• Likes : Masque les compteurs de likes sur les posts")
+                                    Text("• Likes: Hides like counters on posts")
                                         .font(AppFonts.caption2())
                                         .foregroundColor(.secondary)
 
-                                    Text("• Following : Force le mode Following uniquement")
+                                    Text("• Following: Forces Following-only mode")
                                         .font(AppFonts.caption2())
                                         .foregroundColor(.secondary)
 
-                                    Text("• Suggestions : Masque les suggestions de comptes")
+                                    Text("• Suggestions: Hides account suggestions")
                                         .font(AppFonts.caption2())
                                         .foregroundColor(.secondary)
 
-                                    Text("• Messages : Masque l'onglet Messages dans la navigation")
+                                    Text("• Messages: Hides the Messages tab in navigation")
                                         .font(AppFonts.caption2())
                                         .foregroundColor(.secondary)
                                 }
@@ -249,10 +249,10 @@ struct SettingsView: View {
                     }
                 }
             }
-            .navigationTitle("Paramètres")
+            .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarItems(
-                trailing: Button("Fermer") {
+                trailing: Button("Close") {
                     presentationMode.wrappedValue.dismiss()
                 }
             )
@@ -261,13 +261,13 @@ struct SettingsView: View {
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())
-        .alert("Se déconnecter", isPresented: $showLogoutAlert) {
-            Button("Annuler", role: .cancel) { }
-            Button("Déconnexion", role: .destructive) {
+        .alert("Log Out", isPresented: $showLogoutAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Log Out", role: .destructive) {
                 logout()
             }
         } message: {
-            Text("Êtes-vous sûr de vouloir vous déconnecter ? Vous devrez vous reconnecter pour utiliser l'application.")
+            Text("Are you sure you want to log out? You will need to log back in to use the app.")
         }
     }
     
@@ -365,19 +365,19 @@ struct FilterToggleRow: View {
     private var filterDescription: String {
         switch filterType {
         case .reels:
-            return "Masque l'accès aux Reels dans la navigation"
+            return "Hides access to Reels in navigation"
         case .explore:
-            return "Masque la page Explorer et ses suggestions"
+            return "Hides the Explore page and its suggestions"
         case .stories:
-            return "Masque les stories en haut du feed principal"
+            return "Hides stories at the top of the main feed"
         case .suggestions:
-            return "Masque les suggestions de comptes à suivre"
+            return "Hides account suggestions to follow"
         case .likes:
-            return "Masque les compteurs de likes sur les posts"
+            return "Hides like counters on posts"
         case .following:
-            return "Force le mode Following et masque le bouton 'For you'"
+            return "Forces Following mode and hides the 'For you' button"
         case .messages:
-            return "Masque l'onglet Messages dans la navigation"
+            return "Hides the Messages tab in navigation"
         }
     }
 }
