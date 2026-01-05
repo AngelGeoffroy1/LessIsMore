@@ -8,20 +8,50 @@
 import Foundation
 import Combine
 import UIKit
+import SwiftUI
 
 class UsageTracker: ObservableObject {
     static let shared = UsageTracker()
 
+    enum UsageCategory: String, CaseIterable, Codable {
+        case feed = "Feed"
+        case reels = "Reels"
+        case stories = "Stories"
+        case messages = "Messages"
+        case explore = "Explore"
+        case other = "Other"
+        
+        var color: Color {
+            switch self {
+            case .feed: return .blue
+            case .reels: return Color(red: 0.98, green: 0.05, blue: 0.44) // Rose Insta
+            case .stories: return Color(red: 1.0, green: 0.60, blue: 0.0) // Orange Insta
+            case .messages: return .purple
+            case .explore: return .green
+            case .other: return .gray
+            }
+        }
+    }
+
+    struct WeeklyUsageData: Identifiable, Codable {
+        let id: UUID
+        let day: String
+        var categorySeconds: [String: Int] // Use String key for Codable compatibility
+        
+        var totalSeconds: Int {
+            categorySeconds.values.reduce(0, +)
+        }
+
+        init(day: String, seconds: Int = 0) {
+            self.id = UUID()
+            self.day = day
+            self.categorySeconds = [UsageCategory.feed.rawValue: seconds]
+        }
+    }
+
+    @Published var currentCategory: UsageCategory = .feed
     @Published var todayUsageSeconds: Int = 0
-    @Published var weeklyUsage: [WeeklyUsageData] = [
-        WeeklyUsageData(day: "Mon", seconds: 3600),
-        WeeklyUsageData(day: "Tue", seconds: 5400),
-        WeeklyUsageData(day: "Wed", seconds: 2400),
-        WeeklyUsageData(day: "Thu", seconds: 7200),
-        WeeklyUsageData(day: "Fri", seconds: 4500),
-        WeeklyUsageData(day: "Sat", seconds: 8000),
-        WeeklyUsageData(day: "Sun", seconds: 1200)
-    ]
+    @Published var weeklyUsage: [WeeklyUsageData] = []
 
     private var timer: Timer?
     private var isTracking = false
@@ -31,28 +61,35 @@ class UsageTracker: ObservableObject {
     private let lastDateKey = "usage_last_date"
 
     private init() {
-        loadTodayUsage()
+        initializeWeeklyUsage()
+        loadUsage()
         updateTodayInWeekly()
         setupNotifications()
         startTracking()
     }
 
+    private func initializeWeeklyUsage() {
+        let dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        weeklyUsage = dayNames.map { WeeklyUsageData(day: $0) }
+    }
+
     private func updateTodayInWeekly() {
-        let calendar = Calendar.current
-        let weekday = calendar.component(.weekday, from: Date())
-        let dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-        let currentDayName = dayNames[weekday - 1]
-        
+        let currentDayName = getCurrentDayName()
         if let index = weeklyUsage.firstIndex(where: { $0.day == currentDayName }) {
-            weeklyUsage[index].seconds = todayUsageSeconds
+            // This is just to sync the UI when loading, 
+            // the tracking logic already updates the specific categories.
+            todayUsageSeconds = weeklyUsage[index].totalSeconds
         }
     }
 
-    struct WeeklyUsageData: Identifiable {
-        let id = UUID()
-        let day: String
-        var seconds: Int
+    private func getCurrentDayName() -> String {
+        let calendar = Calendar.current
+        let weekday = calendar.component(.weekday, from: Date())
+        // Adjusting to Mon-Sun
+        let dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+        return dayNames[weekday - 1]
     }
+
 
     deinit {
         stopTracking()
@@ -86,29 +123,35 @@ class UsageTracker: ObservableObject {
 
     // MARK: - Private Methods
 
-    private func loadTodayUsage() {
+    private func loadUsage() {
         let savedDate = userDefaults.string(forKey: lastDateKey) ?? ""
         let today = currentDateString()
 
-        if savedDate == today {
-            todayUsageSeconds = userDefaults.integer(forKey: usageSecondsKey)
-        } else {
-            // Nouveau jour, reset du compteur
-            todayUsageSeconds = 0
-            userDefaults.set(0, forKey: usageSecondsKey)
-            userDefaults.set(today, forKey: lastDateKey)
+        // Load weekly data if exists
+        if let data = userDefaults.data(forKey: "weekly_usage_detailed"),
+           let decoded = try? JSONDecoder().decode([WeeklyUsageData].self, from: data) {
+            weeklyUsage = decoded
         }
+
+        if savedDate != today {
+            // New day: cleanup but keep weekly history (max 7 days logic would go here)
+            // For now we just reset the current day entry in weeklyUsage
+            let currentDayName = getCurrentDayName()
+            if let index = weeklyUsage.firstIndex(where: { $0.day == currentDayName }) {
+                weeklyUsage[index].categorySeconds = [:]
+            }
+            userDefaults.set(today, forKey: lastDateKey)
+            saveUsage()
+        }
+        
+        updateTodayInWeekly()
     }
 
     private func saveUsage() {
-        userDefaults.set(todayUsageSeconds, forKey: usageSecondsKey)
+        if let encoded = try? JSONEncoder().encode(weeklyUsage) {
+            userDefaults.set(encoded, forKey: "weekly_usage_detailed")
+        }
         userDefaults.set(currentDateString(), forKey: lastDateKey)
-    }
-
-    private func currentDateString() -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: Date())
     }
 
     private func setupNotifications() {
@@ -135,7 +178,7 @@ class UsageTracker: ObservableObject {
     }
 
     @objc private func appDidBecomeActive() {
-        loadTodayUsage() // Recharger au cas où le jour a changé
+        loadUsage() // Recharger au cas où le jour a changé
         startTracking()
     }
 
@@ -156,8 +199,14 @@ class UsageTracker: ObservableObject {
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             guard let self = self else { return }
             DispatchQueue.main.async {
-                self.todayUsageSeconds += 1
-                self.updateTodayInWeekly()
+                let currentDayName = self.getCurrentDayName()
+                if let index = self.weeklyUsage.firstIndex(where: { $0.day == currentDayName }) {
+                    let catKey = self.currentCategory.rawValue
+                    let currentVal = self.weeklyUsage[index].categorySeconds[catKey] ?? 0
+                    self.weeklyUsage[index].categorySeconds[catKey] = currentVal + 1
+                    
+                    self.todayUsageSeconds = self.weeklyUsage[index].totalSeconds
+                }
 
                 // Sauvegarder toutes les 30 secondes
                 if self.todayUsageSeconds % 30 == 0 {
@@ -171,5 +220,11 @@ class UsageTracker: ObservableObject {
         timer?.invalidate()
         timer = nil
         isTracking = false
+    }
+
+    private func currentDateString() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: Date())
     }
 }

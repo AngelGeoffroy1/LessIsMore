@@ -86,6 +86,7 @@ class WebViewManager: NSObject, ObservableObject {
         
         // Configuration pour permettre l'injection de JavaScript
         let userContentController = WKUserContentController()
+        userContentController.add(self, name: "lessIsMoreTracker")
         configuration.userContentController = userContentController
         
         // Injection du script dès le début du chargement (plus rapide)
@@ -281,6 +282,18 @@ extension WebViewManager: WKNavigationDelegate {
             handleError(.network())
         } else {
             handleError(.loadFailed())
+        }
+    }
+}
+
+// MARK: - WKScriptMessageHandler
+extension WebViewManager: WKScriptMessageHandler {
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        if message.name == "lessIsMoreTracker", let categoryName = message.body as? String {
+            if let category = UsageTracker.UsageCategory(rawValue: categoryName) {
+                print("Usage Tracker: Switched to category \(category)")
+                UsageTracker.shared.currentCategory = category
+            }
         }
     }
 }

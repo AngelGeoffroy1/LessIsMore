@@ -629,6 +629,57 @@ class ContentBlocker {
                 }
             });
             
+            // --- Tracker de catégorie ---
+            (function() {
+                const getCategory = () => {
+                    const path = window.location.pathname;
+                    const url = window.location.href;
+                    
+                    if (path === '/' || path.includes('/direct/') || path.includes('/p/')) {
+                        if (path.includes('/direct/')) return 'Messages';
+                        if (url.includes('variant=following') || path === '/' || path.includes('/p/')) return 'Feed';
+                    }
+                    if (path.includes('/reels/')) return 'Reels';
+                    if (path.includes('/stories/')) return 'Stories';
+                    if (path.includes('/explore/')) return 'Explore';
+                    
+                    return 'Other';
+                };
+
+                const reportCategory = () => {
+                    const category = getCategory();
+                    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.lessIsMoreTracker) {
+                        window.webkit.messageHandlers.lessIsMoreTracker.postMessage(category);
+                    }
+                };
+
+                // Observer les changements d'URL
+                let lastUrl = location.href;
+                const observer = new MutationObserver(() => {
+                    if (location.href !== lastUrl) {
+                        lastUrl = location.href;
+                        reportCategory();
+                    }
+                });
+                observer.observe(document, {subtree: true, childList: true});
+
+                // Overrides pour pushState et replaceState (SPA navigation)
+                const originalPushState = history.pushState;
+                const originalReplaceState = history.replaceState;
+                history.pushState = function() {
+                    originalPushState.apply(this, arguments);
+                    reportCategory();
+                };
+                history.replaceState = function() {
+                    originalReplaceState.apply(this, arguments);
+                    reportCategory();
+                };
+                window.addEventListener('popstate', reportCategory);
+
+                // Rapport initial
+                setTimeout(reportCategory, 1000);
+            })();
+
             console.log('LessIsMore: Bloqueur de contenu initialisé avec succès');
         })();
         """

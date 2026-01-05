@@ -75,7 +75,7 @@ struct ControlPanelView: View {
         VStack(alignment: .leading, spacing: 20) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("USE TIME")
+                    Text("TODAY USE")
                         .font(AppFonts.caption(10))
                         .foregroundColor(.secondary)
                         .tracking(1.5)
@@ -101,8 +101,8 @@ struct ControlPanelView: View {
             }
 
             // Graphique hebdomadaire
+            // Graphique hebdomadaire combiné
             WeeklyUsageChart(data: usageTracker.weeklyUsage)
-                .frame(height: 110)
         }
         .padding(.bottom, 10)
     }
@@ -323,8 +323,17 @@ struct WeeklyUsageChart: View {
     let data: [UsageTracker.WeeklyUsageData]
 
     private var maxUsage: Int {
-        let maxVal = data.map { $0.seconds }.max() ?? 3600
+        let maxVal = data.map { $0.totalSeconds }.max() ?? 3600
         return max(maxVal, 3600) // Minimum 1h pour l'échelle
+    }
+
+    private func formatSeconds(_ seconds: Int) -> String {
+        let hours = seconds / 3600
+        let minutes = (seconds % 3600) / 60
+        if hours > 0 {
+            return "\(hours)h"
+        }
+        return "\(minutes)m"
     }
 
     private var currentDayName: String {
@@ -334,30 +343,67 @@ struct WeeklyUsageChart: View {
         return dayNames[weekday - 1]
     }
 
+    private let chartHeight: CGFloat = 110
+
     var body: some View {
-        HStack(alignment: .bottom, spacing: 8) {
-            ForEach(data) { item in
-                VStack(spacing: 8) {
-                    // Bar
-                    ZStack(alignment: .bottom) {
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.primary.opacity(0.05))
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 80)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .bottom, spacing: 8) {
+                ForEach(data) { item in
+                    VStack(spacing: 8) {
+                        // Stacked Bar
+                        ZStack(alignment: .bottom) {
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color.primary.opacity(0.03))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: chartHeight)
 
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(item.day == currentDayName ? Color.blue : Color.primary.opacity(0.2))
-                            .frame(maxWidth: .infinity)
-                            .frame(height: CGFloat(item.seconds) / CGFloat(maxUsage) * 80)
+                            if item.totalSeconds == 0 {
+                                // Simulation Bar when no data - Randomized for realism
+                                let simulatedHeight: CGFloat = 8 + CGFloat(abs(item.day.hashValue % 15))
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color.primary.opacity(0.08))
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: simulatedHeight) 
+                            }
+
+                            VStack(spacing: 0) {
+                                ForEach(Array(UsageTracker.UsageCategory.allCases.reversed()), id: \.self) { category in
+                                    let seconds = item.categorySeconds[category.rawValue] ?? 0
+                                    if seconds > 0 && item.totalSeconds > 0 {
+                                        Rectangle()
+                                            .fill(category.color.opacity(item.day == currentDayName ? 1.0 : 0.4))
+                                            .frame(height: CGFloat(seconds) / CGFloat(item.totalSeconds) * chartHeight)
+                                    }
+                                }
+                            }
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                        }
+
+                        Text(item.day)
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundColor(item.day == currentDayName ? .primary : .secondary)
                     }
-
-                    Text(item.day)
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundColor(item.day == currentDayName ? .primary : .secondary)
                 }
             }
+            .frame(height: chartHeight + 20)
+
+            // Legend
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 15) {
+                    ForEach(UsageTracker.UsageCategory.allCases, id: \.self) { category in
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(category.color)
+                                .frame(width: 8, height: 8)
+                            Text(category.rawValue)
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+                .padding(.horizontal, 4)
+            }
         }
-        .frame(maxWidth: .infinity)
     }
 }
 
