@@ -1,10 +1,3 @@
-//
-//  SettingsView.swift
-//  LessIsMore
-//
-//  Created by Angel Geoffroy on 03/09/2025.
-//
-
 import SwiftUI
 import SuperwallKit
 
@@ -12,193 +5,174 @@ struct SettingsView: View {
     @ObservedObject var webViewManager: WebViewManager
     @ObservedObject var authManager: AuthenticationManager
     @ObservedObject var subscriptionManager: SubscriptionManager
-    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) var dismiss
     @State private var showLogoutAlert = false
-    @State private var scrollOffset: CGFloat = 0
-
-    private var headerOpacity: Double {
-        let threshold: CGFloat = 100
-        return max(0, min(1, 1 - (scrollOffset / threshold)))
-    }
-
-    private var headerOffset: CGFloat {
-        return min(0, -scrollOffset * 0.5)
-    }
+    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
-        NavigationView {
-            ZStack(alignment: .top) {
-                // Fond translucide
-                Color.clear
-                    .background(.ultraThinMaterial)
-                    .ignoresSafeArea()
+        ZStack {
+            // Translucent glassmorphism background
+            VisualEffectView(effect: UIBlurEffect(style: colorScheme == .dark ? .systemUltraThinMaterialDark : .systemUltraThinMaterialLight))
+                .opacity(0.4)
+                .ignoresSafeArea()
 
-                GeometryReader { geometry in
-                    ScrollView {
-                        VStack(spacing: 0) {
-                            // En-tête animé
-                            VStack(spacing: 16) {
-                                Image(systemName: "shield.checkerboard")
-                                    .font(.system(size: 50))
-                                    .foregroundColor(.blue)
+            VStack(spacing: 0) {
+                // Custom Header
+                headerView
 
-                                Text("LessIsMore")
-                                    .font(AppFonts.title())
-
-                                Text("Control your Instagram experience")
-                                    .font(AppFonts.subheadline())
-                                    .foregroundColor(.secondary)
-                                    .multilineTextAlignment(.center)
-                            }
-                            .padding(.top, 30)
-                            .padding(.horizontal)
-                            .opacity(headerOpacity)
-                            .offset(y: headerOffset)
-
-                            // Contenu
-                            LazyVStack(spacing: 16) {
-                                // Section des actions
-                                VStack(spacing: 12) {
-                                    Button(action: {
-                                        webViewManager.loadInstagram()
-                                    }) {
-                                        HStack {
-                                            Image(systemName: "arrow.clockwise")
-                                            Text("Reload Instagram")
-                                            Spacer()
-                                        }
-                                        .padding()
-                                        .background(Color.blue.opacity(0.1))
-                                        .foregroundColor(.blue)
-                                        .cornerRadius(10)
-                                    }
-
-                                    Button(action: {
-                                        resetAllFilters()
-                                    }) {
-                                        HStack {
-                                            Image(systemName: "arrow.counterclockwise")
-                                            Text("Reset Filters")
-                                            Spacer()
-                                        }
-                                        .padding()
-                                        .background(Color.red.opacity(0.1))
-                                        .foregroundColor(.red)
-                                        .cornerRadius(10)
-                                    }
-
-                                    Button(action: {
-                                        resetOnboarding()
-                                    }) {
-                                        HStack {
-                                            Image(systemName: "info.circle")
-                                            Text("Reset Onboarding")
-                                            Spacer()
-                                        }
-                                        .padding()
-                                        .background(Color.orange.opacity(0.1))
-                                        .foregroundColor(.orange)
-                                        .cornerRadius(10)
-                                    }
-                                    .buttonStyle(PlainButtonStyle())
-
-                                    Button(action: {
-                                        showLogoutAlert = true
-                                    }) {
-                                        HStack {
-                                            Image(systemName: "rectangle.portrait.and.arrow.right")
-                                            Text("Log Out")
-                                            Spacer()
-                                        }
-                                        .padding()
-                                        .background(Color.red.opacity(0.1))
-                                        .foregroundColor(.red)
-                                        .cornerRadius(10)
-                                    }
-                                    .buttonStyle(PlainButtonStyle())
-                                }
-                                .padding(.vertical, 16)
-                                .padding(.horizontal, 16)
-                                .background(Color(.systemGray6).opacity(0.5))
-                                .cornerRadius(12)
-
-                                // Section à propos
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("About")
-                                        .font(AppFonts.headline())
-
-                                    Text("LessIsMore helps you use Instagram more mindfully by hiding sources of distraction.")
-                                        .font(AppFonts.caption())
-                                        .foregroundColor(.secondary)
-
-                                    Text("• Reels: Hides access to short videos")
-                                        .font(AppFonts.caption2())
-                                        .foregroundColor(.secondary)
-
-                                    Text("• Explore: Hides the discovery page")
-                                        .font(AppFonts.caption2())
-                                        .foregroundColor(.secondary)
-
-                                    Text("• Stories: Hides stories at the top of the feed")
-                                        .font(AppFonts.caption2())
-                                        .foregroundColor(.secondary)
-
-                                    Text("• Likes: Hides like counters on posts")
-                                        .font(AppFonts.caption2())
-                                        .foregroundColor(.secondary)
-
-                                    Text("• Following: Forces Following-only mode")
-                                        .font(AppFonts.caption2())
-                                        .foregroundColor(.secondary)
-
-                                    Text("• Suggestions: Hides account suggestions")
-                                        .font(AppFonts.caption2())
-                                        .foregroundColor(.secondary)
-
-                                    Text("• Messages: Hides the Messages tab in navigation")
-                                        .font(AppFonts.caption2())
-                                        .foregroundColor(.secondary)
-                                }
-                                .padding(.vertical, 16)
-                                .padding(.horizontal, 16)
-                                .background(Color(.systemGray6).opacity(0.5))
-                                .cornerRadius(12)
-                                .padding(.bottom, 40)
-                            }
-                            .padding(.horizontal)
-                            .padding(.top, 30)
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 24) {
+                        // Premium Card
+                        if !subscriptionManager.isPremium {
+                            premiumCard
                         }
-                        .background(
-                            GeometryReader { scrollGeometry in
-                                Color.clear.preference(
-                                    key: ViewOffsetKey.self,
-                                    value: scrollGeometry.frame(in: .named("scroll")).minY
-                                )
+
+                        // App Settings Section
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("APP SETTINGS")
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundColor(.secondary)
+                                .padding(.leading, 16)
+
+                            VStack(spacing: 0) {
+                                SettingRow(icon: "arrow.clockwise", iconColor: .blue, title: "Reload Instagram") {
+                                    webViewManager.loadInstagram()
+                                    dismiss()
+                                }
+                                Divider().padding(.leading, 50)
+                                SettingRow(icon: "arrow.counterclockwise", iconColor: .red, title: "Reset All Filters") {
+                                    resetAllFilters()
+                                }
                             }
-                        )
+                            .background(Color.primary.opacity(0.05))
+                            .cornerRadius(16)
+                        }
+
+                        // Support & Info Section
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("SUPPORT")
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundColor(.primary.opacity(0.6))
+                                .padding(.leading, 16)
+
+                            VStack(spacing: 0) {
+                                SettingRow(icon: "info.circle", iconColor: .orange, title: "Reset Onboarding") {
+                                    authManager.resetOnboarding()
+                                    dismiss()
+                                }
+                                Divider().padding(.leading, 50)
+                                SettingRow(icon: "doc.text", iconColor: .gray, title: "About LessIsMore") {
+                                    // Could open a detail view or website
+                                }
+                            }
+                            .background(Color.primary.opacity(0.05))
+                            .cornerRadius(16)
+                        }
+
+                        // Account Section
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("ACCOUNT")
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundColor(.primary.opacity(0.6))
+                                .padding(.leading, 16)
+
+                            VStack(spacing: 0) {
+                                SettingRow(icon: "rectangle.portrait.and.arrow.right", iconColor: .red, title: "Log Out", showChevron: false) {
+                                    showLogoutAlert = true
+                                }
+                            }
+                            .background(Color.primary.opacity(0.05))
+                            .cornerRadius(16)
+                        }
+
+                        // footer text
+                        Text("Version 1.0.0")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary.opacity(0.5))
+                            .padding(.top, 10)
                     }
-                    .coordinateSpace(name: "scroll")
-                    .onPreferenceChange(ViewOffsetKey.self) { value in
-                        scrollOffset = -value
-                    }
+                    .padding(16)
                 }
             }
-            .navigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(
-                trailing: Button("Close") {
-                    presentationMode.wrappedValue.dismiss()
-                }
-            )
         }
-        .navigationViewStyle(StackNavigationViewStyle())
+        .navigationBarHidden(true)
+        .background(Color.clear)
         .alert("Log Out", isPresented: $showLogoutAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Log Out", role: .destructive) {
-                logout()
+                authManager.logout()
+                dismiss()
             }
         } message: {
             Text("Are you sure you want to log out? You will need to log back in to use the app.")
+        }
+    }
+
+    // MARK: - Components
+
+    private var headerView: some View {
+        HStack {
+            Button(action: { dismiss() }) {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.white)
+                    .frame(width: 40, height: 40)
+                    .background(Circle().fill(Color.white.opacity(0.1)))
+            }
+
+            Spacer()
+
+            Text("Settings")
+                .font(.system(size: 18, weight: .bold))
+                .foregroundColor(.white)
+
+            Spacer()
+
+            // Balance the header
+            Spacer().frame(width: 40)
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 20)
+        .padding(.bottom, 10)
+    }
+
+    private var premiumCard: some View {
+        Button(action: {
+            Superwall.shared.register(placement: "settings_premium")
+        }) {
+            HStack(spacing: 16) {
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Upgrade to Pro")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(.white)
+
+                    Text("Unlock all features and detailed statistics.")
+                        .font(.system(size: 13))
+                        .foregroundColor(.white.opacity(0.8))
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.white.opacity(0.5))
+            }
+            .padding(20)
+            .background(
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.98, green: 0.05, blue: 0.44), // Rose
+                        Color(red: 0.73, green: 0.20, blue: 0.82), // Violet
+                        Color(red: 1.0, green: 0.60, blue: 0.0)    // Orange
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .cornerRadius(24)
         }
     }
 
@@ -207,27 +181,65 @@ struct SettingsView: View {
             filterType.setEnabled(false)
         }
         webViewManager.applyAllSavedFilters()
-    }
-
-    private func resetOnboarding() {
-        authManager.resetOnboarding()
-        presentationMode.wrappedValue.dismiss()
-    }
-
-    private func logout() {
-        authManager.logout()
-        presentationMode.wrappedValue.dismiss()
+        dismiss()
     }
 }
 
-struct ViewOffsetKey: PreferenceKey {
-    typealias Value = CGFloat
-    static var defaultValue = CGFloat.zero
-    static func reduce(value: inout Value, nextValue: () -> Value) {
-        value += nextValue()
+struct SettingRow: View {
+    let icon: String
+    let iconColor: Color
+    let title: String
+    var subTitle: String? = nil
+    var showChevron: Bool = true
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 16) {
+                // Icon
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(iconColor.opacity(0.15))
+                        .frame(width: 34, height: 34)
+                    
+                    Image(systemName: icon)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(iconColor)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.primary)
+                    
+                    if let sub = subTitle {
+                        Text(sub)
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                if showChevron {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.secondary.opacity(0.5))
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .contentShape(Rectangle())
+        }
     }
 }
 
 #Preview {
-    SettingsView(webViewManager: WebViewManager(), authManager: AuthenticationManager(), subscriptionManager: SubscriptionManager())
+    SettingsView(
+        webViewManager: WebViewManager(),
+        authManager: AuthenticationManager(),
+        subscriptionManager: SubscriptionManager()
+    )
+    .preferredColorScheme(.dark)
 }
+

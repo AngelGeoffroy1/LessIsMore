@@ -121,6 +121,25 @@ class UsageTracker: ObservableObject {
         return "\(minutes)m"
     }
 
+    /// Returns the percentage difference compared to yesterday.
+    /// Positive means more usage today, negative means less.
+    func getComparisonToYesterday() -> Double {
+        let calendar = Calendar.current
+        guard let yesterdayDate = calendar.date(byAdding: .day, value: -1, to: Date()) else { return 0 }
+        
+        let weekday = calendar.component(.weekday, from: yesterdayDate)
+        let dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+        let yesterdayDayName = dayNames[weekday - 1]
+        
+        guard let yesterdayData = weeklyUsage.first(where: { $0.day == yesterdayDayName }) else { return 0 }
+        
+        let yesterdaySeconds = yesterdayData.totalSeconds
+        if yesterdaySeconds == 0 { return 0 }
+        
+        let diff = Double(todayUsageSeconds - yesterdaySeconds)
+        return (diff / Double(yesterdaySeconds)) * 100
+    }
+
     // MARK: - Private Methods
 
     private func loadUsage() {

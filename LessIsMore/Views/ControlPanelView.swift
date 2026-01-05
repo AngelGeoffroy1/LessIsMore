@@ -80,9 +80,14 @@ struct ControlPanelView: View {
                         .foregroundColor(.secondary)
                         .tracking(1.5)
 
-                    Text(usageTracker.formattedTimeShort)
-                        .font(.system(size: 42, weight: .bold, design: .rounded))
-                        .foregroundColor(.primary)
+                    HStack(alignment: .lastTextBaseline, spacing: 12) {
+                        Text(usageTracker.formattedTimeShort)
+                            .font(.system(size: 42, weight: .bold, design: .rounded))
+                            .foregroundColor(.primary)
+                        
+                        // Trend Badge
+                        trendBadge
+                    }
                 }
 
                 Spacer()
@@ -105,6 +110,35 @@ struct ControlPanelView: View {
             WeeklyUsageChart(data: usageTracker.weeklyUsage)
         }
         .padding(.bottom, 10)
+    }
+
+    private var trendBadge: some View {
+        let diff = usageTracker.getComparisonToYesterday()
+        let isZero = Int(diff) == 0
+        let isLower = diff < 0
+        
+        let color: Color = isZero ? .secondary : (isLower ? .green : .red)
+        let icon = isZero ? "minus" : (isLower ? "arrow.down" : "arrow.up")
+        
+        return HStack(spacing: 6) {
+            // Icon in a circle with "transparent" (cutout) icon
+            ZStack {
+                Circle()
+                    .fill(color)
+                    .frame(width: 18, height: 18)
+                
+                Image(systemName: icon)
+                    .font(.system(size: 9, weight: .black))
+                    .foregroundColor(.white)
+                    .blendMode(.destinationOut)
+            }
+            .compositingGroup()
+            
+            Text("\(abs(Int(diff)))%")
+                .font(AppFonts.body(14))
+                .foregroundColor(color)
+        }
+        .padding(.bottom, 6)
     }
 
     // MARK: - Basic Filters Section
@@ -336,6 +370,7 @@ struct WeeklyUsageChart: View {
         return "\(minutes)m"
     }
 
+
     private var currentDayName: String {
         let calendar = Calendar.current
         let weekday = calendar.component(.weekday, from: Date())
@@ -460,13 +495,3 @@ struct FilterRow: View {
     )
 }
 
-// MARK: - Visual Effect View Helper
-struct VisualEffectView: UIViewRepresentable {
-    var effect: UIVisualEffect?
-    func makeUIView(context: Context) -> UIVisualEffectView {
-        UIVisualEffectView(effect: effect)
-    }
-    func updateUIView(_ uiView: UIVisualEffectView, context: Context) {
-        uiView.effect = effect
-    }
-}
