@@ -55,7 +55,7 @@ struct InstagramWebViewContainer: View {
             )
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.hidden)
-            .presentationBackground(.thinMaterial)
+            .presentationBackground(.clear)
         }
         .alert(
             webViewManager.currentError?.title ?? "Erreur",

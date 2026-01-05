@@ -13,6 +13,15 @@ class UsageTracker: ObservableObject {
     static let shared = UsageTracker()
 
     @Published var todayUsageSeconds: Int = 0
+    @Published var weeklyUsage: [WeeklyUsageData] = [
+        WeeklyUsageData(day: "Mon", seconds: 3600),
+        WeeklyUsageData(day: "Tue", seconds: 5400),
+        WeeklyUsageData(day: "Wed", seconds: 2400),
+        WeeklyUsageData(day: "Thu", seconds: 7200),
+        WeeklyUsageData(day: "Fri", seconds: 4500),
+        WeeklyUsageData(day: "Sat", seconds: 8000),
+        WeeklyUsageData(day: "Sun", seconds: 1200)
+    ]
 
     private var timer: Timer?
     private var isTracking = false
@@ -23,8 +32,26 @@ class UsageTracker: ObservableObject {
 
     private init() {
         loadTodayUsage()
+        updateTodayInWeekly()
         setupNotifications()
         startTracking()
+    }
+
+    private func updateTodayInWeekly() {
+        let calendar = Calendar.current
+        let weekday = calendar.component(.weekday, from: Date())
+        let dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+        let currentDayName = dayNames[weekday - 1]
+        
+        if let index = weeklyUsage.firstIndex(where: { $0.day == currentDayName }) {
+            weeklyUsage[index].seconds = todayUsageSeconds
+        }
+    }
+
+    struct WeeklyUsageData: Identifiable {
+        let id = UUID()
+        let day: String
+        var seconds: Int
     }
 
     deinit {
@@ -130,6 +157,7 @@ class UsageTracker: ObservableObject {
             guard let self = self else { return }
             DispatchQueue.main.async {
                 self.todayUsageSeconds += 1
+                self.updateTodayInWeekly()
 
                 // Sauvegarder toutes les 30 secondes
                 if self.todayUsageSeconds % 30 == 0 {
