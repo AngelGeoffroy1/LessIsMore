@@ -20,6 +20,7 @@ protocol PersistenceServiceProtocol {
 enum PersistenceKey: String {
     case isAuthenticated
     case hasSeenOnboarding
+    case hasSeenSwipeTutorial
 
     // Préfixe pour les filtres
     static func filter(_ filterType: String) -> String {
@@ -70,6 +71,11 @@ final class PersistenceService: PersistenceServiceProtocol {
         set { setBool(newValue, forKey: PersistenceKey.hasSeenOnboarding.rawValue) }
     }
 
+    var hasSeenSwipeTutorial: Bool {
+        get { getBool(forKey: PersistenceKey.hasSeenSwipeTutorial.rawValue) }
+        set { setBool(newValue, forKey: PersistenceKey.hasSeenSwipeTutorial.rawValue) }
+    }
+
     func isFilterEnabled(_ filterType: String) -> Bool {
         return getBool(forKey: PersistenceKey.filter(filterType))
     }
@@ -90,6 +96,7 @@ final class PersistenceService: PersistenceServiceProtocol {
     func resetAll() {
         setBool(false, forKey: PersistenceKey.isAuthenticated.rawValue)
         setBool(false, forKey: PersistenceKey.hasSeenOnboarding.rawValue)
+        setBool(false, forKey: PersistenceKey.hasSeenSwipeTutorial.rawValue)
         resetAllFilters()
     }
 }

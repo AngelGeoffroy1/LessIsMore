@@ -8,6 +8,96 @@
 import SwiftUI
 import WebKit
 
+// MARK: - Swipe Tutorial Overlay
+
+struct SwipeTutorialOverlay: View {
+    @Binding var isVisible: Bool
+    @State private var handOffset: CGFloat = 0
+    @State private var handOpacity: Double = 1
+    @Environment(\.colorScheme) var colorScheme
+
+    var body: some View {
+        ZStack {
+            // Fond semi-transparent
+            Color.black.opacity(0.5)
+                .ignoresSafeArea()
+
+            VStack(spacing: 24) {
+                // Zone d'animation de la main
+                VStack(spacing: 16) {
+                    // Indicateur de la zone de swipe (replica du header)
+                    Capsule()
+                        .fill(Color.white.opacity(0.4))
+                        .frame(width: 36, height: 4)
+
+                    // Main animée
+                    Image(systemName: "hand.point.up.fill")
+                        .font(.system(size: 44))
+                        .foregroundColor(.white)
+                        .offset(y: handOffset)
+                        .opacity(handOpacity)
+                }
+                .padding(.top, 40)
+
+                // Texte explicatif
+                VStack(spacing: 8) {
+                    Text("Swipe down to open controls")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.white)
+
+                    Text("Access filters and settings")
+                        .font(.system(size: 14))
+                        .foregroundColor(.white.opacity(0.7))
+                }
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+
+                Spacer()
+
+                // Bouton pour fermer
+                Button(action: dismissTutorial) {
+                    Text("Got it!")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.black)
+                        .padding(.horizontal, 32)
+                        .padding(.vertical, 14)
+                        .background(Color.white)
+                        .clipShape(Capsule())
+                }
+                .padding(.bottom, 60)
+            }
+        }
+        .onAppear {
+            startAnimation()
+        }
+        .onTapGesture {
+            dismissTutorial()
+        }
+    }
+
+    private func startAnimation() {
+        // Animation continue de la main qui swipe vers le bas
+        withAnimation(
+            Animation.easeInOut(duration: 1.0)
+                .repeatForever(autoreverses: true)
+        ) {
+            handOffset = 30
+        }
+    }
+
+    private func dismissTutorial() {
+        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+        impactFeedback.impactOccurred()
+
+        withAnimation(.easeOut(duration: 0.3)) {
+            isVisible = false
+        }
+
+        // Sauvegarder que l'utilisateur a vu le tutoriel
+        PersistenceService.shared.hasSeenSwipeTutorial = true
+    }
+}
+
 struct InstagramWebView: UIViewRepresentable {
     @ObservedObject var webViewManager: WebViewManager
 
@@ -26,25 +116,53 @@ struct InstagramWebViewContainer: View {
     @ObservedObject var authManager: AuthenticationManager
     @ObservedObject var subscriptionManager: SubscriptionManager
     @State private var showControlPanel = false
+    @State private var showSwipeTutorial = false
     @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Header avec indicateur pour ouvrir le panneau
-            HeaderSwipeZone(showControlPanel: $showControlPanel)
+        ZStack {
+            VStack(spacing: 0) {
+                // Header avec indicateur pour ouvrir le panneau
+                HeaderSwipeZone(showControlPanel: $showControlPanel)
 
-            // Barre de progression
-            if webViewManager.isLoading {
-                ProgressView()
-                    .progressViewStyle(LinearProgressViewStyle())
-                    .frame(height: 2)
+                // Barre de progression
+                if webViewManager.isLoading {
+                    ProgressView()
+                        .progressViewStyle(LinearProgressViewStyle())
+                        .frame(height: 2)
+                }
+
+                // WebView Instagram
+                InstagramWebView(webViewManager: webViewManager)
+                    .onAppear {
+                        webViewManager.loadInstagram()
+                    }
             }
 
-            // WebView Instagram
-            InstagramWebView(webViewManager: webViewManager)
-                .onAppear {
-                    webViewManager.loadInstagram()
+            // Overlay de tutoriel pour le premier lancement
+            if showSwipeTutorial {
+                SwipeTutorialOverlay(isVisible: $showSwipeTutorial)
+                    .transition(.opacity)
+                    .zIndex(100)
+            }
+        }
+        .onAppear {
+            // Afficher le tutoriel seulement si l'utilisateur ne l'a jamais vu
+            if !PersistenceService.shared.hasSeenSwipeTutorial {
+                // Petit délai pour laisser le temps au feed de charger
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    withAnimation(.easeIn(duration: 0.3)) {
+                        showSwipeTutorial = true
+                    }
                 }
+            }
+        }
+        .onChange(of: showControlPanel) { _, isOpen in
+            // Si l'utilisateur ouvre le control panel, masquer le tutoriel
+            if isOpen && showSwipeTutorial {
+                showSwipeTutorial = false
+                PersistenceService.shared.hasSeenSwipeTutorial = true
+            }
         }
         .background(colorScheme == .dark ? Color(red: 11/255, green: 16/255, blue: 20/255) : Color.white)
         .ignoresSafeArea(edges: .bottom)

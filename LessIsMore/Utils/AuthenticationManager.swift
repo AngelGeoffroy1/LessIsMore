@@ -32,6 +32,7 @@ class AuthenticationManager: ObservableObject {
     func logout() {
         isAuthenticated = false
         hasSeenOnboarding = false
+        persistence.hasSeenSwipeTutorial = false
     }
 
     func login() {
@@ -44,5 +45,6 @@ class AuthenticationManager: ObservableObject {
 
     func resetOnboarding() {
         hasSeenOnboarding = false
+        persistence.hasSeenSwipeTutorial = false
     }
 }
