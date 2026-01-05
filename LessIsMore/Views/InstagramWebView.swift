@@ -51,6 +51,7 @@ struct InstagramWebViewContainer: View {
         .sheet(isPresented: $showControlPanel) {
             ControlPanelView(
                 webViewManager: webViewManager,
+                authManager: authManager,
                 subscriptionManager: subscriptionManager
             )
             .presentationDetents([.medium, .large])

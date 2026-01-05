@@ -10,6 +10,7 @@ import SuperwallKit
 
 struct ControlPanelView: View {
     @ObservedObject var webViewManager: WebViewManager
+    @ObservedObject var authManager: AuthenticationManager
     @ObservedObject var subscriptionManager: SubscriptionManager
     @StateObject private var usageTracker = UsageTracker.shared
     @Environment(\.dismiss) var dismiss
@@ -20,8 +21,9 @@ struct ControlPanelView: View {
 
     var body: some View {
         ZStack {
-            // Force Glassmorphism
-            VisualEffectView(effect: UIBlurEffect(style: colorScheme == .dark ? .systemThinMaterialDark : .systemThinMaterialLight))
+            // Force Glassmorphism - Extreme transparency
+            VisualEffectView(effect: UIBlurEffect(style: colorScheme == .dark ? .systemUltraThinMaterialDark : .systemUltraThinMaterialLight))
+                .opacity(0.4)
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
@@ -57,6 +59,13 @@ struct ControlPanelView: View {
         .background(Color.clear)
         .onAppear {
             loadFilterStates()
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView(
+                webViewManager: webViewManager,
+                authManager: authManager,
+                subscriptionManager: subscriptionManager
+            )
         }
     }
 
@@ -101,28 +110,59 @@ struct ControlPanelView: View {
     // MARK: - Basic Filters Section
 
     private var basicFiltersSection: some View {
-        VStack(spacing: 0) {
-            FilterRow(
-                title: "Hide Reels",
-                isEnabled: binding(for: .reels),
-                isLocked: false
-            )
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Content")
+                    .font(AppFonts.subheadline())
+                    .foregroundColor(.secondary)
 
-            Divider()
-                .padding(.leading, 16)
+                if !subscriptionManager.isPremium {
+                    Text("Pro")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(
+                            LinearGradient(
+                                colors: [
+                                    Color(red: 0.98, green: 0.05, blue: 0.44), // Rose
+                                    Color(red: 0.73, green: 0.20, blue: 0.82), // Violet
+                                    Color(red: 1.0, green: 0.60, blue: 0.0)    // Orange
+                                ],
+                                startPoint: .topTrailing,
+                                endPoint: .bottomLeading
+                            )
+                        )
+                        .cornerRadius(6)
+                }
+            }
+            .padding(.leading, 4)
 
-            FilterRow(
-                title: "Hide Stories",
-                isEnabled: binding(for: .stories),
-                isLocked: false
+            VStack(spacing: 0) {
+                FilterRow(
+                    title: "Hide Reels",
+                    isEnabled: binding(for: .reels),
+                    isLocked: !subscriptionManager.isPremium,
+                    onLockedTap: showPaywall
+                )
+
+                Divider()
+                    .padding(.leading, 16)
+
+                FilterRow(
+                    title: "Hide Stories",
+                    isEnabled: binding(for: .stories),
+                    isLocked: !subscriptionManager.isPremium,
+                    onLockedTap: showPaywall
+                )
+            }
+            .background(Color.primary.opacity(0.06))
+            .cornerRadius(14)
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(Color.primary.opacity(0.05), lineWidth: 0.5)
             )
         }
-        .background(Color.primary.opacity(0.06))
-        .cornerRadius(14)
-        .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(Color.primary.opacity(0.05), lineWidth: 0.5)
-        )
     }
 
     // MARK: - Algorithm Section (Premium)
@@ -135,12 +175,22 @@ struct ControlPanelView: View {
                     .foregroundColor(.secondary)
 
                 if !subscriptionManager.isPremium {
-                    Text("Super")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.orange)
+                    Text("Pro")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.white)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
-                        .background(Color.orange.opacity(0.2))
+                        .background(
+                            LinearGradient(
+                                colors: [
+                                    Color(red: 0.98, green: 0.05, blue: 0.44),
+                                    Color(red: 0.73, green: 0.20, blue: 0.82),
+                                    Color(red: 1.0, green: 0.60, blue: 0.0)
+                                ],
+                                startPoint: .topTrailing,
+                                endPoint: .bottomLeading
+                            )
+                        )
                         .cornerRadius(6)
                 }
             }
@@ -203,12 +253,22 @@ struct ControlPanelView: View {
                     .foregroundColor(.secondary)
 
                 if !subscriptionManager.isPremium {
-                    Text("Super")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.orange)
+                    Text("Pro")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.white)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
-                        .background(Color.orange.opacity(0.2))
+                        .background(
+                            LinearGradient(
+                                colors: [
+                                    Color(red: 0.98, green: 0.05, blue: 0.44),
+                                    Color(red: 0.73, green: 0.20, blue: 0.82),
+                                    Color(red: 1.0, green: 0.60, blue: 0.0)
+                                ],
+                                startPoint: .topTrailing,
+                                endPoint: .bottomLeading
+                            )
+                        )
                         .cornerRadius(6)
                 }
             }
@@ -349,6 +409,7 @@ struct FilterRow: View {
 #Preview {
     ControlPanelView(
         webViewManager: WebViewManager(),
+        authManager: AuthenticationManager(),
         subscriptionManager: SubscriptionManager()
     )
 }
