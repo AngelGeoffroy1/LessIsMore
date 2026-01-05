@@ -10,12 +10,12 @@ import WebKit
 
 struct InstagramWebView: UIViewRepresentable {
     @ObservedObject var webViewManager: WebViewManager
-    
+
     func makeUIView(context: Context) -> WKWebView {
         let webView = webViewManager.setupWebView()
         return webView
     }
-    
+
     func updateUIView(_ uiView: WKWebView, context: Context) {
         // Pas de mise à jour nécessaire pour le moment
     }
@@ -25,89 +25,37 @@ struct InstagramWebViewContainer: View {
     @ObservedObject var webViewManager: WebViewManager
     @ObservedObject var authManager: AuthenticationManager
     @ObservedObject var subscriptionManager: SubscriptionManager
-    @StateObject private var statisticsManager = StatisticsManager.shared
-    @State private var showSettings = false
-    @State private var showStatistics = false
+    @State private var showControlPanel = false
     @Environment(\.colorScheme) var colorScheme
-    
-    // Couleur adaptée au thème Instagram
-    private var instagramHeaderColor: Color {
-        colorScheme == .dark ? Color.black : Color.white
-    }
-    
-    // Couleur des icônes adaptée au thème
-    private var iconColor: Color {
-        colorScheme == .dark ? Color.white : Color.black
-    }
-    
+
     var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
-                // Barre de navigation personnalisée
-                HStack {
-                    Button(action: {
-                        // Actualisation via JavaScript pour éviter la double actualisation
-                        webViewManager.webView?.evaluateJavaScript("window.location.reload();", completionHandler: nil)
-                    }) {
-                        Image(systemName: "arrow.clockwise")
-                            .foregroundColor(iconColor)
-                            .frame(width: 44, height: 44)
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    
-                    Spacer()
-                    
-                    Text("LessIsMore")
-                        .font(AppFonts.caption())
-                        .foregroundColor(iconColor.opacity(0.4))
-                    
-                    Spacer()
-                    
-                    // Bouton Settings
-                    Button(action: {
-                        showSettings = true
-                    }) {
-                        Image(systemName: "gearshape.fill")
-                            .foregroundColor(iconColor)
-                            .frame(width: 44, height: 44)
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    
-                    // Bouton Statistiques
-                    Button(action: {
-                        showStatistics = true
-                    }) {
-                        Image(systemName: "chart.bar.fill")
-                            .foregroundColor(iconColor)
-                            .frame(width: 44, height: 44)
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                }
-                .padding(.horizontal)
-                .padding(.vertical, 8)
-                .background(instagramHeaderColor)
-                
-                // Barre de progression
-                if webViewManager.isLoading {
-                    ProgressView()
-                        .progressViewStyle(LinearProgressViewStyle())
-                        .frame(height: 2)
-                }
-                
-                // WebView Instagram
-                InstagramWebView(webViewManager: webViewManager)
-                    .onAppear {
-                        webViewManager.loadInstagram()
-                    }
+        VStack(spacing: 0) {
+            // Header avec indicateur pour ouvrir le panneau
+            HeaderSwipeZone(showControlPanel: $showControlPanel)
+
+            // Barre de progression
+            if webViewManager.isLoading {
+                ProgressView()
+                    .progressViewStyle(LinearProgressViewStyle())
+                    .frame(height: 2)
             }
+
+            // WebView Instagram
+            InstagramWebView(webViewManager: webViewManager)
+                .onAppear {
+                    webViewManager.loadInstagram()
+                }
         }
-        .navigationViewStyle(StackNavigationViewStyle())
-        .navigationBarHidden(true)
-        .sheet(isPresented: $showSettings) {
-            SettingsView(webViewManager: webViewManager, authManager: authManager, subscriptionManager: subscriptionManager)
-        }
-        .sheet(isPresented: $showStatistics) {
-            StatisticsView()
+        .background(colorScheme == .dark ? Color(red: 11/255, green: 16/255, blue: 20/255) : Color.white)
+        .ignoresSafeArea(edges: .bottom)
+        .sheet(isPresented: $showControlPanel) {
+            ControlPanelView(
+                webViewManager: webViewManager,
+                subscriptionManager: subscriptionManager
+            )
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.hidden)
+            .presentationBackground(.thinMaterial)
         }
         .alert(
             webViewManager.currentError?.title ?? "Erreur",
@@ -132,6 +80,53 @@ struct InstagramWebViewContainer: View {
     }
 }
 
+// MARK: - Header Swipe Zone
+
+struct HeaderSwipeZone: View {
+    @Binding var showControlPanel: Bool
+    @Environment(\.colorScheme) var colorScheme
+
+    // Couleur exacte du background Instagram dark mode (#0b1014)
+    private let instagramDarkBg = Color(red: 11/255, green: 16/255, blue: 20/255)
+
+    var body: some View {
+        // Zone en haut avec indicateur
+        VStack {
+            Spacer()
+
+            Capsule()
+                .fill(colorScheme == .dark ? Color.white.opacity(0.25) : Color.black.opacity(0.15))
+                .frame(width: 36, height: 4)
+                .padding(.bottom, 6)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 28)
+        .background(colorScheme == .dark ? instagramDarkBg : Color.white)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            openPanel()
+        }
+        .gesture(
+            DragGesture()
+                .onEnded { value in
+                    if value.translation.height > 30 {
+                        openPanel()
+                    }
+                }
+        )
+    }
+
+    private func openPanel() {
+        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+        impactFeedback.impactOccurred()
+        showControlPanel = true
+    }
+}
+
 #Preview {
-    InstagramWebViewContainer(webViewManager: WebViewManager(), authManager: AuthenticationManager(), subscriptionManager: SubscriptionManager())
+    InstagramWebViewContainer(
+        webViewManager: WebViewManager(),
+        authManager: AuthenticationManager(),
+        subscriptionManager: SubscriptionManager()
+    )
 }

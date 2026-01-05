@@ -14,19 +14,17 @@ struct SettingsView: View {
     @ObservedObject var subscriptionManager: SubscriptionManager
     @Environment(\.presentationMode) var presentationMode
     @State private var showLogoutAlert = false
-
-    @State private var filterStates: [FilterType: Bool] = [:]
     @State private var scrollOffset: CGFloat = 0
-    
+
     private var headerOpacity: Double {
         let threshold: CGFloat = 100
         return max(0, min(1, 1 - (scrollOffset / threshold)))
     }
-    
+
     private var headerOffset: CGFloat {
         return min(0, -scrollOffset * 0.5)
     }
-    
+
     var body: some View {
         NavigationView {
             ZStack(alignment: .top) {
@@ -56,73 +54,9 @@ struct SettingsView: View {
                             .padding(.horizontal)
                             .opacity(headerOpacity)
                             .offset(y: headerOffset)
-                            
-                            // Contenu des filtres
+
+                            // Contenu
                             LazyVStack(spacing: 16) {
-                                // Section des filtres
-                                VStack(alignment: .leading, spacing: 12) {
-                                    HStack {
-                                        Text("Content Filters")
-                                            .font(AppFonts.headline())
-
-                                        if !subscriptionManager.isPremium {
-                                            Image(systemName: "crown.fill")
-                                                .foregroundColor(.orange)
-                                                .font(.caption)
-                                        }
-                                    }
-                                    .padding(.horizontal, 4)
-
-                                    if !subscriptionManager.isPremium {
-                                        HStack {
-                                            Image(systemName: "lock.fill")
-                                                .foregroundColor(.orange)
-                                            Text("Go Premium to unlock all filters")
-                                                .font(AppFonts.caption())
-                                                .foregroundColor(.secondary)
-                                            Spacer()
-                                            Button(action: {
-                                                subscriptionManager.showPaywall()
-                                            }) {
-                                                Text("Premium")
-                                                    .font(AppFonts.caption())
-                                                    .foregroundColor(.white)
-                                                    .padding(.horizontal, 12)
-                                                    .padding(.vertical, 6)
-                                                    .background(Color.orange)
-                                                    .cornerRadius(8)
-                                            }
-                                        }
-                                        .padding(.horizontal, 4)
-                                        .padding(.vertical, 8)
-                                        .background(Color.orange.opacity(0.1))
-                                        .cornerRadius(8)
-                                    }
-
-                                    ForEach(FilterType.allCases, id: \.rawValue) { filterType in
-                                        FilterToggleRow(
-                                            filterType: filterType,
-                                            isEnabled: Binding(
-                                                get: { filterStates[filterType] ?? false },
-                                                set: { newValue in
-                                                    filterStates[filterType] = newValue
-                                                    filterType.setEnabled(newValue)
-                                                    webViewManager.toggleFilter(filterType)
-                                                }
-                                            ),
-                                            isLocked: !subscriptionManager.isPremium,
-                                            onLockedTap: {
-                                                // Ouvrir le paywall Superwall
-                                                Superwall.shared.register(placement: "settings_premium")
-                                            }
-                                        )
-                                    }
-                                }
-                                .padding(.vertical, 16)
-                                .padding(.horizontal, 16)
-                                .background(Color(.systemGray6).opacity(0.5))
-                                .cornerRadius(12)
-                                
                                 // Section des actions
                                 VStack(spacing: 12) {
                                     Button(action: {
@@ -138,7 +72,7 @@ struct SettingsView: View {
                                         .foregroundColor(.blue)
                                         .cornerRadius(10)
                                     }
-                                    
+
                                     Button(action: {
                                         resetAllFilters()
                                     }) {
@@ -152,7 +86,7 @@ struct SettingsView: View {
                                         .foregroundColor(.red)
                                         .cornerRadius(10)
                                     }
-                                    
+
                                     Button(action: {
                                         resetOnboarding()
                                     }) {
@@ -167,7 +101,7 @@ struct SettingsView: View {
                                         .cornerRadius(10)
                                     }
                                     .buttonStyle(PlainButtonStyle())
-                                    
+
                                     Button(action: {
                                         showLogoutAlert = true
                                     }) {
@@ -187,7 +121,7 @@ struct SettingsView: View {
                                 .padding(.horizontal, 16)
                                 .background(Color(.systemGray6).opacity(0.5))
                                 .cornerRadius(12)
-                                
+
                                 // Section à propos
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("About")
@@ -256,9 +190,6 @@ struct SettingsView: View {
                     presentationMode.wrappedValue.dismiss()
                 }
             )
-            .onAppear {
-                loadFilterStates()
-            }
         }
         .navigationViewStyle(StackNavigationViewStyle())
         .alert("Log Out", isPresented: $showLogoutAlert) {
@@ -270,115 +201,22 @@ struct SettingsView: View {
             Text("Are you sure you want to log out? You will need to log back in to use the app.")
         }
     }
-    
-    private func loadFilterStates() {
-        for filterType in FilterType.allCases {
-            filterStates[filterType] = filterType.isEnabled
-        }
-    }
-    
+
     private func resetAllFilters() {
         for filterType in FilterType.allCases {
-            filterStates[filterType] = false
             filterType.setEnabled(false)
         }
-        // Appliquer tous les filtres en une fois
         webViewManager.applyAllSavedFilters()
     }
-    
+
     private func resetOnboarding() {
-        // Réinitialiser l'onboarding via l'AuthenticationManager
         authManager.resetOnboarding()
-        
-        // Fermer la vue des paramètres
         presentationMode.wrappedValue.dismiss()
     }
-    
+
     private func logout() {
-        // Déconnexion via l'AuthenticationManager
         authManager.logout()
-        
-        // Fermer la vue des paramètres
         presentationMode.wrappedValue.dismiss()
-    }
-}
-
-struct FilterToggleRow: View {
-    let filterType: FilterType
-    @Binding var isEnabled: Bool
-    var isLocked: Bool = false
-    var onLockedTap: (() -> Void)?
-
-    var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 4) {
-                    Text(filterType.displayName)
-                        .font(AppFonts.body())
-
-                    if isLocked {
-                        Image(systemName: "lock.fill")
-                            .font(.caption2)
-                            .foregroundColor(.orange)
-                    }
-                }
-
-                Text(filterDescription)
-                    .font(AppFonts.caption())
-                    .foregroundColor(.secondary)
-            }
-
-            Spacer()
-
-            if isLocked {
-                // Toggle factice qui ouvre le paywall au tap
-                Toggle("", isOn: .constant(false))
-                    .toggleStyle(SwitchToggleStyle(tint: .blue))
-                    .disabled(true)
-                    .overlay(
-                        Color.clear
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                // Haptic feedback
-                                let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                                impactFeedback.impactOccurred()
-                                onLockedTap?()
-                            }
-                    )
-            } else {
-                Toggle("", isOn: $isEnabled)
-                    .toggleStyle(SwitchToggleStyle(tint: .blue))
-            }
-        }
-        .padding(.vertical, 4)
-        .opacity(isLocked ? 0.6 : 1.0)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            if isLocked {
-                let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                impactFeedback.impactOccurred()
-                onLockedTap?()
-            }
-        }
-    }
-    
-    private var filterDescription: String {
-        switch filterType {
-        case .reels:
-            return "Hides access to Reels in navigation"
-        case .explore:
-            return "Hides the Explore page and its suggestions"
-        case .stories:
-            return "Hides stories at the top of the main feed"
-        case .suggestions:
-            return "Hides account suggestions to follow"
-        case .likes:
-            return "Hides like counters on posts"
-        case .following:
-            return "Forces Following mode and hides the 'For you' button"
-        case .messages:
-            return "Hides the Messages tab in navigation"
-        }
     }
 }
 

@@ -422,12 +422,13 @@ struct PremiumCTAPage: View {
     @State private var isPulsing = false
 
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 20) {
-                Spacer()
-                    .frame(height: 20)
+        ZStack(alignment: .topTrailing) {
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 20) {
+                    Spacer()
+                        .frame(height: 20)
 
-                // Badge Premium
+                    // Badge Premium
                 HStack(spacing: 8) {
                     Image(systemName: "crown.fill")
                         .foregroundColor(.yellow)
@@ -488,7 +489,7 @@ struct PremiumCTAPage: View {
                 VStack(spacing: 10) {
                     Button(action: {
                         // Ouvrir le paywall Superwall
-                        Superwall.shared.register(placement: "onboarding_premium") {
+                        Superwall.shared.register(placement: "campaign_trigger") {
                             // Terminer l'onboarding après le paywall
                             authManager.completeOnboarding()
                         }
@@ -528,6 +529,21 @@ struct PremiumCTAPage: View {
                     .frame(height: 60)
             }
             .padding(.horizontal, 24)
+        }
+
+            // Bouton croix pour quitter l'onboarding
+            Button(action: {
+                authManager.completeOnboarding()
+            }) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.secondary)
+                    .frame(width: 32, height: 32)
+                    .background(Color(.systemGray5))
+                    .clipShape(Circle())
+            }
+            .padding(.trailing, 16)
+            .padding(.top, 8)
         }
         .onAppear {
             withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {

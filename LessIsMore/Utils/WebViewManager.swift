@@ -104,7 +104,11 @@ class WebViewManager: NSObject, ObservableObject {
         webView.navigationDelegate = self
         webView.uiDelegate = self
         webView.allowsBackForwardNavigationGestures = true
-        
+
+        // Masquer les indicateurs de scroll natifs
+        webView.scrollView.showsVerticalScrollIndicator = false
+        webView.scrollView.showsHorizontalScrollIndicator = false
+
         self.webView = webView
         return webView
     }
