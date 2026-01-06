@@ -232,7 +232,7 @@ struct ControlPanelView: View {
 
             VStack(spacing: 0) {
                 FilterRow(
-                    title: "Hide \"For You\" Feed",
+                    title: "Following only",
                     isEnabled: binding(for: .following),
                     isLocked: !subscriptionManager.isPremium,
                     onLockedTap: showPaywall
