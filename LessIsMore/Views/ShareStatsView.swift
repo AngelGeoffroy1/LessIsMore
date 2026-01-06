@@ -211,6 +211,40 @@ struct ShareStatsCard: View {
         return UsageTracker.UsageCategory.allCases.filter { usedCategories.contains($0.rawValue) }
     }
     
+    // Impact comparison - what could have been done with this time
+    private var impactComparison: (icon: String, text: String)? {
+        let totalMinutes = totalWeekSeconds / 60
+        guard totalMinutes > 0 else { return nil }
+        
+        // Define comparisons: (minMinutes, icon, singular, plural, divisor)
+        let comparisons: [(min: Int, icon: String, singular: String, plural: String, divisor: Int)] = [
+            (30, "📚", "chapitre de livre lu", "chapitres de livre lus", 30),           // 30 min per chapter
+            (120, "🎬", "film regardé", "films regardés", 120),                          // 2h per movie
+            (45, "🏃", "séance de sport", "séances de sport", 45),                       // 45 min per workout
+            (20, "🧘", "méditation", "méditations", 20),                                  // 20 min per meditation
+            (180, "📖", "livre lu entièrement", "livres lus entièrement", 180),          // 3h per book
+            (45, "🎧", "épisode de podcast", "épisodes de podcast", 45),                 // 45 min per episode
+            (60, "👨‍🍳", "nouveau plat cuisiné", "nouveaux plats cuisinés", 60),          // 1h per recipe
+            (30, "🎸", "leçon de musique", "leçons de musique", 30),                     // 30 min per lesson
+            (15, "🚶", "km de marche", "km de marche", 15),                               // 15 min per km
+            (60, "💪", "heure de musculation", "heures de musculation", 60),             // 1h per session
+        ]
+        
+        // Filter valid comparisons and pick one based on time
+        let validComparisons = comparisons.filter { totalMinutes >= $0.min }
+        guard !validComparisons.isEmpty else { return nil }
+        
+        // Pick a random comparison for variety (seeded by total to be consistent)
+        let index = totalMinutes % validComparisons.count
+        let comparison = validComparisons[index]
+        
+        let count = totalMinutes / comparison.divisor
+        guard count > 0 else { return nil }
+        
+        let text = count == 1 ? comparison.singular : comparison.plural
+        return (comparison.icon, "≈ \(count) \(text)")
+    }
+    
     private let chartHeight: CGFloat = 100
     
     var body: some View {
@@ -295,7 +329,7 @@ struct ShareStatsCard: View {
                         )
                     }
                 }
-                .padding(.bottom, 20)
+                .padding(.bottom, 16)
                 
                 // Chart - 100% Stacked Bar (like ControlPanelView)
                 VStack(spacing: 8) {
@@ -326,21 +360,54 @@ struct ShareStatsCard: View {
                         }
                     }
                 }
-                .padding(.top, 12)
+                .padding(.top, 10)
                 
-                Spacer(minLength: 0)
+                Spacer(minLength: 8)
                 
-                // Branding - Fixed at bottom
-                HStack(spacing: 5) {
-                    Image(systemName: "hourglass")
-                        .font(.system(size: 10))
+                // Impact Comparison - Option C (without card)
+                if let impact = impactComparison {
+                    VStack(spacing: 8) {
+                        // Header
+                        Text("AVEC CE TEMPS...")
+                            .font(AppFonts.caption2(9))
+                            .foregroundColor(.white.opacity(0.4))
+                            .tracking(1.5)
+                        
+                        // Main content
+                        VStack(spacing: 4) {
+                            Text(impact.icon)
+                                .font(.system(size: 28))
+                            
+                            Text(impact.text)
+                                .font(AppFonts.subheadline(12))
+                                .foregroundColor(.white.opacity(0.9))
+                                .multilineTextAlignment(.center)
+                        }
+                        
+                        // Call to action
+                        Text("Reprends le contrôle")
+                            .font(AppFonts.caption2(9))
+                            .foregroundColor(.white.opacity(0.4))
+                            .italic()
+                    }
+                    .padding(.vertical, 10)
+                }
+                
+                Spacer(minLength: 8)
+                
+                // Branding - Download CTA with Logo
+                HStack(spacing: 8) {
+                    Text("Télécharge")
+                        .font(AppFonts.caption(11))
                         .foregroundColor(.white.opacity(0.5))
                     
-                    Text("LessIsMore")
-                        .font(AppFonts.subheadline(12))
-                        .foregroundColor(.white.opacity(0.6))
+                    Image("Logo")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 28, height: 28)
+                        .clipShape(RoundedRectangle(cornerRadius: 7))
                 }
-                .padding(.bottom, 32)
+                .padding(.bottom, 28)
             }
         }
         .frame(width: 270, height: 480) // 9:16 ratio to match Instagram story
