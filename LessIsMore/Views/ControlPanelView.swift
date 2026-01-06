@@ -18,6 +18,7 @@ struct ControlPanelView: View {
 
     @State private var filterStates: [FilterType: Bool] = [:]
     @State private var showSettings = false
+    @State private var showSharePreview = false
 
     var body: some View {
         ZStack {
@@ -67,6 +68,13 @@ struct ControlPanelView: View {
                 subscriptionManager: subscriptionManager
             )
         }
+        .sheet(isPresented: $showSharePreview) {
+            ShareStatsPreviewSheet(
+                weeklyData: usageTracker.weeklyUsage,
+                todayUsage: usageTracker.formattedTimeShort,
+                percentageChange: usageTracker.getComparisonToYesterday()
+            )
+        }
     }
 
     // MARK: - Usage Header
@@ -107,7 +115,11 @@ struct ControlPanelView: View {
 
             // Graphique hebdomadaire
             // Graphique hebdomadaire combiné
-            WeeklyUsageChart(data: usageTracker.weeklyUsage)
+            WeeklyUsageChart(
+                data: usageTracker.weeklyUsage,
+                todayUsage: usageTracker.formattedTimeShort,
+                percentageChange: usageTracker.getComparisonToYesterday()
+            )
         }
         .padding(.bottom, 10)
     }
@@ -168,6 +180,28 @@ struct ControlPanelView: View {
                             )
                         )
                         .cornerRadius(6)
+                }
+                
+                Spacer()
+                
+                // Share Stats Button
+                Button(action: {
+                    let haptic = UIImpactFeedbackGenerator(style: .light)
+                    haptic.impactOccurred()
+                    showSharePreview = true
+                }) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "square.and.arrow.up")
+                            .font(.system(size: 10, weight: .semibold))
+                        
+                        Text("Share")
+                            .font(AppFonts.caption(11))
+                    }
+                    .foregroundColor(.primary.opacity(0.6))
+                    .padding(.vertical, 6)
+                    .padding(.horizontal, 10)
+                    .background(.ultraThinMaterial)
+                    .clipShape(Capsule())
                 }
             }
             .padding(.leading, 4)
@@ -355,6 +389,8 @@ struct ControlPanelView: View {
 
 struct WeeklyUsageChart: View {
     let data: [UsageTracker.WeeklyUsageData]
+    var todayUsage: String = ""
+    var percentageChange: Double = 0
 
     private var maxUsage: Int {
         let maxVal = data.map { $0.totalSeconds }.max() ?? 3600
