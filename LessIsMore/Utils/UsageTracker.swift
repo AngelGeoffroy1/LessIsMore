@@ -48,10 +48,29 @@ class UsageTracker: ObservableObject {
             self.categorySeconds = [UsageCategory.feed.rawValue: seconds]
         }
     }
+    
+    struct MonthlyWeekData: Identifiable, Codable {
+        let id: UUID
+        let weekLabel: String // "Week 1", "Week 2", etc.
+        let weekNumber: Int // 1, 2, 3, 4, 5
+        var categorySeconds: [String: Int]
+        
+        var totalSeconds: Int {
+            categorySeconds.values.reduce(0, +)
+        }
+        
+        init(weekLabel: String, weekNumber: Int, categorySeconds: [String: Int] = [:]) {
+            self.id = UUID()
+            self.weekLabel = weekLabel
+            self.weekNumber = weekNumber
+            self.categorySeconds = categorySeconds
+        }
+    }
 
     @Published var currentCategory: UsageCategory = .feed
     @Published var todayUsageSeconds: Int = 0
     @Published var weeklyUsage: [WeeklyUsageData] = []
+    @Published var monthlyUsage: [MonthlyWeekData] = []
 
     private var timer: Timer?
     private var isTracking = false
@@ -62,8 +81,10 @@ class UsageTracker: ObservableObject {
 
     private init() {
         initializeWeeklyUsage()
+        initializeMonthlyUsage()
         loadUsage()
         updateTodayInWeekly()
+        updateCurrentWeekInMonthly()
         setupNotifications()
         startTracking()
     }
@@ -71,6 +92,85 @@ class UsageTracker: ObservableObject {
     private func initializeWeeklyUsage() {
         let dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
         weeklyUsage = dayNames.map { WeeklyUsageData(day: $0) }
+    }
+    
+    private func initializeMonthlyUsage() {
+        // Calculer le nombre de semaines dans le mois actuel
+        let weeksInMonth = getWeeksInCurrentMonth()
+        monthlyUsage = (1...weeksInMonth).map { weekNum in
+            MonthlyWeekData(weekLabel: "Week \(weekNum)", weekNumber: weekNum)
+        }
+    }
+    
+    private func getWeeksInCurrentMonth() -> Int {
+        let calendar = Calendar.current
+        let now = Date()
+        guard let range = calendar.range(of: .weekOfMonth, in: .month, for: now) else {
+            return 4 // Fallback
+        }
+        return range.count
+    }
+    
+    private func getCurrentWeekOfMonth() -> Int {
+        let calendar = Calendar.current
+        return calendar.component(.weekOfMonth, from: Date())
+    }
+    
+    /// Synchronise les données hebdomadaires vers les données mensuelles
+    /// Cette fonction reconstruit les données mensuelles à partir des données hebdomadaires existantes
+    private func syncWeeklyToMonthly() {
+        let calendar = Calendar.current
+        let today = Date()
+        
+        // Réinitialiser les données mensuelles
+        for i in 0..<monthlyUsage.count {
+            monthlyUsage[i].categorySeconds = [:]
+        }
+        
+        // Pour chaque jour de la semaine avec des données
+        let dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+        
+        for dayData in weeklyUsage {
+            guard dayData.totalSeconds > 0 else { continue }
+            
+            // Trouver la date de ce jour dans la semaine actuelle
+            guard let dayIndex = dayNames.firstIndex(of: dayData.day) else { continue }
+            
+            // Calculer la date de ce jour
+            let todayWeekday = calendar.component(.weekday, from: today) // 1 = Sunday
+            let daysDiff = dayIndex - (todayWeekday - 1)
+            
+            guard let dayDate = calendar.date(byAdding: .day, value: daysDiff, to: today) else { continue }
+            
+            // Vérifier si ce jour est dans le mois actuel
+            let dayMonth = calendar.component(.month, from: dayDate)
+            let currentMonth = calendar.component(.month, from: today)
+            
+            guard dayMonth == currentMonth else { continue }
+            
+            // Obtenir la semaine du mois pour ce jour
+            let weekOfMonth = calendar.component(.weekOfMonth, from: dayDate)
+            
+            // Ajouter les données à la semaine correspondante
+            if let weekIndex = monthlyUsage.firstIndex(where: { $0.weekNumber == weekOfMonth }) {
+                for (category, seconds) in dayData.categorySeconds {
+                    let currentVal = monthlyUsage[weekIndex].categorySeconds[category] ?? 0
+                    monthlyUsage[weekIndex].categorySeconds[category] = currentVal + seconds
+                }
+            }
+        }
+    }
+    
+    private func updateCurrentWeekInMonthly() {
+        // Synchroniser les données hebdomadaires vers les données mensuelles
+        syncWeeklyToMonthly()
+    }
+    
+    /// Get the current month name for display
+    var currentMonthName: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM yyyy"
+        return formatter.string(from: Date())
     }
 
     private func updateTodayInWeekly() {
@@ -144,12 +244,26 @@ class UsageTracker: ObservableObject {
 
     private func loadUsage() {
         let savedDate = userDefaults.string(forKey: lastDateKey) ?? ""
+        let savedMonth = userDefaults.string(forKey: "usage_last_month") ?? ""
         let today = currentDateString()
+        let currentMonth = currentMonthString()
 
         // Load weekly data if exists
         if let data = userDefaults.data(forKey: "weekly_usage_detailed"),
            let decoded = try? JSONDecoder().decode([WeeklyUsageData].self, from: data) {
             weeklyUsage = decoded
+        }
+        
+        // Load monthly data if exists
+        if let monthData = userDefaults.data(forKey: "monthly_usage_detailed"),
+           let decodedMonth = try? JSONDecoder().decode([MonthlyWeekData].self, from: monthData) {
+            monthlyUsage = decodedMonth
+        }
+        
+        // Check if month changed - reset monthly data
+        if savedMonth != currentMonth {
+            initializeMonthlyUsage()
+            userDefaults.set(currentMonth, forKey: "usage_last_month")
         }
 
         if savedDate != today {
@@ -164,11 +278,21 @@ class UsageTracker: ObservableObject {
         }
         
         updateTodayInWeekly()
+        updateCurrentWeekInMonthly()
+    }
+    
+    private func currentMonthString() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM"
+        return formatter.string(from: Date())
     }
 
     private func saveUsage() {
         if let encoded = try? JSONEncoder().encode(weeklyUsage) {
             userDefaults.set(encoded, forKey: "weekly_usage_detailed")
+        }
+        if let monthEncoded = try? JSONEncoder().encode(monthlyUsage) {
+            userDefaults.set(monthEncoded, forKey: "monthly_usage_detailed")
         }
         userDefaults.set(currentDateString(), forKey: lastDateKey)
     }
@@ -219,12 +343,21 @@ class UsageTracker: ObservableObject {
             guard let self = self else { return }
             DispatchQueue.main.async {
                 let currentDayName = self.getCurrentDayName()
+                let catKey = self.currentCategory.rawValue
+                
+                // Update weekly data
                 if let index = self.weeklyUsage.firstIndex(where: { $0.day == currentDayName }) {
-                    let catKey = self.currentCategory.rawValue
                     let currentVal = self.weeklyUsage[index].categorySeconds[catKey] ?? 0
                     self.weeklyUsage[index].categorySeconds[catKey] = currentVal + 1
                     
                     self.todayUsageSeconds = self.weeklyUsage[index].totalSeconds
+                }
+                
+                // Update monthly data (current week)
+                let currentWeek = self.getCurrentWeekOfMonth()
+                if let weekIndex = self.monthlyUsage.firstIndex(where: { $0.weekNumber == currentWeek }) {
+                    let currentMonthVal = self.monthlyUsage[weekIndex].categorySeconds[catKey] ?? 0
+                    self.monthlyUsage[weekIndex].categorySeconds[catKey] = currentMonthVal + 1
                 }
 
                 // Sauvegarder toutes les 30 secondes

@@ -395,19 +395,28 @@ struct ShareStatsCard: View {
                 
                 Spacer(minLength: 8)
                 
-                // Branding - Download CTA with Logo
-                HStack(spacing: 8) {
-                    Text("Télécharge")
-                        .font(AppFonts.caption(11))
-                        .foregroundColor(.white.opacity(0.5))
-                    
-                    Image("Logo")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 28, height: 28)
-                        .clipShape(RoundedRectangle(cornerRadius: 7))
-                }
-                .padding(.bottom, 28)
+                // Branding - LessIsMore badge with Instagram gradient
+                Text("LessIsMore")
+                    .font(AppFonts.headline(12))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [
+                                Color(red: 1.0, green: 0.55, blue: 0.0),
+                                Color(red: 0.98, green: 0.22, blue: 0.42),
+                                Color(red: 0.83, green: 0.18, blue: 0.62),
+                                Color(red: 0.55, green: 0.23, blue: 0.85)
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 6)
+                    .background(
+                        Capsule()
+                            .fill(Color.white.opacity(0.08))
+                    )
+                    .padding(.bottom, 40)
             }
         }
         .frame(width: 270, height: 480) // 9:16 ratio to match Instagram story

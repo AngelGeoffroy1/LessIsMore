@@ -113,12 +113,11 @@ struct ControlPanelView: View {
                 }
             }
 
-            // Graphique hebdomadaire
-            // Graphique hebdomadaire combiné
-            WeeklyUsageChart(
-                data: usageTracker.weeklyUsage,
-                todayUsage: usageTracker.formattedTimeShort,
-                percentageChange: usageTracker.getComparisonToYesterday()
+            // Graphique carousel (hebdomadaire ↔ mensuel)
+            ChartCarouselView(
+                weeklyData: usageTracker.weeklyUsage,
+                monthlyData: usageTracker.monthlyUsage,
+                monthName: usageTracker.currentMonthName
             )
         }
         .padding(.bottom, 10)
@@ -518,6 +517,174 @@ struct FilterRow: View {
         .onTapGesture {
             if isLocked {
                 onLockedTap?()
+            }
+        }
+    }
+}
+
+// MARK: - Chart Carousel View (Swipeable)
+
+struct ChartCarouselView: View {
+    let weeklyData: [UsageTracker.WeeklyUsageData]
+    let monthlyData: [UsageTracker.MonthlyWeekData]
+    let monthName: String
+    
+    @State private var currentPage: Int = 0
+    @State private var dragOffset: CGFloat = 0
+    
+    private let chartHeight: CGFloat = 110
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            // Chart title + Page indicator
+            HStack {
+                Text(currentPage == 0 ? "This Week" : monthName)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.secondary)
+                
+                Spacer()
+                
+                // Page indicator
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(currentPage == 0 ? Color.primary : Color.primary.opacity(0.3))
+                        .frame(width: 6, height: 6)
+                    Circle()
+                        .fill(currentPage == 1 ? Color.primary : Color.primary.opacity(0.3))
+                        .frame(width: 6, height: 6)
+                }
+            }
+            
+            // Swipeable chart container
+            GeometryReader { geometry in
+                HStack(spacing: 0) {
+                    // Page 0: Weekly Chart
+                    WeeklyUsageChart(data: weeklyData)
+                        .frame(width: geometry.size.width)
+                    
+                    // Page 1: Monthly Chart
+                    MonthlyUsageChart(data: monthlyData)
+                        .frame(width: geometry.size.width)
+                }
+                .offset(x: -CGFloat(currentPage) * geometry.size.width + dragOffset)
+                .gesture(
+                    DragGesture()
+                        .onChanged { value in
+                            dragOffset = value.translation.width
+                        }
+                        .onEnded { value in
+                            let threshold = geometry.size.width * 0.25
+                            let predictedEndOffset = value.predictedEndTranslation.width
+                            
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                if predictedEndOffset < -threshold && currentPage == 0 {
+                                    // Swipe left -> go to monthly
+                                    currentPage = 1
+                                    let haptic = UIImpactFeedbackGenerator(style: .light)
+                                    haptic.impactOccurred()
+                                } else if predictedEndOffset > threshold && currentPage == 1 {
+                                    // Swipe right -> go to weekly
+                                    currentPage = 0
+                                    let haptic = UIImpactFeedbackGenerator(style: .light)
+                                    haptic.impactOccurred()
+                                }
+                                dragOffset = 0
+                            }
+                        }
+                )
+            }
+            .frame(height: chartHeight + 50)
+            .clipped()
+        }
+    }
+}
+
+// MARK: - Monthly Usage Chart Component
+
+struct MonthlyUsageChart: View {
+    let data: [UsageTracker.MonthlyWeekData]
+    
+    private var maxUsage: Int {
+        let maxVal = data.map { $0.totalSeconds }.max() ?? 3600
+        return max(maxVal, 3600) // Minimum 1h pour l'échelle
+    }
+    
+    private func formatSeconds(_ seconds: Int) -> String {
+        let hours = seconds / 3600
+        let minutes = (seconds % 3600) / 60
+        if hours > 0 {
+            return "\(hours)h"
+        }
+        return "\(minutes)m"
+    }
+    
+    private func getCurrentWeekOfMonth() -> Int {
+        let calendar = Calendar.current
+        return calendar.component(.weekOfMonth, from: Date())
+    }
+    
+    private let chartHeight: CGFloat = 110
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .bottom, spacing: 8) {
+                ForEach(data) { item in
+                    let isCurrentWeek = item.weekNumber == getCurrentWeekOfMonth()
+                    
+                    VStack(spacing: 8) {
+                        // Stacked Bar
+                        ZStack(alignment: .bottom) {
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color.primary.opacity(0.03))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: chartHeight)
+                            
+                            if item.totalSeconds == 0 {
+                                // Simulation Bar when no data - Randomized for realism
+                                let simulatedHeight: CGFloat = 8 + CGFloat(abs(item.weekLabel.hashValue % 15))
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color.primary.opacity(0.08))
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: simulatedHeight)
+                            }
+                            
+                            VStack(spacing: 0) {
+                                ForEach(Array(UsageTracker.UsageCategory.allCases.reversed()), id: \.self) { category in
+                                    let seconds = item.categorySeconds[category.rawValue] ?? 0
+                                    if seconds > 0 && item.totalSeconds > 0 {
+                                        Rectangle()
+                                            .fill(category.color.opacity(isCurrentWeek ? 1.0 : 0.4))
+                                            .frame(height: CGFloat(seconds) / CGFloat(item.totalSeconds) * chartHeight)
+                                    }
+                                }
+                            }
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                        }
+                        
+                        // Week label - "Wk 1", "Wk 2", etc.
+                        Text("Wk \(item.weekNumber)")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundColor(isCurrentWeek ? .primary : .secondary)
+                    }
+                }
+            }
+            .frame(height: chartHeight + 20)
+            
+            // Legend
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 15) {
+                    ForEach(UsageTracker.UsageCategory.allCases, id: \.self) { category in
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(category.color)
+                                .frame(width: 8, height: 8)
+                            Text(category.rawValue)
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+                .padding(.horizontal, 4)
             }
         }
     }
