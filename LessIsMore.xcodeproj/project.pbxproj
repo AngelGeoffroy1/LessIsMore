@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		111EF8FE2E698EFC004B0CFE /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 111EF8FD2E698EFC004B0CFE /* StoreKit.framework */; };
 		1163F4552EE0737A0046FFAC /* SuperwallKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1163F4542EE0737A0046FFAC /* SuperwallKit */; };
+		11C82AC92F0ED12A0080CD3C /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 11C82AC82F0ED12A0080CD3C /* Lottie */; };
+		11C82ACB2F0ED12A0080CD3C /* Lottie-Dynamic in Frameworks */ = {isa = PBXBuildFile; productRef = 11C82ACA2F0ED12A0080CD3C /* Lottie-Dynamic */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -72,7 +74,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				111EF8FE2E698EFC004B0CFE /* StoreKit.framework in Frameworks */,
+				11C82ACB2F0ED12A0080CD3C /* Lottie-Dynamic in Frameworks */,
 				1163F4552EE0737A0046FFAC /* SuperwallKit in Frameworks */,
+				11C82AC92F0ED12A0080CD3C /* Lottie in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -143,6 +147,8 @@
 			name = LessIsMore;
 			packageProductDependencies = (
 				1163F4542EE0737A0046FFAC /* SuperwallKit */,
+				11C82AC82F0ED12A0080CD3C /* Lottie */,
+				11C82ACA2F0ED12A0080CD3C /* Lottie-Dynamic */,
 			);
 			productName = LessIsMore;
 			productReference = 111EF8C62E68B4DC004B0CFE /* LessIsMore.app */;
@@ -228,6 +234,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				1163F4532EE0737A0046FFAC /* XCRemoteSwiftPackageReference "Superwall-iOS" */,
+				11C82AC72F0ED12A0080CD3C /* XCRemoteSwiftPackageReference "lottie-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 111EF8C72E68B4DC004B0CFE /* Products */;
@@ -452,7 +459,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.6;
+				MARKETING_VERSION = 1.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lessismore.com;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -488,7 +495,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.6;
+				MARKETING_VERSION = 1.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lessismore.com;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -620,6 +627,14 @@
 				minimumVersion = 4.10.6;
 			};
 		};
+		11C82AC72F0ED12A0080CD3C /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.6.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -627,6 +642,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1163F4532EE0737A0046FFAC /* XCRemoteSwiftPackageReference "Superwall-iOS" */;
 			productName = SuperwallKit;
+		};
+		11C82AC82F0ED12A0080CD3C /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 11C82AC72F0ED12A0080CD3C /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = Lottie;
+		};
+		11C82ACA2F0ED12A0080CD3C /* Lottie-Dynamic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 11C82AC72F0ED12A0080CD3C /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = "Lottie-Dynamic";
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
