@@ -19,6 +19,7 @@ struct ControlPanelView: View {
     @State private var filterStates: [FilterType: Bool] = [:]
     @State private var showSettings = false
     @State private var showSharePreview = false
+    @State private var chartMode: Int = 0 // 0 = weekly (days), 1 = monthly (weeks)
 
     var body: some View {
         ZStack {
@@ -69,11 +70,24 @@ struct ControlPanelView: View {
             )
         }
         .sheet(isPresented: $showSharePreview) {
-            ShareStatsPreviewSheet(
-                weeklyData: usageTracker.weeklyUsage,
-                todayUsage: usageTracker.formattedTimeShort,
-                percentageChange: usageTracker.getComparisonToYesterday()
-            )
+            if chartMode == 0 {
+                // Weekly mode - share daily data
+                ShareStatsPreviewSheet(
+                    weeklyData: usageTracker.weeklyUsage,
+                    todayUsage: usageTracker.formattedTimeShort,
+                    percentageChange: usageTracker.getComparisonToYesterday(),
+                    isMonthlyMode: false
+                )
+            } else {
+                // Monthly mode - share weekly data
+                ShareStatsPreviewSheet(
+                    monthlyData: usageTracker.monthlyUsage,
+                    weekUsage: usageTracker.formattedCurrentWeekTime,
+                    percentageChange: usageTracker.getComparisonToLastWeek(),
+                    monthName: usageTracker.currentMonthName,
+                    isMonthlyMode: true
+                )
+            }
         }
     }
 
@@ -83,15 +97,17 @@ struct ControlPanelView: View {
         VStack(alignment: .leading, spacing: 20) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("TODAY USE")
+                    Text(chartMode == 0 ? "TODAY USE" : "THIS WEEK USE")
                         .font(AppFonts.caption(10))
                         .foregroundColor(.secondary)
                         .tracking(1.5)
+                        .animation(.easeInOut(duration: 0.2), value: chartMode)
 
                     HStack(alignment: .lastTextBaseline, spacing: 12) {
-                        Text(usageTracker.formattedTimeShort)
+                        Text(chartMode == 0 ? usageTracker.formattedTimeShort : usageTracker.formattedCurrentWeekTime)
                             .font(.system(size: 42, weight: .bold, design: .rounded))
                             .foregroundColor(.primary)
+                            .animation(.easeInOut(duration: 0.2), value: chartMode)
                         
                         // Trend Badge
                         trendBadge
@@ -117,14 +133,16 @@ struct ControlPanelView: View {
             ChartCarouselView(
                 weeklyData: usageTracker.weeklyUsage,
                 monthlyData: usageTracker.monthlyUsage,
-                monthName: usageTracker.currentMonthName
+                monthName: usageTracker.currentMonthName,
+                currentPage: $chartMode
             )
         }
         .padding(.bottom, 10)
     }
 
     private var trendBadge: some View {
-        let diff = usageTracker.getComparisonToYesterday()
+        // Use different comparison based on mode
+        let diff = chartMode == 0 ? usageTracker.getComparisonToYesterday() : usageTracker.getComparisonToLastWeek()
         let isZero = Int(diff) == 0
         let isLower = diff < 0
         
@@ -150,6 +168,7 @@ struct ControlPanelView: View {
                 .foregroundColor(color)
         }
         .padding(.bottom, 6)
+        .animation(.easeInOut(duration: 0.2), value: chartMode)
     }
 
     // MARK: - Basic Filters Section
@@ -528,8 +547,8 @@ struct ChartCarouselView: View {
     let weeklyData: [UsageTracker.WeeklyUsageData]
     let monthlyData: [UsageTracker.MonthlyWeekData]
     let monthName: String
+    @Binding var currentPage: Int
     
-    @State private var currentPage: Int = 0
     @State private var dragOffset: CGFloat = 0
     
     private let chartHeight: CGFloat = 110

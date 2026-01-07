@@ -239,6 +239,44 @@ class UsageTracker: ObservableObject {
         let diff = Double(todayUsageSeconds - yesterdaySeconds)
         return (diff / Double(yesterdaySeconds)) * 100
     }
+    
+    // MARK: - Monthly Mode Methods
+    
+    /// Returns the total seconds for the current week of the month
+    var currentWeekTotalSeconds: Int {
+        let currentWeek = getCurrentWeekOfMonth()
+        guard let weekData = monthlyUsage.first(where: { $0.weekNumber == currentWeek }) else { return 0 }
+        return weekData.totalSeconds
+    }
+    
+    /// Returns formatted time for the current week
+    var formattedCurrentWeekTime: String {
+        let seconds = currentWeekTotalSeconds
+        let hours = seconds / 3600
+        let minutes = (seconds % 3600) / 60
+        
+        if hours > 0 {
+            return "\(hours)h\(minutes > 0 ? " \(minutes)m" : "")"
+        }
+        return "\(minutes)m"
+    }
+    
+    /// Returns the percentage difference compared to last week.
+    /// Positive means more usage this week, negative means less.
+    func getComparisonToLastWeek() -> Double {
+        let currentWeek = getCurrentWeekOfMonth()
+        let lastWeek = currentWeek - 1
+        
+        guard lastWeek >= 1 else { return 0 }
+        
+        guard let lastWeekData = monthlyUsage.first(where: { $0.weekNumber == lastWeek }) else { return 0 }
+        
+        let lastWeekSeconds = lastWeekData.totalSeconds
+        if lastWeekSeconds == 0 { return 0 }
+        
+        let diff = Double(currentWeekTotalSeconds - lastWeekSeconds)
+        return (diff / Double(lastWeekSeconds)) * 100
+    }
 
     // MARK: - Private Methods
 
