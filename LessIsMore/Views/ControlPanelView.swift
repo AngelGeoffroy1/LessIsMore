@@ -13,6 +13,7 @@ struct ControlPanelView: View {
     @ObservedObject var authManager: AuthenticationManager
     @ObservedObject var subscriptionManager: SubscriptionManager
     @StateObject private var usageTracker = UsageTracker.shared
+    @StateObject private var streakTracker = StreakTracker.shared
     @Environment(\.dismiss) var dismiss
     @Environment(\.colorScheme) var colorScheme
 
@@ -20,6 +21,8 @@ struct ControlPanelView: View {
     @State private var showSettings = false
     @State private var showSharePreview = false
     @State private var chartMode: Int = 0 // 0 = weekly (days), 1 = monthly (weeks)
+    @State private var showBreakStreakModal = false
+    @State private var pendingFilterToDisable: FilterType? = nil
 
     var body: some View {
         ZStack {
@@ -61,6 +64,47 @@ struct ControlPanelView: View {
         .background(Color.clear)
         .onAppear {
             loadFilterStates()
+            streakTracker.syncWithFilterStates()
+        }
+        .overlay {
+            // Break Streak Confirmation Modal
+            if showBreakStreakModal, let filterType = pendingFilterToDisable {
+                ZStack {
+                    Color.black.opacity(0.5)
+                        .ignoresSafeArea()
+                        .onTapGesture {
+                            // Cancel on background tap
+                            showBreakStreakModal = false
+                            pendingFilterToDisable = nil
+                        }
+                    
+                    BreakStreakModal(
+                        filterType: filterType,
+                        currentStreak: streakTracker.getCurrentStreakDays(for: filterType),
+                        personalRecord: streakTracker.getLongestStreak(for: filterType),
+                        onCancel: {
+                            showBreakStreakModal = false
+                            pendingFilterToDisable = nil
+                        },
+                        onConfirm: {
+                            // Actually disable the filter
+                            streakTracker.deactivateStreak(for: filterType)
+                            filterStates[filterType] = false
+                            filterType.setEnabled(false)
+                            webViewManager.toggleFilter(filterType)
+                            
+                            showBreakStreakModal = false
+                            pendingFilterToDisable = nil
+                            
+                            // Haptic feedback
+                            let haptic = UINotificationFeedbackGenerator()
+                            haptic.notificationOccurred(.warning)
+                        }
+                    )
+                    .transition(.scale.combined(with: .opacity))
+                }
+                .animation(.spring(response: 0.3, dampingFraction: 0.8), value: showBreakStreakModal)
+            }
         }
         .sheet(isPresented: $showSettings) {
             SettingsView(
@@ -96,6 +140,7 @@ struct ControlPanelView: View {
     private var usageHeader: some View {
         VStack(alignment: .leading, spacing: 20) {
             HStack(alignment: .top) {
+                // Left side: Usage stats
                 VStack(alignment: .leading, spacing: 4) {
                     Text(chartMode == 0 ? "TODAY USE" : "THIS WEEK USE")
                         .font(AppFonts.caption(10))
@@ -115,8 +160,8 @@ struct ControlPanelView: View {
                 }
 
                 Spacer()
-
-                // Bouton Settings
+                
+                // Right side: Settings only
                 Button(action: {
                     showSettings = true
                 }) {
@@ -136,8 +181,92 @@ struct ControlPanelView: View {
                 monthName: usageTracker.currentMonthName,
                 currentPage: $chartMode
             )
+            
+            // Streak Highlight - Left aligned with personal record on right
+            if let best = streakTracker.bestActiveStreak {
+                HStack {
+                    // Left: Current streak
+                    HStack(spacing: 6) {
+                        GradientFlameView(size: 16)
+                        
+                        Text("\(best.days)")
+                            .font(AppFonts.headline(15))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [
+                                        Color(red: 1.0, green: 0.60, blue: 0.0),
+                                        Color(red: 0.98, green: 0.05, blue: 0.44),
+                                        Color(red: 0.73, green: 0.20, blue: 0.82)
+                                    ],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                        
+                        Text(best.days == 1 ? "day" : "days")
+                            .font(AppFonts.body(13))
+                            .foregroundColor(.secondary)
+                        
+                        Text("·")
+                            .font(AppFonts.body(13))
+                            .foregroundColor(.secondary.opacity(0.4))
+                        
+                        Text("No \(best.filterType.displayName)")
+                            .font(AppFonts.body(13))
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                    
+                    // Right: Estimated time saved
+                    HStack(spacing: 4) {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.system(size: 11))
+                            .foregroundColor(.green.opacity(0.8))
+                        
+                        Text("~\(estimatedTimeSaved(for: best.filterType, days: best.days))")
+                            .font(AppFonts.caption(12))
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(.top, 4)
+            }
         }
-        .padding(.bottom, 10)
+        .padding(.bottom, 4)
+    }
+    
+    /// Estimates time saved based on average usage per content type
+    private func estimatedTimeSaved(for filterType: FilterType, days: Int) -> String {
+        // Average minutes saved per day by content type
+        let avgMinutesPerDay: Int
+        switch filterType {
+        case .reels:
+            avgMinutesPerDay = 35  // Reels are very time-consuming
+        case .stories:
+            avgMinutesPerDay = 15
+        case .explore:
+            avgMinutesPerDay = 20
+        case .suggestions:
+            avgMinutesPerDay = 10
+        case .following:
+            avgMinutesPerDay = 25  // For You feed is addictive
+        case .messages:
+            avgMinutesPerDay = 12
+        case .likes:
+            avgMinutesPerDay = 5   // Minimal direct time impact
+        }
+        
+        let totalMinutes = avgMinutesPerDay * days
+        
+        if totalMinutes >= 60 {
+            let hours = totalMinutes / 60
+            let mins = totalMinutes % 60
+            if mins > 0 {
+                return "\(hours)h\(mins)m saved"
+            }
+            return "\(hours)h saved"
+        }
+        return "\(totalMinutes)m saved"
     }
 
     private var trendBadge: some View {
@@ -229,6 +358,7 @@ struct ControlPanelView: View {
                     title: "Hide Reels",
                     isEnabled: binding(for: .reels),
                     isLocked: !subscriptionManager.isPremium,
+                    streakDays: streakTracker.getCurrentStreakDays(for: .reels),
                     onLockedTap: showPaywall
                 )
 
@@ -239,6 +369,7 @@ struct ControlPanelView: View {
                     title: "Hide Stories",
                     isEnabled: binding(for: .stories),
                     isLocked: !subscriptionManager.isPremium,
+                    streakDays: streakTracker.getCurrentStreakDays(for: .stories),
                     onLockedTap: showPaywall
                 )
             }
@@ -287,6 +418,7 @@ struct ControlPanelView: View {
                     title: "Following only",
                     isEnabled: binding(for: .following),
                     isLocked: !subscriptionManager.isPremium,
+                    streakDays: streakTracker.getCurrentStreakDays(for: .following),
                     onLockedTap: showPaywall
                 )
 
@@ -297,6 +429,7 @@ struct ControlPanelView: View {
                     title: "Hide Explore Feed",
                     isEnabled: binding(for: .explore),
                     isLocked: !subscriptionManager.isPremium,
+                    streakDays: streakTracker.getCurrentStreakDays(for: .explore),
                     onLockedTap: showPaywall
                 )
 
@@ -307,6 +440,7 @@ struct ControlPanelView: View {
                     title: "Hide Suggestions",
                     isEnabled: binding(for: .suggestions),
                     isLocked: !subscriptionManager.isPremium,
+                    streakDays: streakTracker.getCurrentStreakDays(for: .suggestions),
                     onLockedTap: showPaywall
                 )
 
@@ -317,6 +451,7 @@ struct ControlPanelView: View {
                     title: "Hide Messages Tab",
                     isEnabled: binding(for: .messages),
                     isLocked: !subscriptionManager.isPremium,
+                    streakDays: streakTracker.getCurrentStreakDays(for: .messages),
                     onLockedTap: showPaywall
                 )
             }
@@ -365,6 +500,7 @@ struct ControlPanelView: View {
                     title: "Hide Likes",
                     isEnabled: binding(for: .likes),
                     isLocked: !subscriptionManager.isPremium,
+                    streakDays: streakTracker.getCurrentStreakDays(for: .likes),
                     onLockedTap: showPaywall
                 )
             }
@@ -383,9 +519,31 @@ struct ControlPanelView: View {
         Binding(
             get: { filterStates[filterType] ?? false },
             set: { newValue in
-                filterStates[filterType] = newValue
-                filterType.setEnabled(newValue)
-                webViewManager.toggleFilter(filterType)
+                if newValue {
+                    // Turning ON - activate streak
+                    filterStates[filterType] = true
+                    filterType.setEnabled(true)
+                    webViewManager.toggleFilter(filterType)
+                    streakTracker.activateStreak(for: filterType)
+                    
+                    // Light haptic
+                    let haptic = UIImpactFeedbackGenerator(style: .light)
+                    haptic.impactOccurred()
+                } else {
+                    // Turning OFF - check if there's an active streak
+                    let currentStreak = streakTracker.getCurrentStreakDays(for: filterType)
+                    
+                    if currentStreak > 0 {
+                        // Show confirmation modal
+                        pendingFilterToDisable = filterType
+                        showBreakStreakModal = true
+                    } else {
+                        // No streak, just disable
+                        filterStates[filterType] = false
+                        filterType.setEnabled(false)
+                        webViewManager.toggleFilter(filterType)
+                    }
+                }
             }
         )
     }
@@ -502,6 +660,7 @@ struct FilterRow: View {
     let title: String
     @Binding var isEnabled: Bool
     var isLocked: Bool = false
+    var streakDays: Int = 0
     var onLockedTap: (() -> Void)?
 
     var body: some View {
@@ -509,6 +668,11 @@ struct FilterRow: View {
             Text(title)
                 .font(AppFonts.body())
                 .foregroundColor(isLocked ? .secondary : .primary)
+            
+            // Streak Badge (only show if filter is enabled and has streak)
+            if !isLocked && streakDays > 0 {
+                StreakBadge(days: streakDays, compact: true)
+            }
 
             Spacer()
 
