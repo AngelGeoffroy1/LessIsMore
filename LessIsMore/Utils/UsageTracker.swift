@@ -277,6 +277,89 @@ class UsageTracker: ObservableObject {
         let diff = Double(currentWeekTotalSeconds - lastWeekSeconds)
         return (diff / Double(lastWeekSeconds)) * 100
     }
+    
+    // MARK: - Average Usage Per Category
+    
+    /// Returns the average minutes per day for a specific category based on historical data
+    /// Uses the last 7 days of data to calculate the average
+    func averageMinutesPerDay(for category: UsageCategory) -> Int {
+        var totalSeconds = 0
+        var daysWithData = 0
+        
+        for dayData in weeklyUsage {
+            let seconds = dayData.categorySeconds[category.rawValue] ?? 0
+            if seconds > 0 {
+                totalSeconds += seconds
+                daysWithData += 1
+            }
+        }
+        
+        // If we have data, calculate average
+        if daysWithData > 0 {
+            let avgSeconds = totalSeconds / daysWithData
+            return avgSeconds / 60  // Convert to minutes
+        }
+        
+        // Fallback to default estimates if no data
+        return defaultAverageMinutes(for: category)
+    }
+    
+    /// Returns the total average minutes per day across all categories
+    func totalAverageMinutesPerDay() -> Int {
+        var totalSeconds = 0
+        var daysWithData = 0
+        
+        for dayData in weeklyUsage {
+            if dayData.totalSeconds > 0 {
+                totalSeconds += dayData.totalSeconds
+                daysWithData += 1
+            }
+        }
+        
+        if daysWithData > 0 {
+            return (totalSeconds / daysWithData) / 60
+        }
+        return 0
+    }
+    
+    /// Default average minutes per category (used when no historical data)
+    private func defaultAverageMinutes(for category: UsageCategory) -> Int {
+        switch category {
+        case .reels: return 35
+        case .stories: return 15
+        case .feed: return 25
+        case .explore: return 20
+        case .messages: return 12
+        case .other: return 10
+        }
+    }
+    
+    /// Maps a FilterType to its corresponding UsageCategory (if applicable)
+    static func usageCategory(for filterType: FilterType) -> UsageCategory? {
+        switch filterType {
+        case .reels: return .reels
+        case .stories: return .stories
+        case .explore: return .explore
+        case .messages: return .messages
+        case .following: return .feed  // Following mode affects Feed usage
+        case .suggestions: return nil   // Not directly trackable
+        case .likes: return nil         // Not directly trackable
+        }
+    }
+    
+    /// Formatted string for average daily usage of a category
+    func formattedAveragePerDay(for category: UsageCategory) -> String {
+        let minutes = averageMinutesPerDay(for: category)
+        if minutes >= 60 {
+            let hours = minutes / 60
+            let mins = minutes % 60
+            if mins > 0 {
+                return "\(hours)h\(mins)m"
+            }
+            return "\(hours)h"
+        }
+        return "\(minutes)m"
+    }
 
     // MARK: - Private Methods
 

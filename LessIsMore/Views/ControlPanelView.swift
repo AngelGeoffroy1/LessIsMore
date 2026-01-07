@@ -22,6 +22,7 @@ struct ControlPanelView: View {
     @State private var showSharePreview = false
     @State private var chartMode: Int = 0 // 0 = weekly (days), 1 = monthly (weeks)
     @State private var showBreakStreakModal = false
+    @State private var showTimeSavedExplanation = false
     @State private var pendingFilterToDisable: FilterType? = nil
 
     var body: some View {
@@ -105,7 +106,24 @@ struct ControlPanelView: View {
                 }
                 .animation(.spring(response: 0.3, dampingFraction: 0.8), value: showBreakStreakModal)
             }
+            
+            // Time Saved Explanation Modal
+            if showTimeSavedExplanation {
+                ZStack {
+                    Color.black.opacity(0.4)
+                        .ignoresSafeArea()
+                        .onTapGesture {
+                            showTimeSavedExplanation = false
+                        }
+                    
+                    TimeSavedExplanationModal(onDismiss: {
+                        showTimeSavedExplanation = false
+                    })
+                }
+                .transition(.opacity)
+            }
         }
+        .animation(.easeInOut(duration: 0.3), value: showTimeSavedExplanation)
         .sheet(isPresented: $showSettings) {
             SettingsView(
                 webViewManager: webViewManager,
@@ -218,16 +236,27 @@ struct ControlPanelView: View {
                     
                     Spacer()
                     
-                    // Right: Estimated time saved
-                    HStack(spacing: 4) {
-                        Image(systemName: "clock.arrow.circlepath")
-                            .font(.system(size: 11))
-                            .foregroundColor(.green.opacity(0.8))
-                        
-                        Text("~\(estimatedTimeSaved(for: best.filterType, days: best.days))")
-                            .font(AppFonts.caption(12))
-                            .foregroundColor(.secondary)
+                    // Right: Estimated time saved (Clickable)
+                    Button(action: {
+                        let haptic = UIImpactFeedbackGenerator(style: .medium)
+                        haptic.impactOccurred()
+                        showTimeSavedExplanation = true
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "clock.arrow.circlepath")
+                                .font(.system(size: 11))
+                                .foregroundColor(.green.opacity(0.8))
+                            
+                            Text("~\(estimatedTimeSaved(for: best.filterType, days: best.days))")
+                                .font(AppFonts.caption(12))
+                                .foregroundColor(.secondary)
+                            
+                            Image(systemName: "info.circle")
+                                .font(.system(size: 10))
+                                .foregroundColor(.secondary.opacity(0.5))
+                        }
                     }
+                    .buttonStyle(PlainButtonStyle())
                 }
                 .padding(.top, 4)
             }
@@ -237,26 +266,20 @@ struct ControlPanelView: View {
     
     /// Estimates time saved based on average usage per content type
     private func estimatedTimeSaved(for filterType: FilterType, days: Int) -> String {
-        // Average minutes saved per day by content type
-        let avgMinutesPerDay: Int
-        switch filterType {
-        case .reels:
-            avgMinutesPerDay = 35  // Reels are very time-consuming
-        case .stories:
-            avgMinutesPerDay = 15
-        case .explore:
-            avgMinutesPerDay = 20
-        case .suggestions:
-            avgMinutesPerDay = 10
-        case .following:
-            avgMinutesPerDay = 25  // For You feed is addictive
-        case .messages:
-            avgMinutesPerDay = 12
-        case .likes:
-            avgMinutesPerDay = 5   // Minimal direct time impact
+        // Get average minutes per day for this filter type from usageTracker
+        let avgMinutes: Int
+        if let category = UsageTracker.usageCategory(for: filterType) {
+            avgMinutes = usageTracker.averageMinutesPerDay(for: category)
+        } else {
+            // Fallback for types not directly trackable by category
+            switch filterType {
+            case .suggestions: avgMinutes = 10
+            case .likes: avgMinutes = 5
+            default: avgMinutes = 15
+            }
         }
         
-        let totalMinutes = avgMinutesPerDay * days
+        let totalMinutes = avgMinutes * days
         
         if totalMinutes >= 60 {
             let hours = totalMinutes / 60
@@ -359,6 +382,7 @@ struct ControlPanelView: View {
                     isEnabled: binding(for: .reels),
                     isLocked: !subscriptionManager.isPremium,
                     streakDays: streakTracker.getCurrentStreakDays(for: .reels),
+                    avgTimePerDay: usageTracker.formattedAveragePerDay(for: .reels),
                     onLockedTap: showPaywall
                 )
 
@@ -370,6 +394,7 @@ struct ControlPanelView: View {
                     isEnabled: binding(for: .stories),
                     isLocked: !subscriptionManager.isPremium,
                     streakDays: streakTracker.getCurrentStreakDays(for: .stories),
+                    avgTimePerDay: usageTracker.formattedAveragePerDay(for: .stories),
                     onLockedTap: showPaywall
                 )
             }
@@ -419,6 +444,7 @@ struct ControlPanelView: View {
                     isEnabled: binding(for: .following),
                     isLocked: !subscriptionManager.isPremium,
                     streakDays: streakTracker.getCurrentStreakDays(for: .following),
+                    avgTimePerDay: usageTracker.formattedAveragePerDay(for: .feed),
                     onLockedTap: showPaywall
                 )
 
@@ -430,6 +456,7 @@ struct ControlPanelView: View {
                     isEnabled: binding(for: .explore),
                     isLocked: !subscriptionManager.isPremium,
                     streakDays: streakTracker.getCurrentStreakDays(for: .explore),
+                    avgTimePerDay: usageTracker.formattedAveragePerDay(for: .explore),
                     onLockedTap: showPaywall
                 )
 
@@ -441,6 +468,7 @@ struct ControlPanelView: View {
                     isEnabled: binding(for: .suggestions),
                     isLocked: !subscriptionManager.isPremium,
                     streakDays: streakTracker.getCurrentStreakDays(for: .suggestions),
+                    avgTimePerDay: "10m",
                     onLockedTap: showPaywall
                 )
 
@@ -448,10 +476,11 @@ struct ControlPanelView: View {
                     .padding(.leading, 16)
 
                 FilterRow(
-                    title: "Hide Messages Tab",
+                    title: "Hide Messages",
                     isEnabled: binding(for: .messages),
                     isLocked: !subscriptionManager.isPremium,
                     streakDays: streakTracker.getCurrentStreakDays(for: .messages),
+                    avgTimePerDay: usageTracker.formattedAveragePerDay(for: .messages),
                     onLockedTap: showPaywall
                 )
             }
@@ -501,6 +530,7 @@ struct ControlPanelView: View {
                     isEnabled: binding(for: .likes),
                     isLocked: !subscriptionManager.isPremium,
                     streakDays: streakTracker.getCurrentStreakDays(for: .likes),
+                    avgTimePerDay: "5m",
                     onLockedTap: showPaywall
                 )
             }
@@ -661,26 +691,51 @@ struct FilterRow: View {
     @Binding var isEnabled: Bool
     var isLocked: Bool = false
     var streakDays: Int = 0
+    var avgTimePerDay: String? = nil  // Estimated time saved per day
     var onLockedTap: (() -> Void)?
 
     var body: some View {
-        HStack {
-            Text(title)
-                .font(AppFonts.body())
-                .foregroundColor(isLocked ? .secondary : .primary)
-            
-            // Streak Badge (only show if filter is enabled and has streak)
-            if !isLocked && streakDays > 0 {
-                StreakBadge(days: streakDays, compact: true)
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(title)
+                        .font(AppFonts.body())
+                        .foregroundColor(isLocked ? .secondary : .primary)
+                        .lineLimit(1)
+                        .allowsTightening(true)
+                        .truncationMode(.tail)
+                    
+                    // Streak Badge (show only if enabled)
+                    if !isLocked && isEnabled && streakDays > 0 {
+                        StreakBadge(days: streakDays, compact: true)
+                            .fixedSize()
+                    }
+                }
+                
+                // Estimated savings
+                if let avgTime = avgTimePerDay {
+                    HStack(spacing: 4) {
+                        Image(systemName: "clock")
+                            .font(.system(size: 9))
+                        
+                        Text("~\(avgTime)/day saved" + (isEnabled ? "" : " if activated"))
+                            .font(AppFonts.caption(10))
+                            .lineLimit(1)
+                            .allowsTightening(true)
+                    }
+                    .foregroundColor(.secondary.opacity(0.6))
+                }
             }
-
-            Spacer()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .layoutPriority(1)
 
             if isLocked {
                 Toggle("", isOn: .constant(false))
+                    .labelsHidden()
                     .toggleStyle(SwitchToggleStyle(tint: .blue))
                     .disabled(true)
                     .scaleEffect(0.9)
+                    .fixedSize()
                     .overlay(
                         Color.clear
                             .contentShape(Rectangle())
@@ -690,8 +745,10 @@ struct FilterRow: View {
                     )
             } else {
                 Toggle("", isOn: $isEnabled)
+                    .labelsHidden()
                     .toggleStyle(SwitchToggleStyle(tint: .white))
                     .scaleEffect(0.9)
+                    .fixedSize()
             }
         }
         .padding(.horizontal, 16)

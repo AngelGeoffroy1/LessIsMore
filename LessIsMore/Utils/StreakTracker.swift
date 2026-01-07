@@ -406,3 +406,112 @@ struct BreakStreakModal: View {
     .padding()
     .background(Color.gray.opacity(0.1))
 }
+
+// MARK: - Time Saved Explanation Modal
+
+struct TimeSavedExplanationModal: View {
+    let onDismiss: () -> Void
+    @Environment(\.colorScheme) var colorScheme
+    @State private var appeared = false
+    
+    var body: some View {
+        VStack(spacing: 24) {
+            // Icon
+            ZStack {
+                Circle()
+                    .fill(Color.green.opacity(0.1))
+                    .frame(width: 70, height: 70)
+                
+                Image(systemName: "clock.arrow.circlepath")
+                    .font(.system(size: 30))
+                    .foregroundColor(.green)
+            }
+            
+            // Text Content
+            VStack(spacing: 12) {
+                Text("How it's calculated")
+                    .font(AppFonts.title3(20))
+                    .foregroundColor(.primary)
+                
+                VStack(spacing: 16) {
+                    ExplanationRow(
+                        icon: "chart.bar.xaxis",
+                        title: "We analyze your usage",
+                        description: "We look at your average daily time spent on each category (Reels, Stories, etc.) over the last 7 days."
+                    )
+                    
+                    ExplanationRow(
+                        icon: "flame.fill",
+                        title: "We track your progress",
+                        description: "We multiply your active streak days by your personal average daily usage."
+                    )
+                    
+                    ExplanationRow(
+                        icon: "sparkles",
+                        title: "Real reclaimed time",
+                        description: "This represents the actual time you've won back for yourself by keeping your filters active."
+                    )
+                }
+            }
+            
+            // Dismiss Button
+            Button(action: onDismiss) {
+                Text("Got it")
+                    .font(AppFonts.headline(16))
+                    .foregroundColor(colorScheme == .dark ? .black : .white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(Color.primary)
+                    .cornerRadius(14)
+            }
+        }
+        .padding(28)
+        .background(
+            ZStack {
+                VisualEffectView(effect: UIBlurEffect(style: colorScheme == .dark ? .systemMaterialDark : .systemMaterialLight))
+                    .opacity(0.9)
+            }
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 24))
+        .overlay(
+            RoundedRectangle(cornerRadius: 24)
+                .stroke(Color.primary.opacity(0.1), lineWidth: 0.5)
+        )
+        .padding(.horizontal, 24)
+        .scaleEffect(appeared ? 1 : 0.9)
+        .opacity(appeared ? 1 : 0)
+        .onAppear {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
+                appeared = true
+            }
+        }
+    }
+}
+
+private struct ExplanationRow: View {
+    let icon: String
+    let title: String
+    let description: String
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 14) {
+            Image(systemName: icon)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.primary.opacity(0.7))
+                .frame(width: 24, height: 24)
+                .background(Color.primary.opacity(0.05))
+                .clipShape(Circle())
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(AppFonts.subheadline(14).bold())
+                    .foregroundColor(.primary)
+                
+                Text(description)
+                    .font(AppFonts.footnote(12))
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
