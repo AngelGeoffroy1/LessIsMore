@@ -3,432 +3,1123 @@
 //  LessIsMore
 //
 //  Created by Angel Geoffroy on 03/09/2025.
+//  Redesigned on 07/01/2026.
 //
 
 import SwiftUI
 import SuperwallKit
 
-// Couleurs Instagram
-extension Color {
-    static let instagramPurple = Color(red: 131/255, green: 58/255, blue: 180/255)
-    static let instagramPink = Color(red: 193/255, green: 53/255, blue: 132/255)
-    static let instagramOrange = Color(red: 253/255, green: 89/255, blue: 73/255)
-    static let instagramYellow = Color(red: 252/255, green: 175/255, blue: 69/255)
+// MARK: - Design System Colors
+struct OnboardingColors {
+    static let background = Color(hex: "111111")
+    static let primary = Color(hex: "ffb3cf")
+    static let surface = Color(hex: "1C1C1E")
+    static let surfaceSelected = Color(hex: "ffb3cf").opacity(0.15)
+    static let textPrimary = Color.white
+    static let textSecondary = Color(hex: "8E8E93")
+    static let border = Color(hex: "2C2C2E")
+    static let borderSelected = Color(hex: "ffb3cf")
 }
 
+// MARK: - Main Onboarding View
 struct OnboardingView: View {
     @ObservedObject var authManager: AuthenticationManager
     @State private var currentPage = 0
     @State private var animateContent = false
-    @State private var showSkip = false
-
-    private let totalPages = 4
-
+    
+    private let totalPages = 10
+    
     var body: some View {
         ZStack {
-            // Fond animé
-            AnimatedGradientBackground()
+            // Dark background
+            OnboardingColors.background
                 .ignoresSafeArea()
-
+            
             VStack(spacing: 0) {
-                // Header avec skip
-                HStack {
-                    Spacer()
-                    if showSkip && currentPage < totalPages - 1 {
-                        Button(action: {
-                            withAnimation(.easeInOut(duration: 0.4)) {
-                                currentPage = totalPages - 1
-                            }
-                        }) {
-                            Text("Skip")
-                                .font(AppFonts.subheadline())
-                                .foregroundColor(.secondary)
-                        }
-                        .transition(.opacity)
-                    }
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 16)
-                .frame(height: 44)
-
-                // Contenu principal
+                // Progress bar
+                OnboardingProgressBar(currentPage: currentPage, totalPages: totalPages)
+                    .padding(.top, 8)
+                
+                // Content
                 TabView(selection: $currentPage) {
-                    // Page 1: Le problème
-                    ProblemPage(animateContent: $animateContent)
+                    // Page 0: Welcome
+                    WelcomePage(animateContent: $animateContent)
                         .tag(0)
-
-                    // Page 2: La solution
-                    SolutionPage(animateContent: $animateContent)
+                    
+                    // Page 1: Name Input
+                    NameInputPage(authManager: authManager, animateContent: $animateContent, onContinue: { goToNextPage() })
                         .tag(1)
-
-                    // Page 3: Les bénéfices
-                    BenefitsPage(animateContent: $animateContent)
+                    
+                    // Page 2: Problem Selection
+                    ProblemPage(authManager: authManager, animateContent: $animateContent)
                         .tag(2)
-
-                    // Page 4: CTA Premium
-                    PremiumCTAPage(authManager: authManager, animateContent: $animateContent)
+                    
+                    // Page 3: Goals Selection
+                    GoalsPage(authManager: authManager, animateContent: $animateContent)
                         .tag(3)
+                    
+                    // Page 4: Screen Time Input
+                    ScreenTimePage(authManager: authManager, animateContent: $animateContent)
+                        .tag(4)
+                    
+                    // Page 5: Filter Recommendations
+                    FiltersPage(authManager: authManager, animateContent: $animateContent)
+                        .tag(5)
+                    
+                    // Page 6: Projection
+                    ProjectionPage(authManager: authManager, animateContent: $animateContent)
+                        .tag(6)
+                    
+                    // Page 7: Social Proof
+                    SocialProofPage(animateContent: $animateContent)
+                        .tag(7)
+                    
+                    // Page 8: Premium CTA
+                    PremiumCTAPage(authManager: authManager, animateContent: $animateContent)
+                        .tag(8)
+                    
+                    // Page 9: Let's Go
+                    LetsGoPage(authManager: authManager, animateContent: $animateContent)
+                        .tag(9)
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                 .animation(.easeInOut(duration: 0.3), value: currentPage)
-
-                // Footer avec indicateurs et boutons
-                VStack(spacing: 20) {
-                    // Indicateurs de page améliorés
-                    OnboardingPageIndicator(currentPage: currentPage, totalPages: totalPages)
-
-                    // Bouton principal (sauf dernière page)
-                    if currentPage < totalPages - 1 {
+            }
+            
+            // Back button overlay (top left, below progress bar)
+            if currentPage > 1 && currentPage < totalPages - 1 && currentPage != 8 {
+                VStack {
+                    HStack {
                         Button(action: {
                             withAnimation(.easeInOut(duration: 0.4)) {
-                                currentPage += 1
+                                currentPage -= 1
                             }
                         }) {
-                            HStack(spacing: 8) {
-                                Text(currentPage == 0 ? "Discover" : "Continue")
-                                    .font(AppFonts.headline())
-                                Image(systemName: "arrow.right")
+                            HStack(spacing: 4) {
+                                Image(systemName: "chevron.left")
                                     .font(.system(size: 14, weight: .semibold))
+                                Text("Retour")
+                                    .font(AppFonts.subheadline())
                             }
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 56)
-                            .background(
-                                LinearGradient(
-                                    colors: [.instagramPurple, .instagramPink, .instagramOrange],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .cornerRadius(16)
-                            .shadow(color: Color.instagramPink.opacity(0.4), radius: 12, x: 0, y: 6)
+                            .foregroundColor(OnboardingColors.textSecondary)
                         }
-                        .buttonStyle(ScaleButtonStyle())
+                        .padding(.leading, 20)
+                        .padding(.top, 16)
+                        Spacer()
                     }
+                    Spacer()
                 }
-                .padding(.horizontal, 32)
-                .padding(.bottom, 40)
+            }
+            
+            // Footer overlay (transparent, no background)
+            VStack {
+                Spacer()
+                OnboardingFooter(
+                    currentPage: $currentPage,
+                    totalPages: totalPages,
+                    authManager: authManager,
+                    canContinue: canContinue
+                )
             }
         }
         .onAppear {
-            withAnimation(.easeOut(duration: 0.5).delay(0.3)) {
-                animateContent = true
-            }
-            withAnimation(.easeOut(duration: 0.3).delay(1.5)) {
-                showSkip = true
-            }
+            triggerAnimation()
         }
         .onChange(of: currentPage) {
-            animateContent = false
-            withAnimation(.easeOut(duration: 0.4).delay(0.1)) {
-                animateContent = true
-            }
+            triggerAnimation()
+        }
+    }
+    
+    private func triggerAnimation() {
+        // Dismiss keyboard when changing pages
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        
+        animateContent = false
+        withAnimation(.easeOut(duration: 0.4).delay(0.1)) {
+            animateContent = true
+        }
+    }
+    
+    private func goToNextPage() {
+        withAnimation(.easeInOut(duration: 0.4)) {
+            currentPage += 1
+        }
+    }
+    
+    private var canContinue: Bool {
+        switch currentPage {
+        case 1: return !authManager.userName.trimmingCharacters(in: .whitespaces).isEmpty
+        case 2: return authManager.userProblem != nil
+        case 3: return !authManager.userGoals.isEmpty
+        default: return true
         }
     }
 }
 
-// MARK: - Page 1: Le Problème
-struct ProblemPage: View {
-    @Binding var animateContent: Bool
-    @State private var timeCounter: Int = 0
-    @State private var isCounterAnimating = false
-
+// MARK: - Progress Bar
+struct OnboardingProgressBar: View {
+    let currentPage: Int
+    let totalPages: Int
+    
     var body: some View {
-        VStack(spacing: 24) {
-            Spacer()
-
-            // Icône animée
-            ZStack {
-                Circle()
-                    .fill(Color.red.opacity(0.1))
-                    .frame(width: 120, height: 120)
-                    .scaleEffect(animateContent ? 1 : 0.5)
-
-                Circle()
-                    .fill(Color.red.opacity(0.2))
-                    .frame(width: 80, height: 80)
-                    .scaleEffect(animateContent ? 1 : 0.5)
-
-                Image(systemName: "hourglass.tophalf.filled")
-                    .font(.system(size: 40))
-                    .foregroundColor(.red)
-                    .rotationEffect(.degrees(animateContent ? 0 : -30))
-            }
-            .opacity(animateContent ? 1 : 0)
-            .animation(.spring(response: 0.6, dampingFraction: 0.7).delay(0.1), value: animateContent)
-
-            VStack(spacing: 12) {
-                Text("Did you know...")
-                    .font(AppFonts.subheadline())
-                    .foregroundColor(.secondary)
-                    .opacity(animateContent ? 1 : 0)
-                    .offset(y: animateContent ? 0 : 20)
-
-                // Compteur animé
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text("\(timeCounter)")
-                        .font(AppFonts.title(50))
-                        .foregroundColor(.red)
-                        .contentTransition(.numericText())
-
-                    Text("min/day")
-                        .font(AppFonts.title3())
-                        .foregroundColor(.secondary)
-                }
-                .opacity(animateContent ? 1 : 0)
-                .offset(y: animateContent ? 0 : 20)
-
-                Text("That's the average time wasted\non Instagram every day")
-                    .font(AppFonts.body())
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .opacity(animateContent ? 1 : 0)
-                    .offset(y: animateContent ? 0 : 20)
-            }
-            .animation(.easeOut(duration: 0.5).delay(0.2), value: animateContent)
-
-            // Stats persuasives
-            VStack(spacing: 10) {
-                StatBadge(icon: "brain.head.profile", text: "Reduces anxiety by 40%", color: .orange)
-                StatBadge(icon: "clock.arrow.circlepath", text: "Recover 2h per week", color: .green)
-                StatBadge(icon: "bolt.fill", text: "2x Productivity", color: .blue)
-            }
-            .padding(.top, 8)
-            .opacity(animateContent ? 1 : 0)
-            .offset(y: animateContent ? 0 : 30)
-            .animation(.easeOut(duration: 0.5).delay(0.4), value: animateContent)
-
-            Spacer()
-            Spacer()
-        }
-        .padding(.horizontal, 24)
-        .onAppear {
-            startCounterAnimation()
-        }
-    }
-
-    private func startCounterAnimation() {
-        guard !isCounterAnimating else { return }
-        isCounterAnimating = true
-        timeCounter = 0
-
-        Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { timer in
-            if timeCounter < 53 {
-                withAnimation(.easeOut(duration: 0.05)) {
-                    timeCounter += 1
-                }
-            } else {
-                timer.invalidate()
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                // Background
+                Rectangle()
+                    .fill(OnboardingColors.border)
+                    .frame(height: 3)
+                
+                // Progress
+                Rectangle()
+                    .fill(OnboardingColors.primary)
+                    .frame(width: geometry.size.width * CGFloat(currentPage + 1) / CGFloat(totalPages), height: 3)
+                    .animation(.easeInOut(duration: 0.3), value: currentPage)
             }
         }
+        .frame(height: 3)
+        .padding(.horizontal, 20)
     }
 }
 
-// MARK: - Page 2: La Solution (Scrollable)
-struct SolutionPage: View {
-    @Binding var animateContent: Bool
-    @State private var selectedFilters: Set<String> = []
-
-    let filters = [
-        ("film.fill", "Reels", "Addictive videos", Color.pink),
-        ("safari.fill", "Explore", "Random content", Color.orange),
-        ("circle.dashed", "Stories", "Distractions", Color.purple),
-        ("heart.fill", "Likes", "Comparison", Color.red)
-    ]
-
+// MARK: - Footer
+struct OnboardingFooter: View {
+    @Binding var currentPage: Int
+    let totalPages: Int
+    @ObservedObject var authManager: AuthenticationManager
+    let canContinue: Bool
+    
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 20) {
-                VStack(spacing: 6) {
-                    Text("Your Instagram,")
-                        .font(AppFonts.title2())
-                    Text("Your Rules")
-                        .font(AppFonts.title())
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [.instagramPurple, .instagramPink],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
+        VStack(spacing: 16) {
+            // Main CTA button (except for pages with custom buttons)
+            if shouldShowMainButton {
+                Button(action: {
+                    handleMainButtonAction()
+                }) {
+                    Text(mainButtonText)
+                        .font(AppFonts.headline())
+                        .foregroundColor(OnboardingColors.background)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 56)
+                        .background(
+                            RoundedRectangle(cornerRadius: 28)
+                                .fill(canContinue ? OnboardingColors.primary : OnboardingColors.primary.opacity(0.5))
                         )
                 }
+                .disabled(!canContinue)
+                .buttonStyle(OnboardingButtonStyle())
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 40)
+    }
+    
+    private var shouldShowMainButton: Bool {
+        // Pages 8 (premium) and 9 (let's go) have custom buttons
+        return currentPage != 8 && currentPage != 9
+    }
+    
+    private var mainButtonText: String {
+        switch currentPage {
+        case 0: return "Continue"
+        case 7: return "Rejoindre la team"
+        default: return "Continue"
+        }
+    }
+    
+    private func handleMainButtonAction() {
+        withAnimation(.easeInOut(duration: 0.4)) {
+            if currentPage < totalPages - 1 {
+                currentPage += 1
+            }
+        }
+    }
+}
+
+// MARK: - Button Style
+struct OnboardingButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.96 : 1)
+            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+    }
+}
+
+// MARK: - Page 0: Welcome
+struct WelcomePage: View {
+    @Binding var animateContent: Bool
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer()
+            
+            // Text content
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Salut ! 👋 Je suis Lessy,")
+                    .font(AppFonts.title2())
+                    .foregroundColor(OnboardingColors.textPrimary)
+                
+                Text("ton compagnon pour reprendre")
+                    .font(AppFonts.title2())
+                    .foregroundColor(OnboardingColors.textPrimary)
+                
+                Text("le contrôle de ton temps")
+                    .font(AppFonts.title2())
+                    .foregroundColor(OnboardingColors.textPrimary)
+                
+                Text("sur Instagram !")
+                    .font(AppFonts.title2())
+                    .foregroundColor(OnboardingColors.textPrimary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 24)
+            .opacity(animateContent ? 1 : 0)
+            .offset(y: animateContent ? 0 : 20)
+            .animation(.easeOut(duration: 0.5), value: animateContent)
+            
+            Spacer()
+            
+            // Mascot
+            LessyMascotContainer(size: 220, showGlow: true)
+                .opacity(animateContent ? 1 : 0)
+                .scaleEffect(animateContent ? 1 : 0.8)
+                .animation(.spring(response: 0.6, dampingFraction: 0.7).delay(0.2), value: animateContent)
+            
+            Spacer()
+            Spacer()
+        }
+    }
+}
+
+// MARK: - Page 1: Name Input
+struct NameInputPage: View {
+    @ObservedObject var authManager: AuthenticationManager
+    @Binding var animateContent: Bool
+    var onContinue: () -> Void
+    @FocusState private var isNameFocused: Bool
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer()
+                .frame(height: 60)
+            
+            // Question
+            Text("Comment je peux t'appeler ? 😊")
+                .font(AppFonts.title2())
+                .foregroundColor(OnboardingColors.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 24)
                 .opacity(animateContent ? 1 : 0)
                 .offset(y: animateContent ? 0 : 20)
-                .animation(.easeOut(duration: 0.5), value: animateContent)
-                .padding(.top, 20)
+            
+            // Text field
+            VStack(alignment: .trailing, spacing: 8) {
+                TextField("", text: $authManager.userName)
+                    .font(AppFonts.body())
+                    .foregroundColor(OnboardingColors.textPrimary)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(OnboardingColors.surface)
+                    )
+                    .focused($isNameFocused)
+                    .submitLabel(.continue)
+                    .onSubmit {
+                        if !authManager.userName.trimmingCharacters(in: .whitespaces).isEmpty {
+                            onContinue()
+                        }
+                    }
+                
+                Text("\(authManager.userName.count) / 50")
+                    .font(AppFonts.caption())
+                    .foregroundColor(OnboardingColors.textSecondary)
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 20)
+            .opacity(animateContent ? 1 : 0)
+            .animation(.easeOut(duration: 0.5).delay(0.1), value: animateContent)
+            
+            Spacer()
+            
+            // Mascot (smaller, curious expression)
+            LessyMascotContainer(size: 160, showGlow: true)
+                .opacity(animateContent ? 1 : 0)
+                .animation(.easeOut(duration: 0.5).delay(0.2), value: animateContent)
+            
+            Spacer()
+            Spacer()
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            isNameFocused = false
+        }
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                isNameFocused = true
+            }
+        }
+    }
+}
 
-                Text("Tap to block")
-                    .font(AppFonts.subheadline())
-                    .foregroundColor(.secondary)
-                    .opacity(animateContent ? 1 : 0)
-
-                // Grille de filtres interactifs (2x2)
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                    ForEach(Array(filters.enumerated()), id: \.offset) { index, filter in
-                        InteractiveFilterCard(
-                            icon: filter.0,
-                            title: filter.1,
-                            subtitle: filter.2,
-                            color: filter.3,
-                            isSelected: selectedFilters.contains(filter.1),
-                            delay: Double(index) * 0.1
+// MARK: - Page 2: Problem Selection
+struct ProblemPage: View {
+    @ObservedObject var authManager: AuthenticationManager
+    @Binding var animateContent: Bool
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer()
+                .frame(height: 60)
+            
+            // Question
+            VStack(alignment: .leading, spacing: 4) {
+                if !authManager.userName.isEmpty {
+                    Text("\(authManager.userName),")
+                        .font(AppFonts.title2())
+                        .foregroundColor(OnboardingColors.primary)
+                }
+                Text("qu'est-ce qui t'embête")
+                    .font(AppFonts.title2())
+                    .foregroundColor(OnboardingColors.textPrimary)
+                Text("le plus avec Instagram ? 🤔")
+                    .font(AppFonts.title2())
+                    .foregroundColor(OnboardingColors.textPrimary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 24)
+            .opacity(animateContent ? 1 : 0)
+            .offset(y: animateContent ? 0 : 20)
+            
+            // Options
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 12) {
+                    ForEach(Array(UserProblem.allCases.enumerated()), id: \.element) { index, problem in
+                        ProblemOptionCard(
+                            problem: problem,
+                            isSelected: authManager.userProblem == problem,
+                            delay: Double(index) * 0.08
                         ) {
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                if selectedFilters.contains(filter.1) {
-                                    selectedFilters.remove(filter.1)
+                                authManager.userProblem = problem
+                                let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+                                impactFeedback.impactOccurred()
+                            }
+                        }
+                        .opacity(animateContent ? 1 : 0)
+                        .offset(y: animateContent ? 0 : 20)
+                        .animation(.easeOut(duration: 0.4).delay(Double(index) * 0.08 + 0.1), value: animateContent)
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 24)
+                .padding(.bottom, 120)
+            }
+            
+            Spacer()
+        }
+    }
+}
+
+struct ProblemOptionCard: View {
+    let problem: UserProblem
+    let isSelected: Bool
+    let delay: Double
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Text(problem.emoji)
+                    .font(.system(size: 24))
+                
+                Text(problem.displayText)
+                    .font(AppFonts.body())
+                    .foregroundColor(OnboardingColors.textPrimary)
+                
+                Spacer()
+                
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 22))
+                        .foregroundColor(OnboardingColors.primary)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 16)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(isSelected ? OnboardingColors.surfaceSelected : OnboardingColors.surface)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(isSelected ? OnboardingColors.borderSelected : OnboardingColors.border, lineWidth: isSelected ? 2 : 1)
+                    )
+            )
+        }
+        .buttonStyle(OnboardingButtonStyle())
+    }
+}
+
+// MARK: - Page 3: Goals Selection
+struct GoalsPage: View {
+    @ObservedObject var authManager: AuthenticationManager
+    @Binding var animateContent: Bool
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer()
+                .frame(height: 60)
+            
+            // Question
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Qu'est-ce que tu veux accomplir ? 🎯")
+                    .font(AppFonts.title2())
+                    .foregroundColor(OnboardingColors.textPrimary)
+                Text("(sélectionne tout ce qui s'applique)")
+                    .font(AppFonts.subheadline())
+                    .foregroundColor(OnboardingColors.textSecondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 24)
+            .opacity(animateContent ? 1 : 0)
+            .offset(y: animateContent ? 0 : 20)
+            
+            // Options
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 12) {
+                    ForEach(Array(UserGoal.allCases.enumerated()), id: \.element) { index, goal in
+                        GoalOptionCard(
+                            goal: goal,
+                            isSelected: authManager.userGoals.contains(goal)
+                        ) {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                if authManager.userGoals.contains(goal) {
+                                    authManager.userGoals.remove(goal)
                                 } else {
-                                    selectedFilters.insert(filter.1)
+                                    authManager.userGoals.insert(goal)
                                     let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
                                     impactFeedback.impactOccurred()
                                 }
                             }
                         }
                         .opacity(animateContent ? 1 : 0)
-                        .offset(y: animateContent ? 0 : 30)
-                        .animation(.spring(response: 0.5, dampingFraction: 0.8).delay(Double(index) * 0.08), value: animateContent)
+                        .offset(y: animateContent ? 0 : 20)
+                        .animation(.easeOut(duration: 0.4).delay(Double(index) * 0.08 + 0.1), value: animateContent)
                     }
                 }
-                .padding(.horizontal, 8)
+                .padding(.horizontal, 24)
+                .padding(.top, 24)
+                .padding(.bottom, 120)
+            }
+            
+            Spacer()
+        }
+    }
+}
 
-                // Compteur de filtres sélectionnés
-                if !selectedFilters.isEmpty {
+struct GoalOptionCard: View {
+    let goal: UserGoal
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Text(goal.emoji)
+                    .font(.system(size: 24))
+                
+                Text(goal.displayText)
+                    .font(AppFonts.body())
+                    .foregroundColor(OnboardingColors.textPrimary)
+                
+                Spacer()
+                
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 22))
+                        .foregroundColor(OnboardingColors.primary)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 16)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(isSelected ? OnboardingColors.surfaceSelected : OnboardingColors.surface)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(isSelected ? OnboardingColors.borderSelected : OnboardingColors.border, lineWidth: isSelected ? 2 : 1)
+                    )
+            )
+        }
+        .buttonStyle(OnboardingButtonStyle())
+    }
+}
+
+// MARK: - Page 4: Screen Time Input
+struct ScreenTimePage: View {
+    @ObservedObject var authManager: AuthenticationManager
+    @Binding var animateContent: Bool
+    
+    private let timeOptions = [30, 60, 90, 120, 150, 180, 240, 300]
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer()
+                .frame(height: 60)
+            
+            // Question
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Combien de temps passes-tu")
+                    .font(AppFonts.title2())
+                    .foregroundColor(OnboardingColors.textPrimary)
+                Text("sur Instagram par jour ? 📱")
+                    .font(AppFonts.title2())
+                    .foregroundColor(OnboardingColors.textPrimary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 24)
+            .opacity(animateContent ? 1 : 0)
+            .offset(y: animateContent ? 0 : 20)
+            
+            Spacer()
+            
+            // Time display
+            VStack(spacing: 8) {
+                Text(formatTime(authManager.dailyScreenTimeMinutes))
+                    .font(AppFonts.title(50))
+                    .foregroundColor(timeColor)
+                    .contentTransition(.numericText())
+                    .animation(.easeInOut(duration: 0.2), value: authManager.dailyScreenTimeMinutes)
+                
+                Text("par jour")
+                    .font(AppFonts.subheadline())
+                    .foregroundColor(OnboardingColors.textSecondary)
+            }
+            .opacity(animateContent ? 1 : 0)
+            .animation(.easeOut(duration: 0.5).delay(0.1), value: animateContent)
+            
+            // Slider
+            VStack(spacing: 16) {
+                Slider(
+                    value: Binding(
+                        get: { Double(authManager.dailyScreenTimeMinutes) },
+                        set: { authManager.dailyScreenTimeMinutes = Int($0) }
+                    ),
+                    in: 30...300,
+                    step: 30
+                )
+                .tint(OnboardingColors.primary)
+                .padding(.horizontal, 24)
+                
+                HStack {
+                    Text("30min")
+                        .font(AppFonts.caption())
+                        .foregroundColor(OnboardingColors.textSecondary)
+                    Spacer()
+                    Text("5h+")
+                        .font(AppFonts.caption())
+                        .foregroundColor(OnboardingColors.textSecondary)
+                }
+                .padding(.horizontal, 24)
+            }
+            .padding(.top, 32)
+            .opacity(animateContent ? 1 : 0)
+            .animation(.easeOut(duration: 0.5).delay(0.2), value: animateContent)
+            
+            Spacer()
+            
+            // Mascot with reaction
+            VStack(spacing: 12) {
+                LessyMascotContainer(size: 140, showGlow: true)
+                
+                Text(reactionMessage)
+                    .font(AppFonts.subheadline())
+                    .foregroundColor(OnboardingColors.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            }
+            .opacity(animateContent ? 1 : 0)
+            .animation(.easeOut(duration: 0.5).delay(0.3), value: animateContent)
+            .padding(.bottom, 120)
+            
+            Spacer()
+        }
+    }
+    
+    private var timeColor: Color {
+        switch authManager.dailyScreenTimeMinutes {
+        case 0...60: return .green
+        case 61...120: return .yellow
+        case 121...180: return .orange
+        default: return .red
+        }
+    }
+    
+    private var reactionMessage: String {
+        switch authManager.dailyScreenTimeMinutes {
+        case 0...60: return "Pas mal ! On peut encore améliorer 💪"
+        case 61...120: return "C'est commun, on va régler ça ensemble !"
+        case 121...180: return "T'inquiète, je suis là pour t'aider ! 🤗"
+        default: return "Wow, mais pas de souci, on va transformer ça ! 🚀"
+        }
+    }
+    
+    private func formatTime(_ minutes: Int) -> String {
+        let hours = minutes / 60
+        let mins = minutes % 60
+        if hours > 0 && mins > 0 {
+            return "\(hours)h\(mins)"
+        } else if hours > 0 {
+            return "\(hours)h"
+        } else {
+            return "\(mins)min"
+        }
+    }
+}
+
+// MARK: - Page 5: Filter Recommendations
+struct FiltersPage: View {
+    @ObservedObject var authManager: AuthenticationManager
+    @Binding var animateContent: Bool
+    @State private var selectedFilters: Set<String> = []
+    
+    let filters: [(id: String, icon: String, title: String, timeSaved: Int, color: Color)] = [
+        ("reels", "film.fill", "Reels", 45, .pink),
+        ("explore", "safari.fill", "Explore", 20, .orange),
+        ("stories", "circle.dashed", "Stories", 15, .purple),
+        ("likes", "heart.fill", "Likes", 10, .red)
+    ]
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer()
+                .frame(height: 40)
+            
+            // Header
+            VStack(alignment: .leading, spacing: 4) {
+                if !authManager.userName.isEmpty {
+                    Text("\(authManager.userName),")
+                        .font(AppFonts.title2())
+                        .foregroundColor(OnboardingColors.primary)
+                }
+                Text("voici mes recommandations")
+                    .font(AppFonts.title2())
+                    .foregroundColor(OnboardingColors.textPrimary)
+                Text("pour toi ! ✨")
+                    .font(AppFonts.title2())
+                    .foregroundColor(OnboardingColors.textPrimary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 24)
+            .opacity(animateContent ? 1 : 0)
+            .offset(y: animateContent ? 0 : 20)
+            
+            Text("Tape pour bloquer")
+                .font(AppFonts.subheadline())
+                .foregroundColor(OnboardingColors.textSecondary)
+                .padding(.top, 8)
+                .opacity(animateContent ? 1 : 0)
+            
+            // Filter grid
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                ForEach(Array(filters.enumerated()), id: \.element.id) { index, filter in
+                    FilterCard(
+                        icon: filter.icon,
+                        title: filter.title,
+                        timeSaved: filter.timeSaved,
+                        color: filter.color,
+                        isSelected: selectedFilters.contains(filter.id),
+                        isRecommended: authManager.recommendedFiltersFromGoals.contains(filter.id)
+                    ) {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            if selectedFilters.contains(filter.id) {
+                                selectedFilters.remove(filter.id)
+                            } else {
+                                selectedFilters.insert(filter.id)
+                                let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+                                impactFeedback.impactOccurred()
+                            }
+                        }
+                    }
+                    .opacity(animateContent ? 1 : 0)
+                    .offset(y: animateContent ? 0 : 30)
+                    .animation(.spring(response: 0.5, dampingFraction: 0.8).delay(Double(index) * 0.08 + 0.1), value: animateContent)
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 24)
+            
+            Spacer()
+            
+            // Time saved counter
+            if !selectedFilters.isEmpty {
+                VStack(spacing: 8) {
                     HStack(spacing: 8) {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundColor(.green)
-                        Text("\(selectedFilters.count) blocked")
+                        Text("\(selectedFilters.count) filtre(s) bloqué(s)")
                             .font(AppFonts.subheadline())
-                            .foregroundColor(.secondary)
+                            .foregroundColor(OnboardingColors.textSecondary)
                     }
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 16)
-                    .background(Color.green.opacity(0.1))
-                    .cornerRadius(20)
-                    .transition(.scale.combined(with: .opacity))
+                    
+                    HStack(spacing: 4) {
+                        Text("≈")
+                            .foregroundColor(OnboardingColors.textSecondary)
+                        Text("\(totalTimeSaved) min")
+                            .font(AppFonts.headline())
+                            .foregroundColor(.green)
+                        Text("économisées/jour")
+                            .foregroundColor(OnboardingColors.textSecondary)
+                    }
+                    .font(AppFonts.subheadline())
                 }
-
-                // Espace pour le footer
-                Spacer()
-                    .frame(height: 60)
+                .transition(.scale.combined(with: .opacity))
             }
+            
+            // Extra space for Continue button
+            Spacer()
+                .frame(height: 100)
+        }
+        .onAppear {
+            // Pre-select recommended filters
+            selectedFilters = authManager.recommendedFiltersFromGoals
+        }
+    }
+    
+    private var totalTimeSaved: Int {
+        filters.filter { selectedFilters.contains($0.id) }.reduce(0) { $0 + $1.timeSaved }
+    }
+}
+
+struct FilterCard: View {
+    let icon: String
+    let title: String
+    let timeSaved: Int
+    let color: Color
+    let isSelected: Bool
+    let isRecommended: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                ZStack {
+                    Circle()
+                        .fill(isSelected ? color : color.opacity(0.15))
+                        .frame(width: 50, height: 50)
+                    
+                    Image(systemName: isSelected ? "xmark" : icon)
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(isSelected ? .white : color)
+                }
+                
+                Text(title)
+                    .font(AppFonts.headline())
+                    .foregroundColor(isSelected ? color : OnboardingColors.textPrimary)
+                
+                Text("-\(timeSaved) min")
+                    .font(AppFonts.caption())
+                    .foregroundColor(OnboardingColors.textSecondary)
+                
+                if isRecommended && !isSelected {
+                    Text("Recommandé")
+                        .font(AppFonts.caption2())
+                        .foregroundColor(OnboardingColors.primary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(OnboardingColors.primary.opacity(0.2))
+                        .cornerRadius(8)
+                }
+            }
+            .padding(.vertical, 16)
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(isSelected ? color.opacity(0.1) : OnboardingColors.surface)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(isSelected ? color : OnboardingColors.border, lineWidth: isSelected ? 2 : 1)
+                    )
+            )
+        }
+        .buttonStyle(OnboardingButtonStyle())
+    }
+}
+
+// MARK: - Page 6: Projection
+struct ProjectionPage: View {
+    @ObservedObject var authManager: AuthenticationManager
+    @Binding var animateContent: Bool
+    @State private var displayedHours: Int = 0
+    
+    private var projectedHours: Int {
+        (authManager.estimatedTimeSavedMinutes * 30) / 60
+    }
+    
+    let equivalences = [
+        ("📚", "livres lus"),
+        ("🏃", "séances de sport"),
+        ("😴", "nuits de sommeil en plus")
+    ]
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer()
+                .frame(height: 60)
+            
+            // Header
+            VStack(alignment: .leading, spacing: 4) {
+                if !authManager.userName.isEmpty {
+                    Text("\(authManager.userName),")
+                        .font(AppFonts.title2())
+                        .foregroundColor(OnboardingColors.primary)
+                }
+                Text("dans 30 jours,")
+                    .font(AppFonts.title2())
+                    .foregroundColor(OnboardingColors.textPrimary)
+                Text("tu auras récupéré... 🔮")
+                    .font(AppFonts.title2())
+                    .foregroundColor(OnboardingColors.textPrimary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 24)
+            .opacity(animateContent ? 1 : 0)
+            .offset(y: animateContent ? 0 : 20)
+            
+            Spacer()
+            
+            // Big number (centered)
+            VStack(spacing: 8) {
+                Text("\(displayedHours)h")
+                    .font(AppFonts.title(72))
+                    .foregroundColor(.green)
+                    .contentTransition(.numericText())
+                
+                Text("de ta vie")
+                    .font(AppFonts.title3())
+                    .foregroundColor(OnboardingColors.textSecondary)
+            }
+            .opacity(animateContent ? 1 : 0)
+            .scaleEffect(animateContent ? 1 : 0.8)
+            .animation(.spring(response: 0.6, dampingFraction: 0.7).delay(0.2), value: animateContent)
+            
+            // Equivalences
+            VStack(spacing: 12) {
+                Text("💡 C'est l'équivalent de :")
+                    .font(AppFonts.subheadline())
+                    .foregroundColor(OnboardingColors.textSecondary)
+                
+                VStack(spacing: 8) {
+                    EquivalenceCard(emoji: "📚", text: "\(max(projectedHours / 4, 1)) livres lus")
+                    EquivalenceCard(emoji: "🏃", text: "\(max(projectedHours / 2, 1)) séances de sport")
+                    EquivalenceCard(emoji: "😴", text: "\(max(projectedHours / 8, 1)) nuits de sommeil en plus")
+                }
+            }
+            .padding(.top, 32)
+            .padding(.horizontal, 24)
+            .opacity(animateContent ? 1 : 0)
+            .animation(.easeOut(duration: 0.5).delay(0.5), value: animateContent)
+            
+            Spacer()
+            
+            // Extra space for Continue button
+            Spacer()
+                .frame(height: 100)
+        }
+        .onAppear {
+            startCounterAnimation()
+        }
+    }
+    
+    private func startCounterAnimation() {
+        displayedHours = 0
+        let target = projectedHours
+        let duration = 1.5
+        let steps = 30
+        let interval = duration / Double(steps)
+        
+        for i in 0...steps {
+            DispatchQueue.main.asyncAfter(deadline: .now() + interval * Double(i)) {
+                withAnimation(.easeOut(duration: 0.1)) {
+                    displayedHours = Int(Double(target) * Double(i) / Double(steps))
+                }
+            }
         }
     }
 }
 
-// MARK: - Page 3: Les Bénéfices (Scrollable)
-struct BenefitsPage: View {
-    @Binding var animateContent: Bool
-
-    let testimonials = [
-        ("I get back 1h30 per day!", "Marie, 24 years old"),
-        ("No more endless scrolling at night", "Thomas, 31 years old")
-    ]
-
+struct EquivalenceCard: View {
+    let emoji: String
+    let text: String
+    
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 16) {
-                // Titre
-                VStack(spacing: 4) {
-                    Text("Join")
-                        .font(AppFonts.title3())
-                    HStack(spacing: 6) {
-                        Text("10 000+")
-                            .font(AppFonts.title())
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.green, .blue],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                        Text("users")
-                            .font(AppFonts.title3())
-                    }
-                }
+        HStack(spacing: 12) {
+            Text(emoji)
+                .font(.system(size: 24))
+            Text(text)
+                .font(AppFonts.body())
+                .foregroundColor(OnboardingColors.textPrimary)
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+    }
+}
+
+// MARK: - Page 7: Social Proof
+struct SocialProofPage: View {
+    @Binding var animateContent: Bool
+    
+    let testimonials = [
+        ("Je récupère 1h30 par jour !", "Marie, 24 ans"),
+        ("Plus de scroll nocturne", "Thomas, 31 ans")
+    ]
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer()
+                .frame(height: 60)
+            
+            // Header
+            Text("Tu n'es pas seul(e) ! 🤝")
+                .font(AppFonts.title2())
+                .foregroundColor(OnboardingColors.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 24)
                 .opacity(animateContent ? 1 : 0)
                 .offset(y: animateContent ? 0 : 20)
-                .animation(.easeOut(duration: 0.5), value: animateContent)
-                .padding(.top, 20)
-
-                // Note moyenne
-                HStack(spacing: 4) {
-                    ForEach(0..<5, id: \.self) { index in
-                        Image(systemName: "star.fill")
-                            .foregroundColor(.yellow)
-                            .font(.system(size: 18))
-                            .opacity(animateContent ? 1 : 0)
-                            .scaleEffect(animateContent ? 1 : 0.5)
-                            .animation(.spring(response: 0.4, dampingFraction: 0.6).delay(Double(index) * 0.08), value: animateContent)
-                    }
-                    Text("4.9")
-                        .font(AppFonts.headline())
-                        .padding(.leading, 6)
-                }
-                .padding(.vertical, 4)
-
-                // Témoignages (réduits à 2)
-                VStack(spacing: 12) {
-                    ForEach(Array(testimonials.enumerated()), id: \.offset) { index, testimonial in
-                        CompactTestimonialCard(
-                            quote: testimonial.0,
-                            author: testimonial.1
+            
+            Text("Rejoins")
+                .font(AppFonts.title3())
+                .foregroundColor(OnboardingColors.textSecondary)
+                .padding(.top, 16)
+                .opacity(animateContent ? 1 : 0)
+            
+            // User count
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text("10 000+")
+                    .font(AppFonts.title(40))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.green, .blue],
+                            startPoint: .leading,
+                            endPoint: .trailing
                         )
+                    )
+                Text("users")
+                    .font(AppFonts.title3())
+                    .foregroundColor(OnboardingColors.textSecondary)
+            }
+            .opacity(animateContent ? 1 : 0)
+            .scaleEffect(animateContent ? 1 : 0.8)
+            .animation(.spring(response: 0.5, dampingFraction: 0.7).delay(0.1), value: animateContent)
+            
+            // Rating
+            HStack(spacing: 4) {
+                ForEach(0..<5, id: \.self) { index in
+                    Image(systemName: "star.fill")
+                        .foregroundColor(.yellow)
+                        .font(.system(size: 20))
+                        .opacity(animateContent ? 1 : 0)
+                        .scaleEffect(animateContent ? 1 : 0.5)
+                        .animation(.spring(response: 0.4, dampingFraction: 0.6).delay(Double(index) * 0.08 + 0.2), value: animateContent)
+                }
+                Text("4.9")
+                    .font(AppFonts.headline())
+                    .foregroundColor(OnboardingColors.textPrimary)
+                    .padding(.leading, 8)
+            }
+            .padding(.top, 8)
+            
+            // Testimonials
+            VStack(spacing: 12) {
+                ForEach(Array(testimonials.enumerated()), id: \.offset) { index, testimonial in
+                    TestimonialCard(quote: testimonial.0, author: testimonial.1)
                         .opacity(animateContent ? 1 : 0)
                         .offset(x: animateContent ? 0 : (index % 2 == 0 ? -50 : 50))
-                        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(Double(index) * 0.12 + 0.2), value: animateContent)
-                    }
+                        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(Double(index) * 0.12 + 0.3), value: animateContent)
                 }
-
-                // Badge de confiance
-                HStack(spacing: 10) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "lock.shield.fill")
-                            .foregroundColor(.green)
-                            .font(.system(size: 14))
-                        Text("Privacy")
-                            .font(AppFonts.caption())
-                            .foregroundColor(.secondary)
-                    }
-
-                    Text("•")
-                        .foregroundColor(.secondary)
-
-                    HStack(spacing: 4) {
-                        Image(systemName: "checkmark.seal.fill")
-                            .foregroundColor(.blue)
-                            .font(.system(size: 14))
-                        Text("No ads")
-                            .font(AppFonts.caption())
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .padding(.top, 8)
-                .opacity(animateContent ? 1 : 0)
-                .animation(.easeOut(duration: 0.5).delay(0.5), value: animateContent)
-
-                // Espace pour le footer
-                Spacer()
-                    .frame(height: 60)
             }
             .padding(.horizontal, 24)
+            .padding(.top, 24)
+            
+            Spacer()
+            
+            // Trust badges
+            HStack(spacing: 16) {
+                TrustBadge(icon: "lock.shield.fill", text: "Privacy", color: .green)
+                TrustBadge(icon: "checkmark.seal.fill", text: "No ads", color: .blue)
+            }
+            .opacity(animateContent ? 1 : 0)
+            .animation(.easeOut(duration: 0.5).delay(0.5), value: animateContent)
+            
+            Spacer()
+            Spacer()
         }
     }
 }
 
-// MARK: - Page 4: CTA Premium
+struct TestimonialCard: View {
+    let quote: String
+    let author: String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 2) {
+                ForEach(0..<5, id: \.self) { _ in
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.yellow)
+                }
+            }
+            
+            Text("\"\(quote)\"")
+                .font(AppFonts.body())
+                .foregroundColor(OnboardingColors.textPrimary)
+                .italic()
+            
+            Text("— \(author)")
+                .font(AppFonts.caption())
+                .foregroundColor(OnboardingColors.textSecondary)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(OnboardingColors.surface)
+        )
+    }
+}
+
+struct TrustBadge: View {
+    let icon: String
+    let text: String
+    let color: Color
+    
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.system(size: 14))
+                .foregroundColor(color)
+            Text(text)
+                .font(AppFonts.caption())
+                .foregroundColor(OnboardingColors.textSecondary)
+        }
+    }
+}
+
+// MARK: - Page 8: Premium CTA
 struct PremiumCTAPage: View {
     @ObservedObject var authManager: AuthenticationManager
     @Binding var animateContent: Bool
     @State private var isPulsing = false
-
+    
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 20) {
-                    Spacer()
-                        .frame(height: 20)
-
-                    // Badge Premium
+            VStack(spacing: 0) {
+                Spacer()
+                    .frame(height: 40)
+                
+                // Premium badge
                 HStack(spacing: 8) {
                     Image(systemName: "crown.fill")
                         .foregroundColor(.yellow)
@@ -444,106 +1135,101 @@ struct PremiumCTAPage: View {
                 .opacity(animateContent ? 1 : 0)
                 .scaleEffect(animateContent ? 1 : 0.8)
                 .animation(.spring(response: 0.5, dampingFraction: 0.7), value: animateContent)
-
-                // Titre
+                
+                // Title
                 VStack(spacing: 4) {
-                    Text("Unlock the")
+                    if !authManager.userName.isEmpty {
+                        Text("\(authManager.userName),")
+                            .font(AppFonts.title2())
+                            .foregroundColor(OnboardingColors.primary)
+                    }
+                    Text("débloque tout")
                         .font(AppFonts.title())
-                    Text("Full Potential")
+                        .foregroundColor(OnboardingColors.textPrimary)
+                    Text("le potentiel ! ✨")
                         .font(AppFonts.title())
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [.instagramOrange, .instagramPink],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
+                        .foregroundColor(OnboardingColors.textPrimary)
                 }
                 .multilineTextAlignment(.center)
+                .padding(.top, 16)
                 .opacity(animateContent ? 1 : 0)
                 .offset(y: animateContent ? 0 : 20)
                 .animation(.easeOut(duration: 0.5).delay(0.1), value: animateContent)
-
-                // Features Premium
+                
+                // Features
                 VStack(spacing: 14) {
-                    PremiumFeatureRow(icon: "checkmark.circle.fill", text: "All filters unlimited", color: .green)
-                    PremiumFeatureRow(icon: "bolt.circle.fill", text: "Instant activation", color: .orange)
-                    PremiumFeatureRow(icon: "arrow.triangle.2.circlepath.circle.fill", text: "Multi-device sync", color: .blue)
-                    PremiumFeatureRow(icon: "heart.circle.fill", text: "Priority support", color: .pink)
+                    PremiumFeatureRow(icon: "checkmark.circle.fill", text: "Tous les filtres illimités", color: .green)
+                    PremiumFeatureRow(icon: "bolt.circle.fill", text: "Activation instantanée", color: .orange)
+                    PremiumFeatureRow(icon: "arrow.triangle.2.circlepath.circle.fill", text: "Sync multi-appareils", color: .blue)
+                    PremiumFeatureRow(icon: "heart.circle.fill", text: "Support prioritaire", color: .pink)
                 }
-                .padding(.vertical, 18)
+                .padding(.vertical, 20)
                 .padding(.horizontal, 20)
                 .background(
                     RoundedRectangle(cornerRadius: 20)
-                        .fill(Color(.systemBackground))
-                        .shadow(color: Color.black.opacity(0.1), radius: 20, x: 0, y: 10)
+                        .fill(OnboardingColors.surface)
                 )
+                .padding(.horizontal, 24)
+                .padding(.top, 24)
                 .opacity(animateContent ? 1 : 0)
                 .offset(y: animateContent ? 0 : 30)
                 .animation(.easeOut(duration: 0.5).delay(0.2), value: animateContent)
-
+                
                 Spacer()
-                    .frame(height: 20)
-
-                // Bouton CTA Premium
-                VStack(spacing: 10) {
+                
+                // Mascot with crown
+                LessyMascotContainer(size: 120, showGlow: true, glowColor: .yellow)
+                    .opacity(animateContent ? 1 : 0)
+                    .animation(.easeOut(duration: 0.5).delay(0.3), value: animateContent)
+                
+                Spacer()
+                
+                // CTA Button
+                VStack(spacing: 12) {
                     Button(action: {
-                        // Ouvrir le paywall Superwall
                         Superwall.shared.register(placement: "campaign_trigger") {
-                            // Terminer l'onboarding après le paywall
                             authManager.completeOnboarding()
                         }
                     }) {
                         HStack(spacing: 8) {
                             Image(systemName: "crown.fill")
-                            Text("3-day free trial")
+                            Text("Essai gratuit 3 jours")
                                 .font(AppFonts.headline())
                         }
-                        .foregroundColor(.white)
+                        .foregroundColor(OnboardingColors.background)
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
                         .background(
-                            LinearGradient(
-                                colors: [.instagramPurple, .instagramPink, .instagramOrange],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
+                            RoundedRectangle(cornerRadius: 28)
+                                .fill(OnboardingColors.primary)
                         )
-                        .cornerRadius(16)
-                        .shadow(color: Color.instagramPink.opacity(0.4), radius: 12, x: 0, y: 6)
                         .scaleEffect(isPulsing ? 1.02 : 1)
                     }
-                    .buttonStyle(ScaleButtonStyle())
-                    .opacity(animateContent ? 1 : 0)
-                    .animation(.easeOut(duration: 0.5).delay(0.4), value: animateContent)
-
-                    // Mention légale
-                    Text("Cancel anytime. No commitment.")
-                        .font(AppFonts.caption2())
-                        .foregroundColor(.secondary.opacity(0.7))
-                        .opacity(animateContent ? 1 : 0)
-                        .padding(.top, 4)
+                    .buttonStyle(OnboardingButtonStyle())
+                    
+                    Text("Annulable à tout moment")
+                        .font(AppFonts.caption())
+                        .foregroundColor(OnboardingColors.textSecondary)
                 }
-
-                Spacer()
-                    .frame(height: 60)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 40)
+                .opacity(animateContent ? 1 : 0)
+                .animation(.easeOut(duration: 0.5).delay(0.4), value: animateContent)
             }
-            .padding(.horizontal, 24)
-        }
-
-            // Bouton croix pour quitter l'onboarding
+            
+            // Close button
             Button(action: {
                 authManager.completeOnboarding()
             }) {
                 Image(systemName: "xmark")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(OnboardingColors.textSecondary)
                     .frame(width: 32, height: 32)
-                    .background(Color(.systemGray5))
+                    .background(OnboardingColors.surface)
                     .clipShape(Circle())
             }
-            .padding(.trailing, 16)
-            .padding(.top, 8)
+            .padding(.trailing, 20)
+            .padding(.top, 16)
         }
         .onAppear {
             withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
@@ -553,179 +1239,194 @@ struct PremiumCTAPage: View {
     }
 }
 
-// MARK: - Composants réutilisables
-
-struct AnimatedGradientBackground: View {
-    @State private var animateGradient = false
-
-    var body: some View {
-        LinearGradient(
-            colors: [
-                Color.instagramPurple.opacity(0.06),
-                Color.instagramPink.opacity(0.06),
-                Color.instagramOrange.opacity(0.04)
-            ],
-            startPoint: animateGradient ? .topLeading : .bottomLeading,
-            endPoint: animateGradient ? .bottomTrailing : .topTrailing
-        )
-        .onAppear {
-            withAnimation(.easeInOut(duration: 5).repeatForever(autoreverses: true)) {
-                animateGradient = true
-            }
-        }
-    }
-}
-
-struct OnboardingPageIndicator: View {
-    let currentPage: Int
-    let totalPages: Int
-
-    var body: some View {
-        HStack(spacing: 8) {
-            ForEach(0..<totalPages, id: \.self) { page in
-                Capsule()
-                    .fill(
-                        page == currentPage ?
-                        AnyShapeStyle(LinearGradient(colors: [.instagramPurple, .instagramPink], startPoint: .leading, endPoint: .trailing)) :
-                        AnyShapeStyle(Color.gray.opacity(0.3))
-                    )
-                    .frame(width: page == currentPage ? 24 : 8, height: 8)
-                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: currentPage)
-            }
-        }
-    }
-}
-
-struct StatBadge: View {
-    let icon: String
-    let text: String
-    let color: Color
-
-    var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: icon)
-                .font(.system(size: 16))
-                .foregroundColor(color)
-                .frame(width: 28)
-
-            Text(text)
-                .font(AppFonts.subheadline())
-                .foregroundColor(.primary)
-
-            Spacer()
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-        .background(color.opacity(0.1))
-        .cornerRadius(12)
-    }
-}
-
-struct InteractiveFilterCard: View {
-    let icon: String
-    let title: String
-    let subtitle: String
-    let color: Color
-    let isSelected: Bool
-    let delay: Double
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 6) {
-                ZStack {
-                    Circle()
-                        .fill(isSelected ? color : color.opacity(0.1))
-                        .frame(width: 44, height: 44)
-
-                    Image(systemName: isSelected ? "xmark" : icon)
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(isSelected ? .white : color)
-                }
-
-                Text(title)
-                    .font(AppFonts.headline())
-                    .foregroundColor(isSelected ? color : .primary)
-
-                Text(subtitle)
-                    .font(AppFonts.caption2())
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
-            }
-            .padding(.vertical, 12)
-            .padding(.horizontal, 6)
-            .frame(maxWidth: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(isSelected ? color.opacity(0.1) : Color(.systemGray6).opacity(0.5))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14)
-                            .stroke(isSelected ? color : Color.clear, lineWidth: 2)
-                    )
-            )
-        }
-        .buttonStyle(ScaleButtonStyle())
-    }
-}
-
-struct CompactTestimonialCard: View {
-    let quote: String
-    let author: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 2) {
-                ForEach(0..<5, id: \.self) { _ in
-                    Image(systemName: "star.fill")
-                        .font(.system(size: 10))
-                        .foregroundColor(.yellow)
-                }
-            }
-
-            Text("\"\(quote)\"")
-                .font(AppFonts.subheadline())
-                .foregroundColor(.primary)
-                .italic()
-
-            Text("— \(author)")
-                .font(AppFonts.caption())
-                .foregroundColor(.secondary)
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.systemGray6).opacity(0.5))
-        .cornerRadius(14)
-    }
-}
-
 struct PremiumFeatureRow: View {
     let icon: String
     let text: String
     let color: Color
-
+    
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
             Image(systemName: icon)
-                .font(.system(size: 20))
+                .font(.system(size: 22))
                 .foregroundColor(color)
-
+            
             Text(text)
                 .font(AppFonts.body())
-                .foregroundColor(.primary)
-
+                .foregroundColor(OnboardingColors.textPrimary)
+            
             Spacer()
         }
     }
 }
 
-struct ScaleButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.96 : 1)
-            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+// MARK: - Page 9: Let's Go
+struct LetsGoPage: View {
+    @ObservedObject var authManager: AuthenticationManager
+    @Binding var animateContent: Bool
+    @State private var showConfetti = false
+    
+    var body: some View {
+        ZStack {
+            VStack(spacing: 0) {
+                Spacer()
+                
+                // Header
+                VStack(spacing: 8) {
+                    Text("Tu es prêt(e),")
+                        .font(AppFonts.title())
+                        .foregroundColor(OnboardingColors.textPrimary)
+                    
+                    if !authManager.userName.isEmpty {
+                        Text("\(authManager.userName) ! 🚀")
+                            .font(AppFonts.title())
+                            .foregroundColor(OnboardingColors.primary)
+                    }
+                }
+                .opacity(animateContent ? 1 : 0)
+                .offset(y: animateContent ? 0 : 20)
+                .animation(.easeOut(duration: 0.5), value: animateContent)
+                
+                // Goal recap
+                VStack(spacing: 8) {
+                    Text("Ton objectif :")
+                        .font(AppFonts.subheadline())
+                        .foregroundColor(OnboardingColors.textSecondary)
+                    
+                    HStack(spacing: 8) {
+                        Text("Récupérer")
+                            .foregroundColor(OnboardingColors.textSecondary)
+                        Text("\(authManager.estimatedTimeSavedMinutes) min/jour")
+                            .foregroundColor(.green)
+                            .fontWeight(.bold)
+                    }
+                    .font(AppFonts.title3())
+                }
+                .padding(.vertical, 16)
+                .padding(.horizontal, 24)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(OnboardingColors.surface)
+                )
+                .padding(.top, 24)
+                .opacity(animateContent ? 1 : 0)
+                .animation(.easeOut(duration: 0.5).delay(0.1), value: animateContent)
+                
+                Spacer()
+                
+                // Mascot celebrating
+                LessyMascotContainer(size: 200, showGlow: true, glowColor: OnboardingColors.primary)
+                    .opacity(animateContent ? 1 : 0)
+                    .scaleEffect(animateContent ? 1 : 0.8)
+                    .animation(.spring(response: 0.6, dampingFraction: 0.7).delay(0.2), value: animateContent)
+                
+                // Message
+                Text("\"Je serai toujours là pour t'encourager !\"")
+                    .font(AppFonts.subheadline())
+                    .foregroundColor(OnboardingColors.textSecondary)
+                    .italic()
+                    .padding(.top, 16)
+                    .opacity(animateContent ? 1 : 0)
+                    .animation(.easeOut(duration: 0.5).delay(0.3), value: animateContent)
+                
+                Spacer()
+                
+                // Start button
+                Button(action: {
+                    authManager.completeOnboarding()
+                }) {
+                    HStack(spacing: 8) {
+                        Text("Commencer !")
+                            .font(AppFonts.headline())
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 14, weight: .semibold))
+                    }
+                    .foregroundColor(OnboardingColors.background)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(
+                        RoundedRectangle(cornerRadius: 28)
+                            .fill(OnboardingColors.primary)
+                    )
+                }
+                .buttonStyle(OnboardingButtonStyle())
+                .padding(.horizontal, 24)
+                .padding(.bottom, 40)
+                .opacity(animateContent ? 1 : 0)
+                .animation(.easeOut(duration: 0.5).delay(0.4), value: animateContent)
+            }
+            
+            // Confetti overlay
+            if showConfetti {
+                ConfettiView()
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+            }
+        }
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                showConfetti = true
+            }
+        }
     }
 }
 
+// MARK: - Confetti View
+struct ConfettiView: View {
+    @State private var particles: [ConfettiParticle] = []
+    
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                ForEach(particles) { particle in
+                    Circle()
+                        .fill(particle.color)
+                        .frame(width: particle.size, height: particle.size)
+                        .position(particle.position)
+                        .opacity(particle.opacity)
+                }
+            }
+            .onAppear {
+                createParticles(in: geometry.size)
+            }
+        }
+    }
+    
+    private func createParticles(in size: CGSize) {
+        let colors: [Color] = [.pink, .purple, .blue, .green, .yellow, .orange, OnboardingColors.primary]
+        
+        for i in 0..<50 {
+            let particle = ConfettiParticle(
+                id: i,
+                color: colors.randomElement()!,
+                size: CGFloat.random(in: 4...10),
+                position: CGPoint(x: CGFloat.random(in: 0...size.width), y: -20),
+                opacity: 1
+            )
+            particles.append(particle)
+            
+            // Animate falling
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.02) {
+                withAnimation(.easeIn(duration: Double.random(in: 2...4))) {
+                    if let index = particles.firstIndex(where: { $0.id == i }) {
+                        particles[index].position.y = size.height + 50
+                        particles[index].position.x += CGFloat.random(in: -100...100)
+                        particles[index].opacity = 0
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct ConfettiParticle: Identifiable {
+    let id: Int
+    let color: Color
+    let size: CGFloat
+    var position: CGPoint
+    var opacity: Double
+}
+
+// MARK: - Preview
 #Preview {
     OnboardingView(authManager: AuthenticationManager())
 }
