@@ -284,16 +284,16 @@ struct ShareStatsCard: View {
         
         // Define comparisons: (minMinutes, icon, singular, plural, divisor)
         let comparisons: [(min: Int, icon: String, singular: String, plural: String, divisor: Int)] = [
-            (30, "📚", "chapitre de livre lu", "chapitres de livre lus", 30),           // 30 min per chapter
-            (120, "🎬", "film regardé", "films regardés", 120),                          // 2h per movie
-            (45, "🏃", "séance de sport", "séances de sport", 45),                       // 45 min per workout
-            (20, "🧘", "méditation", "méditations", 20),                                  // 20 min per meditation
-            (180, "📖", "livre lu entièrement", "livres lus entièrement", 180),          // 3h per book
-            (45, "🎧", "épisode de podcast", "épisodes de podcast", 45),                 // 45 min per episode
-            (60, "👨‍🍳", "nouveau plat cuisiné", "nouveaux plats cuisinés", 60),          // 1h per recipe
-            (30, "🎸", "leçon de musique", "leçons de musique", 30),                     // 30 min per lesson
-            (15, "🚶", "km de marche", "km de marche", 15),                               // 15 min per km
-            (60, "💪", "heure de musculation", "heures de musculation", 60),             // 1h per session
+            (30, "📚", "book chapter read", "book chapters read", 30),                    // 30 min per chapter
+            (120, "🎬", "movie watched", "movies watched", 120),                          // 2h per movie
+            (45, "🏃", "workout session", "workout sessions", 45),                        // 45 min per workout
+            (20, "🧘", "meditation", "meditations", 20),                                   // 20 min per meditation
+            (180, "📖", "book read entirely", "books read entirely", 180),                // 3h per book
+            (45, "🎧", "podcast episode", "podcast episodes", 45),                        // 45 min per episode
+            (60, "👨‍🍳", "new recipe cooked", "new recipes cooked", 60),                    // 1h per recipe
+            (30, "🎸", "music lesson", "music lessons", 30),                              // 30 min per lesson
+            (15, "🚶", "km walked", "km walked", 15),                                      // 15 min per km
+            (60, "💪", "workout hour", "workout hours", 60),                              // 1h per session
         ]
         
         // Filter valid comparisons and pick one based on time
@@ -359,12 +359,12 @@ struct ShareStatsCard: View {
             VStack(spacing: 0) {
                 // Title Section
                 VStack(spacing: 4) {
-                    Text("MON INSTAGRAM")
+                    Text("MY INSTAGRAM")
                         .font(AppFonts.caption(10))
                         .foregroundColor(.white.opacity(0.5))
                         .tracking(2)
                     
-                    Text("cette semaine")
+                    Text("this week")
                         .font(AppFonts.title3(18))
                         .foregroundColor(.white.opacity(0.9))
                 }
@@ -383,7 +383,7 @@ struct ShareStatsCard: View {
                             Image(systemName: percentageChange < 0 ? "arrow.down" : "arrow.up")
                                 .font(.system(size: 9, weight: .bold))
                             
-                            Text("\(abs(Int(percentageChange)))% vs hier")
+                            Text("\(abs(Int(percentageChange)))% vs yesterday")
                                 .font(AppFonts.caption(11))
                         }
                         .foregroundColor(percentageChange < 0 ? .green : .red)
@@ -434,7 +434,7 @@ struct ShareStatsCard: View {
                 if let impact = impactComparison {
                     VStack(spacing: 8) {
                         // Header
-                        Text("AVEC CE TEMPS...")
+                        Text("WITH THIS TIME...")
                             .font(AppFonts.caption2(9))
                             .foregroundColor(.white.opacity(0.4))
                             .tracking(1.5)
@@ -451,7 +451,7 @@ struct ShareStatsCard: View {
                         }
                         
                         // Call to action
-                        Text("Reprends le contrôle")
+                        Text("Take back control")
                             .font(AppFonts.caption2(9))
                             .foregroundColor(.white.opacity(0.4))
                             .italic()
@@ -580,16 +580,16 @@ struct ShareStatsCardMonthly: View {
         
         // Define comparisons: (minMinutes, icon, singular, plural, divisor)
         let comparisons: [(min: Int, icon: String, singular: String, plural: String, divisor: Int)] = [
-            (30, "📚", "chapitre de livre lu", "chapitres de livre lus", 30),
-            (120, "🎬", "film regardé", "films regardés", 120),
-            (45, "🏃", "séance de sport", "séances de sport", 45),
-            (20, "🧘", "méditation", "méditations", 20),
-            (180, "📖", "livre lu entièrement", "livres lus entièrement", 180),
-            (45, "🎧", "épisode de podcast", "épisodes de podcast", 45),
-            (60, "👨‍🍳", "nouveau plat cuisiné", "nouveaux plats cuisinés", 60),
-            (30, "🎸", "leçon de musique", "leçons de musique", 30),
-            (15, "🚶", "km de marche", "km de marche", 15),
-            (60, "💪", "heure de musculation", "heures de musculation", 60),
+            (30, "📚", "book chapter read", "book chapters read", 30),
+            (120, "🎬", "movie watched", "movies watched", 120),
+            (45, "🏃", "workout session", "workout sessions", 45),
+            (20, "🧘", "meditation", "meditations", 20),
+            (180, "📖", "book read entirely", "books read entirely", 180),
+            (45, "🎧", "podcast episode", "podcast episodes", 45),
+            (60, "👨‍🍳", "new recipe cooked", "new recipes cooked", 60),
+            (30, "🎸", "music lesson", "music lessons", 30),
+            (15, "🚶", "km walked", "km walked", 15),
+            (60, "💪", "workout hour", "workout hours", 60),
         ]
         
         // Filter valid comparisons and pick one based on time
@@ -655,7 +655,7 @@ struct ShareStatsCardMonthly: View {
             VStack(spacing: 0) {
                 // Title Section
                 VStack(spacing: 4) {
-                    Text("MON INSTAGRAM")
+                    Text("MY INSTAGRAM")
                         .font(AppFonts.caption(10))
                         .foregroundColor(.white.opacity(0.5))
                         .tracking(2)
@@ -679,7 +679,7 @@ struct ShareStatsCardMonthly: View {
                             Image(systemName: percentageChange < 0 ? "arrow.down" : "arrow.up")
                                 .font(.system(size: 9, weight: .bold))
                             
-                            Text("\(abs(Int(percentageChange)))% vs semaine dernière")
+                            Text("\(abs(Int(percentageChange)))% vs last week")
                                 .font(AppFonts.caption(11))
                         }
                         .foregroundColor(percentageChange < 0 ? .green : .red)
@@ -730,7 +730,7 @@ struct ShareStatsCardMonthly: View {
                 if let impact = impactComparison {
                     VStack(spacing: 8) {
                         // Header
-                        Text("AVEC CE TEMPS...")
+                        Text("WITH THIS TIME...")
                             .font(AppFonts.caption2(9))
                             .foregroundColor(.white.opacity(0.4))
                             .tracking(1.5)
@@ -747,7 +747,7 @@ struct ShareStatsCardMonthly: View {
                         }
                         
                         // Call to action
-                        Text("Reprends le contrôle")
+                        Text("Take back control")
                             .font(AppFonts.caption2(9))
                             .foregroundColor(.white.opacity(0.4))
                             .italic()
