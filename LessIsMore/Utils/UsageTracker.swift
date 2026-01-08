@@ -9,6 +9,7 @@ import Foundation
 import Combine
 import UIKit
 import SwiftUI
+import WidgetKit
 
 class UsageTracker: ObservableObject {
     static let shared = UsageTracker()
@@ -416,6 +417,37 @@ class UsageTracker: ObservableObject {
             userDefaults.set(monthEncoded, forKey: "monthly_usage_detailed")
         }
         userDefaults.set(currentDateString(), forKey: lastDateKey)
+        
+        // Sync to widget
+        syncToWidget()
+    }
+    
+    // MARK: - Widget Sync
+    
+    /// Syncs current usage data to the App Group for widget access
+    private func syncToWidget() {
+        // Calculate yesterday's usage
+        let calendar = Calendar.current
+        let yesterdayWeekday = calendar.component(.weekday, from: calendar.date(byAdding: .day, value: -1, to: Date()) ?? Date())
+        let dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+        let yesterdayDayName = dayNames[yesterdayWeekday - 1]
+        let yesterdaySeconds = weeklyUsage.first(where: { $0.day == yesterdayDayName })?.totalSeconds ?? 0
+        
+        // Calculate weekly total
+        let weeklyTotal = weeklyUsage.reduce(0) { $0 + $1.totalSeconds }
+        
+        // Update shared data
+        SharedDataManager.shared.updateUsageData(
+            todaySeconds: todayUsageSeconds,
+            yesterdaySeconds: yesterdaySeconds,
+            weeklyTotal: weeklyTotal,
+            percentageChange: getComparisonToYesterday()
+        )
+    }
+    
+    /// Force sync to widget (call when app becomes active)
+    func forceSyncToWidget() {
+        syncToWidget()
     }
 
     private func setupNotifications() {

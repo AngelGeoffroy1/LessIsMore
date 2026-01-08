@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		111EF8FE2E698EFC004B0CFE /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 111EF8FD2E698EFC004B0CFE /* StoreKit.framework */; };
 		1163F4552EE0737A0046FFAC /* SuperwallKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1163F4542EE0737A0046FFAC /* SuperwallKit */; };
+		11C82C882F0FF3600080CD3C /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 11C82C872F0FF3600080CD3C /* WidgetKit.framework */; };
+		11C82C8A2F0FF3600080CD3C /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 11C82C892F0FF3600080CD3C /* SwiftUI.framework */; };
+		11C82C972F0FF3630080CD3C /* LessIsMoreWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 11C82C862F0FF3600080CD3C /* LessIsMoreWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -26,13 +29,38 @@
 			remoteGlobalIDString = 111EF8C52E68B4DC004B0CFE;
 			remoteInfo = LessIsMore;
 		};
+		11C82C952F0FF3630080CD3C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 111EF8BE2E68B4DC004B0CFE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 11C82C852F0FF3600080CD3C;
+			remoteInfo = LessIsMoreWidgetExtension;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		11C82C9C2F0FF3630080CD3C /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				11C82C972F0FF3630080CD3C /* LessIsMoreWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		111EF8C62E68B4DC004B0CFE /* LessIsMore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LessIsMore.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		111EF8D32E68B4DE004B0CFE /* LessIsMoreTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LessIsMoreTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		111EF8DD2E68B4DE004B0CFE /* LessIsMoreUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LessIsMoreUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		111EF8FD2E698EFC004B0CFE /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
+		11C82C862F0FF3600080CD3C /* LessIsMoreWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LessIsMoreWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		11C82C872F0FF3600080CD3C /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		11C82C892F0FF3600080CD3C /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		11C82C9D2F0FF3840080CD3C /* LessIsMoreWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LessIsMoreWidgetExtension.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -42,6 +70,13 @@
 				Info.plist,
 			);
 			target = 111EF8C52E68B4DC004B0CFE /* LessIsMore */;
+		};
+		11C82C9B2F0FF3630080CD3C /* Exceptions for "LessIsMoreWidget" folder in "LessIsMoreWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 11C82C852F0FF3600080CD3C /* LessIsMoreWidgetExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -62,6 +97,14 @@
 		111EF8E02E68B4DE004B0CFE /* LessIsMoreUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = LessIsMoreUITests;
+			sourceTree = "<group>";
+		};
+		11C82C8B2F0FF3600080CD3C /* LessIsMoreWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				11C82C9B2F0FF3630080CD3C /* Exceptions for "LessIsMoreWidget" folder in "LessIsMoreWidgetExtension" target */,
+			);
+			path = LessIsMoreWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -90,15 +133,26 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		11C82C832F0FF3600080CD3C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				11C82C8A2F0FF3600080CD3C /* SwiftUI.framework in Frameworks */,
+				11C82C882F0FF3600080CD3C /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		111EF8BD2E68B4DC004B0CFE = {
 			isa = PBXGroup;
 			children = (
+				11C82C9D2F0FF3840080CD3C /* LessIsMoreWidgetExtension.entitlements */,
 				111EF8C82E68B4DC004B0CFE /* LessIsMore */,
 				111EF8D62E68B4DE004B0CFE /* LessIsMoreTests */,
 				111EF8E02E68B4DE004B0CFE /* LessIsMoreUITests */,
+				11C82C8B2F0FF3600080CD3C /* LessIsMoreWidget */,
 				111EF8FC2E698EFC004B0CFE /* Frameworks */,
 				111EF8C72E68B4DC004B0CFE /* Products */,
 			);
@@ -110,6 +164,7 @@
 				111EF8C62E68B4DC004B0CFE /* LessIsMore.app */,
 				111EF8D32E68B4DE004B0CFE /* LessIsMoreTests.xctest */,
 				111EF8DD2E68B4DE004B0CFE /* LessIsMoreUITests.xctest */,
+				11C82C862F0FF3600080CD3C /* LessIsMoreWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -118,6 +173,8 @@
 			isa = PBXGroup;
 			children = (
 				111EF8FD2E698EFC004B0CFE /* StoreKit.framework */,
+				11C82C872F0FF3600080CD3C /* WidgetKit.framework */,
+				11C82C892F0FF3600080CD3C /* SwiftUI.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -132,10 +189,12 @@
 				111EF8C22E68B4DC004B0CFE /* Sources */,
 				111EF8C32E68B4DC004B0CFE /* Frameworks */,
 				111EF8C42E68B4DC004B0CFE /* Resources */,
+				11C82C9C2F0FF3630080CD3C /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				11C82C962F0FF3630080CD3C /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				111EF8C82E68B4DC004B0CFE /* LessIsMore */,
@@ -194,6 +253,28 @@
 			productReference = 111EF8DD2E68B4DE004B0CFE /* LessIsMoreUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		11C82C852F0FF3600080CD3C /* LessIsMoreWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 11C82C982F0FF3630080CD3C /* Build configuration list for PBXNativeTarget "LessIsMoreWidgetExtension" */;
+			buildPhases = (
+				11C82C822F0FF3600080CD3C /* Sources */,
+				11C82C832F0FF3600080CD3C /* Frameworks */,
+				11C82C842F0FF3600080CD3C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				11C82C8B2F0FF3600080CD3C /* LessIsMoreWidget */,
+			);
+			name = LessIsMoreWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = LessIsMoreWidgetExtension;
+			productReference = 11C82C862F0FF3600080CD3C /* LessIsMoreWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -201,7 +282,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1640;
+				LastSwiftUpdateCheck = 2620;
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					111EF8C52E68B4DC004B0CFE = {
@@ -214,6 +295,9 @@
 					111EF8DC2E68B4DE004B0CFE = {
 						CreatedOnToolsVersion = 16.4;
 						TestTargetID = 111EF8C52E68B4DC004B0CFE;
+					};
+					11C82C852F0FF3600080CD3C = {
+						CreatedOnToolsVersion = 26.2;
 					};
 				};
 			};
@@ -237,6 +321,7 @@
 				111EF8C52E68B4DC004B0CFE /* LessIsMore */,
 				111EF8D22E68B4DE004B0CFE /* LessIsMoreTests */,
 				111EF8DC2E68B4DE004B0CFE /* LessIsMoreUITests */,
+				11C82C852F0FF3600080CD3C /* LessIsMoreWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -257,6 +342,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		111EF8DB2E68B4DE004B0CFE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		11C82C842F0FF3600080CD3C /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -287,6 +379,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		11C82C822F0FF3600080CD3C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -299,6 +398,11 @@
 			isa = PBXTargetDependency;
 			target = 111EF8C52E68B4DC004B0CFE /* LessIsMore */;
 			targetProxy = 111EF8DE2E68B4DE004B0CFE /* PBXContainerItemProxy */;
+		};
+		11C82C962F0FF3630080CD3C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 11C82C852F0FF3600080CD3C /* LessIsMoreWidgetExtension */;
+			targetProxy = 11C82C952F0FF3630080CD3C /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -570,6 +674,72 @@
 			};
 			name = Release;
 		};
+		11C82C992F0FF3630080CD3C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = LessIsMoreWidgetExtension.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = TYR3BN2ZH2;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LessIsMoreWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LessIsMoreWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.7;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lessismore.com.LessIsMoreWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		11C82C9A2F0FF3630080CD3C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = LessIsMoreWidgetExtension.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = TYR3BN2ZH2;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LessIsMoreWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LessIsMoreWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.7;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lessismore.com.LessIsMoreWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -605,6 +775,15 @@
 			buildConfigurations = (
 				111EF8EE2E68B4DE004B0CFE /* Debug */,
 				111EF8EF2E68B4DE004B0CFE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		11C82C982F0FF3630080CD3C /* Build configuration list for PBXNativeTarget "LessIsMoreWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				11C82C992F0FF3630080CD3C /* Debug */,
+				11C82C9A2F0FF3630080CD3C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

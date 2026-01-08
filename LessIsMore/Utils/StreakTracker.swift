@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import SwiftUI
+import WidgetKit
 
 /// Tracks filter usage streaks (consecutive days with a filter enabled)
 class StreakTracker: ObservableObject {
@@ -166,6 +167,42 @@ class StreakTracker: ObservableObject {
         if let encoded = try? JSONEncoder().encode(streaks) {
             userDefaults.set(encoded, forKey: streaksKey)
         }
+        
+        // Sync to widget
+        syncToWidget()
+    }
+    
+    // MARK: - Widget Sync
+    
+    /// Syncs current streak data to the App Group for widget access
+    private func syncToWidget() {
+        // Find best active streak
+        if let best = bestActiveStreak {
+            let personalRecord = getLongestStreak(for: best.filterType)
+            SharedDataManager.shared.updateStreakData(
+                bestDays: best.days,
+                filterName: best.filterType.displayName,
+                personalRecord: max(personalRecord, best.days)
+            )
+        } else {
+            // No active streak
+            SharedDataManager.shared.updateStreakData(
+                bestDays: 0,
+                filterName: "",
+                personalRecord: 0
+            )
+        }
+        
+        // Update individual filter streaks
+        for filterType in FilterType.allCases {
+            let days = getCurrentStreakDays(for: filterType)
+            SharedDataManager.shared.updateIndividualStreak(filterType: filterType.rawValue, days: days)
+        }
+    }
+    
+    /// Force sync to widget (call when app becomes active)
+    func forceSyncToWidget() {
+        syncToWidget()
     }
     
     private func initializeMissingStreaks() {
