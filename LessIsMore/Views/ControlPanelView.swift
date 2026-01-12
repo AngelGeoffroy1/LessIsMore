@@ -160,7 +160,7 @@ struct ControlPanelView: View {
             HStack(alignment: .top) {
                 // Left side: Usage stats
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(chartMode == 0 ? "TODAY USE" : "THIS WEEK USE")
+                    Text(chartMode == 0 ? "controlPanel.todayUse".localized : "controlPanel.thisWeekUse".localized)
                         .font(AppFonts.caption(10))
                         .foregroundColor(.secondary)
                         .tracking(1.5)
@@ -221,7 +221,7 @@ struct ControlPanelView: View {
                                 )
                             )
                         
-                        Text(best.days == 1 ? "day" : "days")
+                        Text(best.days == 1 ? "common.day".localized : "common.days".localized)
                             .font(AppFonts.body(13))
                             .foregroundColor(.secondary)
                         
@@ -229,7 +229,7 @@ struct ControlPanelView: View {
                             .font(AppFonts.body(13))
                             .foregroundColor(.secondary.opacity(0.4))
                         
-                        Text("No \(best.filterType.displayName)")
+                        Text(String(format: "streak.noFilter".localized, best.filterType.displayName))
                             .font(AppFonts.body(13))
                             .foregroundColor(.secondary)
                     }
@@ -328,12 +328,12 @@ struct ControlPanelView: View {
     private var basicFiltersSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Content")
+                Text("controlPanel.content".localized)
                     .font(AppFonts.subheadline())
                     .foregroundColor(.secondary)
 
                 if !subscriptionManager.isPremium {
-                    Text("Pro")
+                    Text("controlPanel.pro".localized)
                         .font(.system(size: 11, weight: .bold))
                         .foregroundColor(.white)
                         .padding(.horizontal, 8)
@@ -364,7 +364,7 @@ struct ControlPanelView: View {
                         Image(systemName: "square.and.arrow.up")
                             .font(.system(size: 10, weight: .semibold))
                         
-                        Text("Share")
+                        Text("common.share".localized)
                             .font(AppFonts.caption(11))
                     }
                     .foregroundColor(.primary.opacity(0.6))
@@ -378,7 +378,7 @@ struct ControlPanelView: View {
 
             VStack(spacing: 0) {
                 FilterRow(
-                    title: "Hide Reels",
+                    title: "filter.hideReels".localized,
                     isEnabled: binding(for: .reels),
                     isLocked: !subscriptionManager.isPremium,
                     streakDays: streakTracker.getCurrentStreakDays(for: .reels),
@@ -390,7 +390,7 @@ struct ControlPanelView: View {
                     .padding(.leading, 16)
 
                 FilterRow(
-                    title: "Hide Stories",
+                    title: "filter.hideStories".localized,
                     isEnabled: binding(for: .stories),
                     isLocked: !subscriptionManager.isPremium,
                     streakDays: streakTracker.getCurrentStreakDays(for: .stories),
@@ -412,7 +412,7 @@ struct ControlPanelView: View {
     private var algorithmSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Algorithm")
+                Text("controlPanel.algorithm".localized)
                     .font(AppFonts.subheadline())
                     .foregroundColor(.secondary)
 
@@ -440,7 +440,7 @@ struct ControlPanelView: View {
 
             VStack(spacing: 0) {
                 FilterRow(
-                    title: "Following only",
+                    title: "filter.followingOnly".localized,
                     isEnabled: binding(for: .following),
                     isLocked: !subscriptionManager.isPremium,
                     streakDays: streakTracker.getCurrentStreakDays(for: .following),
@@ -452,7 +452,7 @@ struct ControlPanelView: View {
                     .padding(.leading, 16)
 
                 FilterRow(
-                    title: "Hide Explore Feed",
+                    title: "filter.hideExplore".localized,
                     isEnabled: binding(for: .explore),
                     isLocked: !subscriptionManager.isPremium,
                     streakDays: streakTracker.getCurrentStreakDays(for: .explore),
@@ -464,7 +464,7 @@ struct ControlPanelView: View {
                     .padding(.leading, 16)
 
                 FilterRow(
-                    title: "Hide Suggestions",
+                    title: "filter.hideSuggestions".localized,
                     isEnabled: binding(for: .suggestions),
                     isLocked: !subscriptionManager.isPremium,
                     streakDays: streakTracker.getCurrentStreakDays(for: .suggestions),
@@ -476,7 +476,7 @@ struct ControlPanelView: View {
                     .padding(.leading, 16)
 
                 FilterRow(
-                    title: "Hide Messages",
+                    title: "filter.hideMessages".localized,
                     isEnabled: binding(for: .messages),
                     isLocked: !subscriptionManager.isPremium,
                     streakDays: streakTracker.getCurrentStreakDays(for: .messages),
@@ -498,7 +498,7 @@ struct ControlPanelView: View {
     private var styleSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Style")
+                Text("controlPanel.style".localized)
                     .font(AppFonts.subheadline())
                     .foregroundColor(.secondary)
 
@@ -526,7 +526,7 @@ struct ControlPanelView: View {
 
             VStack(spacing: 0) {
                 FilterRow(
-                    title: "Hide Likes",
+                    title: "filter.hideLikes".localized,
                     isEnabled: binding(for: .likes),
                     isLocked: !subscriptionManager.isPremium,
                     streakDays: streakTracker.getCurrentStreakDays(for: .likes),
@@ -778,7 +778,7 @@ struct ChartCarouselView: View {
         VStack(spacing: 12) {
             // Chart title + Page indicator
             HStack {
-                Text(currentPage == 0 ? "This Week" : monthName)
+                Text(currentPage == 0 ? "controlPanel.thisWeek".localized : monthName)
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(.secondary)
                 

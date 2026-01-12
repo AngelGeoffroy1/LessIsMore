@@ -5,6 +5,7 @@ struct SettingsView: View {
     @ObservedObject var webViewManager: WebViewManager
     @ObservedObject var authManager: AuthenticationManager
     @ObservedObject var subscriptionManager: SubscriptionManager
+    @ObservedObject private var languageManager = LanguageManager.shared
     @Environment(\.dismiss) var dismiss
     @State private var showLogoutAlert = false
     @Environment(\.colorScheme) var colorScheme
@@ -29,18 +30,18 @@ struct SettingsView: View {
 
                         // App Settings Section
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("APP SETTINGS")
+                            Text("settings.appSettings".localized)
                                 .font(.system(size: 13, weight: .bold))
                                 .foregroundColor(.secondary)
                                 .padding(.leading, 16)
 
                             VStack(spacing: 0) {
-                                SettingRow(icon: "arrow.clockwise", iconColor: .blue, title: "Reload Instagram") {
+                                SettingRow(icon: "arrow.clockwise", iconColor: .blue, title: "settings.reloadInstagram".localized) {
                                     webViewManager.loadInstagram()
                                     dismiss()
                                 }
                                 Divider().padding(.leading, 50)
-                                SettingRow(icon: "arrow.counterclockwise", iconColor: .red, title: "Reset All Filters") {
+                                SettingRow(icon: "arrow.counterclockwise", iconColor: .red, title: "settings.resetFilters".localized) {
                                     resetAllFilters()
                                 }
                             }
@@ -48,20 +49,34 @@ struct SettingsView: View {
                             .cornerRadius(16)
                         }
 
-                        // Support & Info Section
+                        // Language Section
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("SUPPORT")
+                            Text("settings.language".localized)
                                 .font(.system(size: 13, weight: .bold))
                                 .foregroundColor(.primary.opacity(0.6))
                                 .padding(.leading, 16)
 
                             VStack(spacing: 0) {
-                                SettingRow(icon: "info.circle", iconColor: .orange, title: "Reset Onboarding") {
+                                LanguageSelectorRow(languageManager: languageManager)
+                            }
+                            .background(Color.primary.opacity(0.05))
+                            .cornerRadius(16)
+                        }
+
+                        // Support & Info Section
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("settings.support".localized)
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundColor(.primary.opacity(0.6))
+                                .padding(.leading, 16)
+
+                            VStack(spacing: 0) {
+                                SettingRow(icon: "info.circle", iconColor: .orange, title: "settings.resetOnboarding".localized) {
                                     authManager.resetOnboarding()
                                     dismiss()
                                 }
                                 Divider().padding(.leading, 50)
-                                SettingRow(icon: "doc.text", iconColor: .gray, title: "About LessIsMore") {
+                                SettingRow(icon: "doc.text", iconColor: .gray, title: "settings.aboutApp".localized) {
                                     // Could open a detail view or website
                                 }
                             }
@@ -71,13 +86,13 @@ struct SettingsView: View {
 
                         // Account Section
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("ACCOUNT")
+                            Text("settings.account".localized)
                                 .font(.system(size: 13, weight: .bold))
                                 .foregroundColor(.primary.opacity(0.6))
                                 .padding(.leading, 16)
 
                             VStack(spacing: 0) {
-                                SettingRow(icon: "rectangle.portrait.and.arrow.right", iconColor: .red, title: "Log Out", showChevron: false) {
+                                SettingRow(icon: "rectangle.portrait.and.arrow.right", iconColor: .red, title: "settings.logOut".localized, showChevron: false) {
                                     showLogoutAlert = true
                                 }
                             }
@@ -86,7 +101,7 @@ struct SettingsView: View {
                         }
 
                         // footer text
-                        Text("Version 1.0.0")
+                        Text(String(format: "settings.version".localized, "1.0.0"))
                             .font(.system(size: 12))
                             .foregroundColor(.secondary.opacity(0.5))
                             .padding(.top, 10)
@@ -95,16 +110,17 @@ struct SettingsView: View {
                 }
             }
         }
+        .id(languageManager.currentLanguage) // Force refresh on language change
         .navigationBarHidden(true)
         .background(Color.clear)
-        .alert("Log Out", isPresented: $showLogoutAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Log Out", role: .destructive) {
+        .alert("settings.logOut".localized, isPresented: $showLogoutAlert) {
+            Button("common.cancel".localized, role: .cancel) { }
+            Button("settings.logOut".localized, role: .destructive) {
                 authManager.logout()
                 dismiss()
             }
         } message: {
-            Text("Are you sure you want to log out? You will need to log back in to use the app.")
+            Text("settings.logOutConfirm".localized)
         }
     }
 
@@ -122,7 +138,7 @@ struct SettingsView: View {
 
             Spacer()
 
-            Text("Settings")
+            Text("settings.title".localized)
                 .font(.system(size: 18, weight: .bold))
                 .foregroundColor(.white)
 
@@ -143,11 +159,11 @@ struct SettingsView: View {
             HStack(spacing: 16) {
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Upgrade to Pro")
+                    Text("settings.upgradeToPro".localized)
                         .font(.system(size: 18, weight: .bold))
                         .foregroundColor(.white)
 
-                    Text("Unlock all features and detailed statistics.")
+                    Text("settings.upgradeDesc".localized)
                         .font(.system(size: 13))
                         .foregroundColor(.white.opacity(0.8))
                         .multilineTextAlignment(.leading)
@@ -243,3 +259,36 @@ struct SettingRow: View {
     .preferredColorScheme(.dark)
 }
 
+// MARK: - Language Selector Row
+
+struct LanguageSelectorRow: View {
+    @ObservedObject var languageManager: LanguageManager
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            // Icon
+            ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.blue.opacity(0.15))
+                    .frame(width: 34, height: 34)
+                
+                Image(systemName: "globe")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.blue)
+            }
+            
+            // Language Picker
+            Picker("", selection: Binding(
+                get: { languageManager.currentLanguage },
+                set: { languageManager.setLanguage($0) }
+            )) {
+                ForEach(languageManager.availableLanguages, id: \.code) { lang in
+                    Text(lang.name).tag(lang.code)
+                }
+            }
+            .pickerStyle(.segmented)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+    }
+}

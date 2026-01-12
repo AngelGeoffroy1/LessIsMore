@@ -74,12 +74,12 @@ struct OnboardingView: View {
                     SocialProofPage(animateContent: $animateContent)
                         .tag(7)
                     
-                    // Page 8: Premium CTA
-                    PremiumCTAPage(authManager: authManager, animateContent: $animateContent)
+                    // Page 8: Let's Go
+                    LetsGoPage(authManager: authManager, animateContent: $animateContent)
                         .tag(8)
                     
-                    // Page 9: Let's Go
-                    LetsGoPage(authManager: authManager, animateContent: $animateContent)
+                    // Page 9: Premium CTA
+                    PremiumCTAPage(authManager: authManager, animateContent: $animateContent)
                         .tag(9)
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
@@ -98,7 +98,7 @@ struct OnboardingView: View {
                             HStack(spacing: 4) {
                                 Image(systemName: "chevron.left")
                                     .font(.system(size: 14, weight: .semibold))
-                                Text("Retour")
+                                Text("onboarding.back".localized)
                                     .font(AppFonts.subheadline())
                             }
                             .foregroundColor(OnboardingColors.textSecondary)
@@ -220,9 +220,9 @@ struct OnboardingFooter: View {
     
     private var mainButtonText: String {
         switch currentPage {
-        case 0: return "Continue"
-        case 7: return "Rejoindre la team"
-        default: return "Continue"
+        case 0: return "common.continue".localized
+        case 7: return "onboarding.social.joinTeam".localized
+        default: return "common.continue".localized
         }
     }
     
@@ -254,19 +254,19 @@ struct WelcomePage: View {
             
             // Text content
             VStack(alignment: .leading, spacing: 8) {
-                Text("Salut ! 👋 Je suis Lessy,")
+                Text("onboarding.welcome.greeting".localized)
                     .font(AppFonts.title2())
                     .foregroundColor(OnboardingColors.textPrimary)
                 
-                Text("ton compagnon pour reprendre")
+                Text("onboarding.welcome.line1".localized)
                     .font(AppFonts.title2())
                     .foregroundColor(OnboardingColors.textPrimary)
                 
-                Text("le contrôle de ton temps")
+                Text("onboarding.welcome.line2".localized)
                     .font(AppFonts.title2())
                     .foregroundColor(OnboardingColors.textPrimary)
                 
-                Text("sur Instagram !")
+                Text("onboarding.welcome.line3".localized)
                     .font(AppFonts.title2())
                     .foregroundColor(OnboardingColors.textPrimary)
             }
@@ -306,7 +306,7 @@ struct NameInputPage: View {
                 .frame(height: 30)
             
             // Question
-            Text("Comment je peux t'appeler ? 😊")
+            Text("onboarding.name.question".localized)
                 .font(AppFonts.title2())
                 .foregroundColor(OnboardingColors.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -334,7 +334,7 @@ struct NameInputPage: View {
                         }
                     }
                 
-                Text("\(authManager.userName.count) / 50")
+                Text(String(format: "onboarding.name.charCount".localized, authManager.userName.count))
                     .font(AppFonts.caption())
                     .foregroundColor(OnboardingColors.textSecondary)
             }
@@ -385,10 +385,10 @@ struct ProblemPage: View {
                         .font(AppFonts.title2())
                         .foregroundColor(OnboardingColors.primary)
                 }
-                Text("qu'est-ce qui t'embête")
+                Text("onboarding.problem.questionPart1".localized)
                     .font(AppFonts.title2())
                     .foregroundColor(OnboardingColors.textPrimary)
-                Text("le plus avec Instagram ? 🤔")
+                Text("onboarding.problem.questionPart2".localized)
                     .font(AppFonts.title2())
                     .foregroundColor(OnboardingColors.textPrimary)
             }
@@ -478,10 +478,10 @@ struct GoalsPage: View {
             
             // Question
             VStack(alignment: .leading, spacing: 4) {
-                Text("Qu'est-ce que tu veux accomplir ? 🎯")
+                Text("onboarding.goals.question".localized)
                     .font(AppFonts.title2())
                     .foregroundColor(OnboardingColors.textPrimary)
-                Text("(sélectionne tout ce qui s'applique)")
+                Text("onboarding.goals.selectAll".localized)
                     .font(AppFonts.subheadline())
                     .foregroundColor(OnboardingColors.textSecondary)
             }
@@ -575,10 +575,10 @@ struct ScreenTimePage: View {
             
             // Question
             VStack(alignment: .leading, spacing: 4) {
-                Text("Combien de temps passes-tu")
+                Text("onboarding.screenTime.question1".localized)
                     .font(AppFonts.title2())
                     .foregroundColor(OnboardingColors.textPrimary)
-                Text("sur Instagram par jour ? 📱")
+                Text("onboarding.screenTime.question2".localized)
                     .font(AppFonts.title2())
                     .foregroundColor(OnboardingColors.textPrimary)
             }
@@ -598,7 +598,7 @@ struct ScreenTimePage: View {
                     .contentTransition(.numericText())
                     .animation(.easeInOut(duration: 0.2), value: authManager.dailyScreenTimeMinutes)
                 
-                Text("par jour")
+                Text("onboarding.screenTime.perDay".localized)
                     .font(AppFonts.subheadline())
                     .foregroundColor(OnboardingColors.textSecondary)
             }
@@ -667,10 +667,10 @@ struct ScreenTimePage: View {
     
     private var reactionMessage: String {
         switch authManager.dailyScreenTimeMinutes {
-        case 0...60: return "Pas mal ! On peut encore améliorer 💪"
-        case 61...120: return "C'est commun, on va régler ça ensemble !"
-        case 121...180: return "T'inquiète, je suis là pour t'aider ! 🤗"
-        default: return "Wow, mais pas de souci, on va transformer ça ! 🚀"
+        case 0...60: return "onboarding.screenTime.reaction1".localized
+        case 61...120: return "onboarding.screenTime.reaction2".localized
+        case 121...180: return "onboarding.screenTime.reaction3".localized
+        default: return "onboarding.screenTime.reaction4".localized
         }
     }
     
@@ -713,10 +713,10 @@ struct FiltersPage: View {
                             .font(AppFonts.title2())
                             .foregroundColor(OnboardingColors.primary)
                     }
-                    Text("voici mes recommandations")
+                    Text("onboarding.filters.myRecommendations".localized)
                         .font(AppFonts.title2())
                         .foregroundColor(OnboardingColors.textPrimary)
-                    Text("pour toi ! ✨")
+                    Text("onboarding.filters.forYou".localized)
                         .font(AppFonts.title2())
                         .foregroundColor(OnboardingColors.textPrimary)
                 }
@@ -733,7 +733,7 @@ struct FiltersPage: View {
             .opacity(animateContent ? 1 : 0)
             .offset(y: animateContent ? 0 : 20)
             
-            Text("Tape pour bloquer")
+            Text("onboarding.filters.tapToBlock".localized)
                 .font(AppFonts.subheadline())
                 .foregroundColor(OnboardingColors.textSecondary)
                 .padding(.top, 8)
@@ -776,7 +776,7 @@ struct FiltersPage: View {
                     HStack(spacing: 8) {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundColor(.green)
-                        Text("\(selectedFilters.count) filtre(s) bloqué(s)")
+                        Text(String(format: "filter.filtersBlocked".localized, selectedFilters.count))
                             .font(AppFonts.subheadline())
                             .foregroundColor(OnboardingColors.textSecondary)
                     }
@@ -787,7 +787,7 @@ struct FiltersPage: View {
                         Text("\(totalTimeSaved) min")
                             .font(AppFonts.headline())
                             .foregroundColor(.green)
-                        Text("économisées/jour")
+                        Text(String(format: "filter.minSavedPerDay".localized, totalTimeSaved))
                             .foregroundColor(OnboardingColors.textSecondary)
                     }
                     .font(AppFonts.subheadline())
@@ -841,7 +841,7 @@ struct FilterCard: View {
                     .foregroundColor(OnboardingColors.textSecondary)
                 
                 if isRecommended && !isSelected {
-                    Text("Recommandé")
+                    Text("onboarding.filters.recommended".localized)
                         .font(AppFonts.caption2())
                         .foregroundColor(OnboardingColors.primary)
                         .padding(.horizontal, 8)
@@ -893,10 +893,10 @@ struct ProjectionPage: View {
                         .font(AppFonts.title2())
                         .foregroundColor(OnboardingColors.primary)
                 }
-                Text("dans 30 jours,")
+                Text("onboarding.projection.in30Days".localized)
                     .font(AppFonts.title2())
                     .foregroundColor(OnboardingColors.textPrimary)
-                Text("tu auras récupéré... 🔮")
+                Text("onboarding.projection.youWillRecover".localized)
                     .font(AppFonts.title2())
                     .foregroundColor(OnboardingColors.textPrimary)
             }
@@ -914,7 +914,7 @@ struct ProjectionPage: View {
                     .foregroundColor(.green)
                     .contentTransition(.numericText())
                 
-                Text("de ta vie")
+                Text("onboarding.projection.ofYourLife".localized)
                     .font(AppFonts.title3())
                     .foregroundColor(OnboardingColors.textSecondary)
             }
@@ -924,14 +924,14 @@ struct ProjectionPage: View {
             
             // Equivalences
             VStack(spacing: 12) {
-                Text("💡 C'est l'équivalent de :")
+                Text("onboarding.projection.equivalent".localized)
                     .font(AppFonts.subheadline())
                     .foregroundColor(OnboardingColors.textSecondary)
                 
                 VStack(spacing: 8) {
-                    EquivalenceCard(emoji: "📚", text: "\(max(projectedHours / 4, 1)) livres lus")
-                    EquivalenceCard(emoji: "🏃", text: "\(max(projectedHours / 2, 1)) séances de sport")
-                    EquivalenceCard(emoji: "😴", text: "\(max(projectedHours / 8, 1)) nuits de sommeil en plus")
+                    EquivalenceCard(emoji: "📚", text: String(format: "onboarding.projection.booksRead".localized, max(projectedHours / 4, 1)))
+                    EquivalenceCard(emoji: "🏃", text: String(format: "onboarding.projection.workoutSessions".localized, max(projectedHours / 2, 1)))
+                    EquivalenceCard(emoji: "😴", text: String(format: "onboarding.projection.extraNights".localized, max(projectedHours / 8, 1)))
                 }
             }
             .padding(.top, 32)
@@ -990,8 +990,8 @@ struct SocialProofPage: View {
     @Binding var animateContent: Bool
     
     let testimonials = [
-        ("Je récupère 1h30 par jour !", "Marie, 24 ans"),
-        ("Plus de scroll nocturne", "Thomas, 31 ans")
+        ("onboarding.social.testimonial1".localized, "onboarding.social.author1".localized),
+        ("onboarding.social.testimonial2".localized, "onboarding.social.author2".localized)
     ]
     
     var body: some View {
@@ -1000,7 +1000,7 @@ struct SocialProofPage: View {
                 .frame(height: 60)
             
             // Header
-            Text("Tu n'es pas seul(e) ! 🤝")
+            Text("onboarding.social.notAlone".localized)
                 .font(AppFonts.title2())
                 .foregroundColor(OnboardingColors.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -1008,7 +1008,7 @@ struct SocialProofPage: View {
                 .opacity(animateContent ? 1 : 0)
                 .offset(y: animateContent ? 0 : 20)
             
-            Text("Rejoins")
+            Text("onboarding.social.join".localized)
                 .font(AppFonts.title3())
                 .foregroundColor(OnboardingColors.textSecondary)
                 .padding(.top, 16)
@@ -1025,7 +1025,7 @@ struct SocialProofPage: View {
                             endPoint: .trailing
                         )
                     )
-                Text("users")
+                Text("onboarding.social.users".localized)
                     .font(AppFonts.title3())
                     .foregroundColor(OnboardingColors.textSecondary)
             }
@@ -1066,8 +1066,8 @@ struct SocialProofPage: View {
             
             // Trust badges
             HStack(spacing: 16) {
-                TrustBadge(icon: "lock.shield.fill", text: "Privacy", color: .green)
-                TrustBadge(icon: "checkmark.seal.fill", text: "No ads", color: .blue)
+                TrustBadge(icon: "lock.shield.fill", text: "onboarding.social.privacy".localized, color: .green)
+                TrustBadge(icon: "checkmark.seal.fill", text: "onboarding.social.noAds".localized, color: .blue)
             }
             .opacity(animateContent ? 1 : 0)
             .animation(.easeOut(duration: 0.5).delay(0.5), value: animateContent)
@@ -1143,7 +1143,7 @@ struct PremiumCTAPage: View {
                 HStack(spacing: 8) {
                     Image(systemName: "crown.fill")
                         .foregroundColor(.yellow)
-                    Text("PREMIUM")
+                    Text("onboarding.premium.badge".localized)
                         .font(AppFonts.caption())
                         .fontWeight(.bold)
                         .foregroundColor(.yellow)
@@ -1163,10 +1163,10 @@ struct PremiumCTAPage: View {
                             .font(AppFonts.title2())
                             .foregroundColor(OnboardingColors.primary)
                     }
-                    Text("débloque tout")
+                    Text("onboarding.premium.unlockAll".localized)
                         .font(AppFonts.title())
                         .foregroundColor(OnboardingColors.textPrimary)
-                    Text("le potentiel ! ✨")
+                    Text("onboarding.premium.potential".localized)
                         .font(AppFonts.title())
                         .foregroundColor(OnboardingColors.textPrimary)
                 }
@@ -1178,10 +1178,10 @@ struct PremiumCTAPage: View {
                 
                 // Features
                 VStack(spacing: 14) {
-                    PremiumFeatureRow(icon: "checkmark.circle.fill", text: "Tous les filtres illimités", color: .green)
-                    PremiumFeatureRow(icon: "bolt.circle.fill", text: "Activation instantanée", color: .orange)
-                    PremiumFeatureRow(icon: "arrow.triangle.2.circlepath.circle.fill", text: "Sync multi-appareils", color: .blue)
-                    PremiumFeatureRow(icon: "heart.circle.fill", text: "Support prioritaire", color: .pink)
+                    PremiumFeatureRow(icon: "checkmark.circle.fill", text: "onboarding.premium.allFilters".localized, color: .green)
+                    PremiumFeatureRow(icon: "bolt.circle.fill", text: "onboarding.premium.instantActivation".localized, color: .orange)
+                    PremiumFeatureRow(icon: "arrow.triangle.2.circlepath.circle.fill", text: "onboarding.premium.multiDevice".localized, color: .blue)
+                    PremiumFeatureRow(icon: "heart.circle.fill", text: "onboarding.premium.prioritySupport".localized, color: .pink)
                 }
                 .padding(.vertical, 20)
                 .padding(.horizontal, 20)
@@ -1213,7 +1213,7 @@ struct PremiumCTAPage: View {
                     }) {
                         HStack(spacing: 8) {
                             Image(systemName: "crown.fill")
-                            Text("Essai gratuit 3 jours")
+                            Text("onboarding.premium.freeTrial".localized)
                                 .font(AppFonts.headline())
                         }
                         .foregroundColor(OnboardingColors.background)
@@ -1227,7 +1227,7 @@ struct PremiumCTAPage: View {
                     }
                     .buttonStyle(OnboardingButtonStyle())
                     
-                    Text("Annulable à tout moment")
+                    Text("onboarding.premium.cancelAnytime".localized)
                         .font(AppFonts.caption())
                         .foregroundColor(OnboardingColors.textSecondary)
                 }
@@ -1292,7 +1292,7 @@ struct LetsGoPage: View {
                 
                 // Header
                 VStack(spacing: 8) {
-                    Text("Tu es prêt(e),")
+                    Text("onboarding.final.ready".localized)
                         .font(AppFonts.title())
                         .foregroundColor(OnboardingColors.textPrimary)
                     
@@ -1308,14 +1308,14 @@ struct LetsGoPage: View {
                 
                 // Goal recap
                 VStack(spacing: 8) {
-                    Text("Ton objectif :")
+                    Text("onboarding.final.yourGoal".localized)
                         .font(AppFonts.subheadline())
                         .foregroundColor(OnboardingColors.textSecondary)
                     
                     HStack(spacing: 8) {
-                        Text("Récupérer")
+                        Text("onboarding.final.recover".localized)
                             .foregroundColor(OnboardingColors.textSecondary)
-                        Text("\(authManager.estimatedTimeSavedMinutes) min/jour")
+                        Text(String(format: "onboarding.final.minPerDay".localized, authManager.estimatedTimeSavedMinutes))
                             .foregroundColor(.green)
                             .fontWeight(.bold)
                     }
@@ -1343,7 +1343,7 @@ struct LetsGoPage: View {
                     .animation(.spring(response: 0.6, dampingFraction: 0.7).delay(0.2), value: animateContent)
                 
                 // Message
-                Text("\"Je serai toujours là pour t'encourager !\"")
+                Text("onboarding.final.mascotMessage".localized)
                     .font(AppFonts.subheadline())
                     .foregroundColor(OnboardingColors.textSecondary)
                     .italic()
@@ -1358,7 +1358,7 @@ struct LetsGoPage: View {
                     authManager.completeOnboarding()
                 }) {
                     HStack(spacing: 8) {
-                        Text("Commencer !")
+                        Text("onboarding.final.start".localized)
                             .font(AppFonts.headline())
                         Image(systemName: "arrow.right")
                             .font(.system(size: 14, weight: .semibold))

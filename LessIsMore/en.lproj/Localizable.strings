@@ -1,0 +1,191 @@
+/* 
+  Localizable.strings (English)
+  LessIsMore
+
+  English localization - Base language
+*/
+
+// MARK: - Common
+"common.continue" = "Continue";
+"common.cancel" = "Cancel";
+"common.share" = "Share";
+"common.save" = "Save";
+"common.done" = "Done";
+"common.back" = "Back";
+"common.day" = "day";
+"common.days" = "days";
+"common.saved" = "saved";
+
+// MARK: - Control Panel
+"controlPanel.todayUse" = "TODAY USE";
+"controlPanel.thisWeekUse" = "THIS WEEK USE";
+"controlPanel.thisWeek" = "This Week";
+"controlPanel.content" = "Content";
+"controlPanel.algorithm" = "Algorithm";
+"controlPanel.style" = "Style";
+"controlPanel.pro" = "Pro";
+
+// MARK: - Filters
+"filter.hideReels" = "Hide Reels";
+"filter.hideStories" = "Hide Stories";
+"filter.followingOnly" = "Following only";
+"filter.hideExplore" = "Hide Explore Feed";
+"filter.hideSuggestions" = "Hide Suggestions";
+"filter.hideMessages" = "Hide Messages";
+"filter.hideLikes" = "Hide Likes";
+"filter.perDaySaved" = "~%@/day saved";
+"filter.perDaySavedIfActivated" = "~%@/day saved if activated";
+"filter.filtersBlocked" = "%d filter(s) blocked";
+"filter.minSavedPerDay" = "≈ %d min saved/day";
+
+// MARK: - Streak
+"streak.breakTitle" = "Break Your Streak?";
+"streak.freeFor" = "You've been %@-free for";
+"streak.keepMyStreak" = "Keep My Streak";
+"streak.disableReset" = "Disable & Reset";
+"streak.bestStreak" = "BEST STREAK";
+"streak.noFilter" = "No %@";
+"streak.timeSaved" = "~%@ saved";
+
+// MARK: - Time Saved Explanation
+"timeSaved.title" = "How it's calculated";
+"timeSaved.analyzeTitle" = "We analyze your usage";
+"timeSaved.analyzeDesc" = "We look at your average daily time spent on each category (Reels, Stories, etc.) over the last 7 days.";
+"timeSaved.trackTitle" = "We track your progress";
+"timeSaved.trackDesc" = "We multiply your active streak days by your personal average daily usage.";
+"timeSaved.realTimeTitle" = "Real reclaimed time";
+"timeSaved.realTimeDesc" = "This represents the actual time you've won back for yourself by keeping your filters active.";
+"timeSaved.gotIt" = "Got it";
+
+// MARK: - Settings
+"settings.title" = "Settings";
+"settings.appSettings" = "APP SETTINGS";
+"settings.support" = "SUPPORT";
+"settings.account" = "ACCOUNT";
+"settings.language" = "LANGUAGE";
+"settings.reloadInstagram" = "Reload Instagram";
+"settings.resetFilters" = "Reset All Filters";
+"settings.resetOnboarding" = "Reset Onboarding";
+"settings.aboutApp" = "About LessIsMore";
+"settings.logOut" = "Log Out";
+"settings.logOutConfirm" = "Are you sure you want to log out? You will need to log back in to use the app.";
+"settings.upgradeToPro" = "Upgrade to Pro";
+"settings.upgradeDesc" = "Unlock all features and detailed statistics.";
+"settings.version" = "Version %@";
+
+// MARK: - Share Stats
+"shareStats.preview" = "Preview";
+"shareStats.shareToStory" = "Share to Story";
+"shareStats.myInstagram" = "MY INSTAGRAM";
+"shareStats.thisWeek" = "this week";
+"shareStats.vsYesterday" = "%d%% vs yesterday";
+"shareStats.vsLastWeek" = "%d%% vs last week";
+"shareStats.withThisTime" = "WITH THIS TIME...";
+"shareStats.takeBackControl" = "Take back control";
+
+// MARK: - Impact Comparisons
+"impact.bookChapter" = "book chapter read";
+"impact.bookChapters" = "book chapters read";
+"impact.movie" = "movie watched";
+"impact.movies" = "movies watched";
+"impact.workout" = "workout session";
+"impact.workouts" = "workout sessions";
+"impact.meditation" = "meditation";
+"impact.meditations" = "meditations";
+"impact.book" = "book read entirely";
+"impact.books" = "books read entirely";
+"impact.podcast" = "podcast episode";
+"impact.podcasts" = "podcast episodes";
+"impact.recipe" = "new recipe cooked";
+"impact.recipes" = "new recipes cooked";
+"impact.musicLesson" = "music lesson";
+"impact.musicLessons" = "music lessons";
+"impact.kmWalked" = "km walked";
+"impact.workoutHour" = "workout hour";
+"impact.workoutHours" = "workout hours";
+
+// MARK: - Onboarding Welcome
+"onboarding.back" = "Back";
+"onboarding.welcome.greeting" = "Hi! 👋 I'm Lessy,";
+"onboarding.welcome.line1" = "your companion to take back";
+"onboarding.welcome.line2" = "control of your time";
+"onboarding.welcome.line3" = "on Instagram!";
+
+// MARK: - Onboarding Name
+"onboarding.name.question" = "What can I call you? 😊";
+"onboarding.name.charCount" = "%d / 50";
+
+// MARK: - Onboarding Problem
+"onboarding.problem.questionPart1" = "what bothers you";
+"onboarding.problem.questionPart2" = "the most with Instagram? 🤔";
+"problem.tooMuchTime" = "I waste too much time";
+"problem.mindlessScrolling" = "I scroll without realizing it";
+"problem.comparison" = "I compare myself to others";
+"problem.poorSleep" = "I sleep poorly due to late-night scrolling";
+
+// MARK: - Onboarding Goals
+"onboarding.goals.question" = "What do you want to accomplish? 🎯";
+"onboarding.goals.selectAll" = "(select all that apply)";
+"goal.reduceScreenTime" = "Reduce my screen time";
+"goal.stopScrolling" = "Stop infinite scrolling";
+"goal.blockReels" = "Block Reels";
+"goal.removeAlgorithm" = "Remove the feed algorithm";
+"goal.lessAnxiety" = "Less social anxiety";
+
+// MARK: - Onboarding Screen Time
+"onboarding.screenTime.question1" = "How much time do you spend";
+"onboarding.screenTime.question2" = "on Instagram per day? 📱";
+"onboarding.screenTime.perDay" = "per day";
+"onboarding.screenTime.reaction1" = "Not bad! We can still improve 💪";
+"onboarding.screenTime.reaction2" = "It's common, let's fix it together!";
+"onboarding.screenTime.reaction3" = "Don't worry, I'm here to help! 🤗";
+"onboarding.screenTime.reaction4" = "Wow, but no worries, we'll transform this! 🚀";
+
+// MARK: - Onboarding Filters
+"onboarding.filters.myRecommendations" = "here are my recommendations";
+"onboarding.filters.forYou" = "for you! ✨";
+"onboarding.filters.tapToBlock" = "Tap to block";
+"onboarding.filters.recommended" = "Recommended";
+
+// MARK: - Onboarding Projection
+"onboarding.projection.in30Days" = "in 30 days,";
+"onboarding.projection.youWillRecover" = "you'll have recovered... 🔮";
+"onboarding.projection.ofYourLife" = "of your life";
+"onboarding.projection.equivalent" = "💡 That's equivalent to:";
+"onboarding.projection.booksRead" = "%d books read";
+"onboarding.projection.workoutSessions" = "%d workout sessions";
+"onboarding.projection.extraNights" = "%d extra nights of sleep";
+
+// MARK: - Onboarding Social Proof
+"onboarding.social.notAlone" = "You're not alone! 🤝";
+"onboarding.social.join" = "Join";
+"onboarding.social.users" = "users";
+"onboarding.social.testimonial1" = "I save 1h30 per day!";
+"onboarding.social.author1" = "Marie, 24";
+"onboarding.social.testimonial2" = "No more late-night scrolling";
+"onboarding.social.author2" = "Thomas, 31";
+"onboarding.social.privacy" = "Privacy";
+"onboarding.social.noAds" = "No ads";
+"onboarding.social.joinTeam" = "Join the team";
+
+// MARK: - Onboarding Premium
+"onboarding.premium.badge" = "PREMIUM";
+"onboarding.premium.unlockAll" = "unlock the full";
+"onboarding.premium.potential" = "potential! ✨";
+"onboarding.premium.allFilters" = "All filters unlimited";
+"onboarding.premium.instantActivation" = "Instant activation";
+"onboarding.premium.multiDevice" = "Multi-device sync";
+"onboarding.premium.prioritySupport" = "Priority support";
+"onboarding.premium.freeTrial" = "Free 3-day trial";
+"onboarding.premium.cancelAnytime" = "Cancel anytime";
+
+// MARK: - Onboarding Final
+"onboarding.final.ready" = "You're ready,";
+"onboarding.final.yourGoal" = "Your goal:";
+"onboarding.final.recover" = "Recover";
+"onboarding.final.minPerDay" = "%d min/day";
+"onboarding.final.mascotMessage" = "\"I'll always be here to encourage you!\"";
+"onboarding.final.start" = "Let's go!";
+
+// MARK: - Chart Labels
+"chart.weekLabel" = "Wk %d";

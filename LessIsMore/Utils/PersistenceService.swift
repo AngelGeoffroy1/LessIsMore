@@ -18,7 +18,6 @@ protocol PersistenceServiceProtocol {
 
 // MARK: - Clés de persistance centralisées
 enum PersistenceKey: String {
-    case isAuthenticated
     case hasSeenOnboarding
     case hasSeenSwipeTutorial
 
@@ -61,11 +60,6 @@ final class PersistenceService: PersistenceServiceProtocol {
 
     // MARK: - Méthodes spécifiques pour l'app
 
-    var isAuthenticated: Bool {
-        get { getBool(forKey: PersistenceKey.isAuthenticated.rawValue) }
-        set { setBool(newValue, forKey: PersistenceKey.isAuthenticated.rawValue) }
-    }
-
     var hasSeenOnboarding: Bool {
         get { getBool(forKey: PersistenceKey.hasSeenOnboarding.rawValue) }
         set { setBool(newValue, forKey: PersistenceKey.hasSeenOnboarding.rawValue) }
@@ -94,7 +88,6 @@ final class PersistenceService: PersistenceServiceProtocol {
     }
 
     func resetAll() {
-        setBool(false, forKey: PersistenceKey.isAuthenticated.rawValue)
         setBool(false, forKey: PersistenceKey.hasSeenOnboarding.rawValue)
         setBool(false, forKey: PersistenceKey.hasSeenSwipeTutorial.rawValue)
         resetAllFilters()

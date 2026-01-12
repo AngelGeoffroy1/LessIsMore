@@ -62,21 +62,21 @@ struct ShareStatsPreviewSheet: View {
                 // Header
                 HStack {
                     Button(action: { dismiss() }) {
-                        Text("Cancel")
+                        Text("common.cancel".localized)
                             .font(AppFonts.body(16))
                             .foregroundColor(.primary.opacity(0.7))
                     }
                     
                     Spacer()
                     
-                    Text("Preview")
+                    Text("shareStats.preview".localized)
                         .font(AppFonts.headline(17))
                         .foregroundColor(.primary)
                     
                     Spacer()
                     
                     Button(action: shareStats) {
-                        Text("Share")
+                        Text("common.share".localized)
                             .font(AppFonts.headline(16))
                             .foregroundColor(.blue)
                     }
@@ -118,7 +118,7 @@ struct ShareStatsPreviewSheet: View {
                             Image(systemName: "square.and.arrow.up")
                                 .font(.system(size: 16, weight: .semibold))
                             
-                            Text("Share to Story")
+                            Text("shareStats.shareToStory".localized)
                                 .font(AppFonts.headline(16))
                         }
                         .foregroundColor(.white)
@@ -375,12 +375,12 @@ struct ShareStatsCard: View {
             VStack(spacing: 0) {
                 // Title Section
                 VStack(spacing: 4) {
-                    Text("MY INSTAGRAM")
+                    Text("shareStats.myInstagram".localized)
                         .font(AppFonts.caption(10))
                         .foregroundColor(.white.opacity(0.5))
                         .tracking(2)
                     
-                    Text("this week")
+                    Text("shareStats.thisWeek".localized)
                         .font(AppFonts.title3(18))
                         .foregroundColor(.white.opacity(0.9))
                 }
@@ -402,7 +402,7 @@ struct ShareStatsCard: View {
                                 Image(systemName: percentageChange < 0 ? "arrow.down" : "arrow.up")
                                     .font(.system(size: 9, weight: .bold))
                                 
-                                Text("\(abs(Int(percentageChange)))% vs yesterday")
+                                Text(String(format: "shareStats.vsYesterday".localized, abs(Int(percentageChange))))
                                     .font(AppFonts.caption(11))
                             }
                             .foregroundColor(percentageChange < 0 ? .green : .red)
@@ -462,7 +462,7 @@ struct ShareStatsCard: View {
                 if let impact = impactComparison {
                     VStack(spacing: 8) {
                         // Header
-                        Text("WITH THIS TIME...")
+                        Text("shareStats.withThisTime".localized)
                             .font(AppFonts.caption2(9))
                             .foregroundColor(.white.opacity(0.4))
                             .tracking(1.5)
@@ -479,7 +479,7 @@ struct ShareStatsCard: View {
                         }
                         
                         // Call to action
-                        Text("Take back control")
+                        Text("shareStats.takeBackControl".localized)
                             .font(AppFonts.caption2(9))
                             .foregroundColor(.white.opacity(0.4))
                             .italic()
@@ -683,7 +683,7 @@ struct ShareStatsCardMonthly: View {
             VStack(spacing: 0) {
                 // Title Section
                 VStack(spacing: 4) {
-                    Text("MY INSTAGRAM")
+                    Text("shareStats.myInstagram".localized)
                         .font(AppFonts.caption(10))
                         .foregroundColor(.white.opacity(0.5))
                         .tracking(2)
@@ -706,8 +706,7 @@ struct ShareStatsCardMonthly: View {
                         HStack(spacing: 4) {
                             Image(systemName: percentageChange < 0 ? "arrow.down" : "arrow.up")
                                 .font(.system(size: 9, weight: .bold))
-                            
-                            Text("\(abs(Int(percentageChange)))% vs last week")
+                            Text(String(format: "shareStats.vsLastWeek".localized, abs(Int(percentageChange))))
                                 .font(AppFonts.caption(11))
                         }
                         .foregroundColor(percentageChange < 0 ? .green : .red)
@@ -758,7 +757,7 @@ struct ShareStatsCardMonthly: View {
                 if let impact = impactComparison {
                     VStack(spacing: 8) {
                         // Header
-                        Text("WITH THIS TIME...")
+                        Text("shareStats.withThisTime".localized)
                             .font(AppFonts.caption2(9))
                             .foregroundColor(.white.opacity(0.4))
                             .tracking(1.5)
@@ -775,7 +774,7 @@ struct ShareStatsCardMonthly: View {
                         }
                         
                         // Call to action
-                        Text("Take back control")
+                        Text("shareStats.takeBackControl".localized)
                             .font(AppFonts.caption2(9))
                             .foregroundColor(.white.opacity(0.4))
                             .italic()

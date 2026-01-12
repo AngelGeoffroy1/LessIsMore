@@ -297,7 +297,7 @@ struct StreakHighlightView: View {
     var body: some View {
         if let best = streakTracker.bestActiveStreak {
             VStack(alignment: .leading, spacing: 4) {
-                Text("BEST STREAK")
+                Text("streak.bestStreak".localized)
                     .font(.system(size: 10, weight: .medium))
                     .foregroundColor(.secondary)
                     .tracking(1.5)
@@ -309,12 +309,12 @@ struct StreakHighlightView: View {
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundStyle(instagramGradient)
                     
-                    Text(best.days == 1 ? "day" : "days")
+                    Text(best.days == 1 ? "common.day".localized : "common.days".localized)
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.secondary)
                 }
                 
-                Text("without \(best.filterType.displayName)")
+                Text(String(format: "streak.noFilter".localized, best.filterType.displayName))
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(.secondary)
             }
@@ -357,11 +357,11 @@ struct BreakStreakModal: View {
             
             // Title
             VStack(spacing: 8) {
-                Text("Break Your Streak?")
+                Text("streak.breakTitle".localized)
                     .font(AppFonts.title3(22))
                     .foregroundColor(.primary)
                 
-                Text("You've been \(filterType.displayName)-free for")
+                Text(String(format: "streak.freeFor".localized, filterType.displayName))
                     .font(AppFonts.subheadline(15))
                     .foregroundColor(.secondary)
                 
@@ -370,7 +370,7 @@ struct BreakStreakModal: View {
                         .font(AppFonts.title(32))
                         .foregroundStyle(instagramGradient)
                     
-                    Text(currentStreak == 1 ? "day" : "days")
+                    Text(currentStreak == 1 ? "common.day".localized : "common.days".localized)
                         .font(AppFonts.body(18))
                         .foregroundColor(.secondary)
                 }
@@ -382,7 +382,7 @@ struct BreakStreakModal: View {
                 Button(action: onCancel) {
                     HStack {
                         GradientFlameView(size: 16)
-                        Text("Keep My Streak")
+                        Text("streak.keepMyStreak".localized)
                             .font(AppFonts.headline(16))
                     }
                     .foregroundColor(.white)
@@ -394,7 +394,7 @@ struct BreakStreakModal: View {
                 
                 // Break Streak Button (Secondary) - No background
                 Button(action: onConfirm) {
-                    Text("Disable & Reset")
+                    Text("streak.disableReset".localized)
                         .font(AppFonts.subheadline(15))
                         .foregroundColor(.secondary)
                         .frame(maxWidth: .infinity)
@@ -466,34 +466,34 @@ struct TimeSavedExplanationModal: View {
             
             // Text Content
             VStack(spacing: 12) {
-                Text("How it's calculated")
+                Text("timeSaved.title".localized)
                     .font(AppFonts.title3(20))
                     .foregroundColor(.primary)
                 
                 VStack(spacing: 16) {
                     ExplanationRow(
                         icon: "chart.bar.xaxis",
-                        title: "We analyze your usage",
-                        description: "We look at your average daily time spent on each category (Reels, Stories, etc.) over the last 7 days."
+                        title: "timeSaved.analyzeTitle".localized,
+                        description: "timeSaved.analyzeDesc".localized
                     )
                     
                     ExplanationRow(
                         icon: "flame.fill",
-                        title: "We track your progress",
-                        description: "We multiply your active streak days by your personal average daily usage."
+                        title: "timeSaved.trackTitle".localized,
+                        description: "timeSaved.trackDesc".localized
                     )
                     
                     ExplanationRow(
                         icon: "sparkles",
-                        title: "Real reclaimed time",
-                        description: "This represents the actual time you've won back for yourself by keeping your filters active."
+                        title: "timeSaved.realTimeTitle".localized,
+                        description: "timeSaved.realTimeDesc".localized
                     )
                 }
             }
             
             // Dismiss Button
             Button(action: onDismiss) {
-                Text("Got it")
+                Text("timeSaved.gotIt".localized)
                     .font(AppFonts.headline(16))
                     .foregroundColor(colorScheme == .dark ? .black : .white)
                     .frame(maxWidth: .infinity)

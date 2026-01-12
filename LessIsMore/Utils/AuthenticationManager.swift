@@ -17,10 +17,10 @@ enum UserProblem: String, CaseIterable, Codable {
     
     var displayText: String {
         switch self {
-        case .tooMuchTime: return "Je perds trop de temps"
-        case .mindlessScrolling: return "Je scrolle sans m'en rendre compte"
-        case .comparison: return "Je me compare aux autres"
-        case .poorSleep: return "Je dors mal à cause du scrolling nocturne"
+        case .tooMuchTime: return "problem.tooMuchTime".localized
+        case .mindlessScrolling: return "problem.mindlessScrolling".localized
+        case .comparison: return "problem.comparison".localized
+        case .poorSleep: return "problem.poorSleep".localized
         }
     }
     
@@ -43,11 +43,11 @@ enum UserGoal: String, CaseIterable, Codable {
     
     var displayText: String {
         switch self {
-        case .reduceScreenTime: return "Réduire mon temps écran"
-        case .stopScrolling: return "Arrêter le scroll infini"
-        case .blockReels: return "Bloquer les Reels"
-        case .removeAlgorithm: return "Supprimer l'algo du feed"
-        case .lessAnxiety: return "Moins d'anxiété sociale"
+        case .reduceScreenTime: return "goal.reduceScreenTime".localized
+        case .stopScrolling: return "goal.stopScrolling".localized
+        case .blockReels: return "goal.blockReels".localized
+        case .removeAlgorithm: return "goal.removeAlgorithm".localized
+        case .lessAnxiety: return "goal.lessAnxiety".localized
         }
     }
     
@@ -75,12 +75,6 @@ enum UserGoal: String, CaseIterable, Codable {
 
 class AuthenticationManager: ObservableObject {
     private let persistence: PersistenceService
-
-    @Published var isAuthenticated: Bool {
-        didSet {
-            persistence.isAuthenticated = isAuthenticated
-        }
-    }
 
     @Published var hasSeenOnboarding: Bool {
         didSet {
@@ -118,7 +112,6 @@ class AuthenticationManager: ObservableObject {
 
     init(persistence: PersistenceService = .shared) {
         self.persistence = persistence
-        self.isAuthenticated = persistence.isAuthenticated
         self.hasSeenOnboarding = persistence.hasSeenOnboarding
         
         // Load onboarding data
@@ -167,13 +160,8 @@ class AuthenticationManager: ObservableObject {
     }
 
     func logout() {
-        isAuthenticated = false
         hasSeenOnboarding = false
         persistence.hasSeenSwipeTutorial = false
-    }
-
-    func login() {
-        isAuthenticated = true
     }
 
     func completeOnboarding() {
