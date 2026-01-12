@@ -12,109 +12,106 @@ struct AuthenticationView: View {
     @ObservedObject var authManager: AuthenticationManager
     @State private var showError = false
     @State private var errorMessage = ""
+    @State private var animateContent = false
     
     var body: some View {
-        VStack(spacing: 30) {
-            Spacer()
+        ZStack {
+            // Dark background matching onboarding
+            OnboardingColors.background
+                .ignoresSafeArea()
             
-            // Logo et titre
-            VStack(spacing: 20) {
-                Image("OnboardingImages")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 200, height: 200)
-                    .clipShape(RoundedRectangle(cornerRadius: 20))
-                    .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
-
-                Text("LessIsMore")
-                    .font(AppFonts.title())
-                    .foregroundColor(.primary)
-
-                Text("Choose your login method")
-                    .font(AppFonts.title2(22))
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.secondary)
-            }
-            
-            Spacer()
-            
-            // Options de connexion
-            VStack(spacing: 16) {
-                // Sign in with Apple
-                SignInWithAppleButton(
-                    onRequest: { request in
-                        request.requestedScopes = [.fullName, .email]
-                    },
-                    onCompletion: { result in
-                        handleSignInWithApple(result: result)
-                    }
-                )
-                .signInWithAppleButtonStyle(.black)
-                .frame(height: 50)
-                .cornerRadius(12)
-                .padding(.horizontal, 40)
+            VStack(spacing: 0) {
+                Spacer()
                 
-                // Ou continuer avec Instagram
-                Button(action: {
-                    authManager.login()
-                }) {
-                    HStack {
-                        Image(systemName: "camera.fill")
-                        Text("Continue with Instagram")
+                // Mascot and welcome text
+                VStack(spacing: 24) {
+                    // Mascot bonjour
+                    Image("mascott bonjour")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 200, height: 200)
+                        .opacity(animateContent ? 1 : 0)
+                        .scaleEffect(animateContent ? 1 : 0.8)
+                        .animation(.spring(response: 0.6, dampingFraction: 0.7), value: animateContent)
+                    
+                    // Title and subtitle
+                    VStack(spacing: 12) {
+                        Text("Bienvenue sur")
+                            .font(AppFonts.title2())
+                            .foregroundColor(OnboardingColors.textSecondary)
+                        
+                        Text("LessIsMore")
+                            .font(AppFonts.title(36))
+                            .foregroundColor(OnboardingColors.textPrimary)
+                        
+                        Text("Choisis ta méthode de connexion")
+                            .font(AppFonts.subheadline())
+                            .foregroundColor(OnboardingColors.textSecondary)
+                            .multilineTextAlignment(.center)
                     }
-                    .font(AppFonts.headline())
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .background(
-                        LinearGradient(
-                            gradient: Gradient(colors: [Color.purple, Color.pink]),
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
+                    .opacity(animateContent ? 1 : 0)
+                    .offset(y: animateContent ? 0 : 20)
+                    .animation(.easeOut(duration: 0.5).delay(0.2), value: animateContent)
+                }
+                
+                Spacer()
+                
+                // Login options
+                VStack(spacing: 16) {
+                    // Sign in with Apple
+                    SignInWithAppleButton(
+                        onRequest: { request in
+                            request.requestedScopes = [.fullName, .email]
+                        },
+                        onCompletion: { result in
+                            handleSignInWithApple(result: result)
+                        }
                     )
-                    .cornerRadius(12)
+                    .signInWithAppleButtonStyle(.white)
+                    .frame(height: 56)
+                    .cornerRadius(28)
+                    .padding(.horizontal, 24)
                 }
-                .padding(.horizontal, 40)
-            }
-            
-            // Texte informatif
-            VStack(spacing: 8) {
-                Text("By continuing, you agree to our")
-                    .font(AppFonts.caption())
-                    .foregroundColor(.secondary)
-
-                HStack(spacing: 4) {
-                    Button("Terms of Service") {
-                        // Ouvrir les conditions d'utilisation
-                    }
-                    .font(AppFonts.caption())
-                    .foregroundColor(.blue)
-
-                    Text("and")
+                .opacity(animateContent ? 1 : 0)
+                .offset(y: animateContent ? 0 : 30)
+                .animation(.easeOut(duration: 0.5).delay(0.3), value: animateContent)
+                
+                // Legal text
+                VStack(spacing: 8) {
+                    Text("En continuant, tu acceptes nos")
                         .font(AppFonts.caption())
-                        .foregroundColor(.secondary)
-
-                    Button("Privacy Policy") {
-                        // Ouvrir la politique de confidentialité
+                        .foregroundColor(OnboardingColors.textSecondary)
+                    
+                    HStack(spacing: 4) {
+                        Button("Conditions d'utilisation") {
+                            // Open terms of service
+                        }
+                        .font(AppFonts.caption())
+                        .foregroundColor(OnboardingColors.primary)
+                        
+                        Text("et")
+                            .font(AppFonts.caption())
+                            .foregroundColor(OnboardingColors.textSecondary)
+                        
+                        Button("Politique de confidentialité") {
+                            // Open privacy policy
+                        }
+                        .font(AppFonts.caption())
+                        .foregroundColor(OnboardingColors.primary)
                     }
-                    .font(AppFonts.caption())
-                    .foregroundColor(.blue)
                 }
+                .padding(.top, 24)
+                .padding(.bottom, 40)
+                .opacity(animateContent ? 1 : 0)
+                .animation(.easeOut(duration: 0.5).delay(0.4), value: animateContent)
             }
-            .padding(.top, 20)
-            
-            Spacer()
         }
-        .padding()
-        .background(
-            LinearGradient(
-                gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
-        .alert("Login Error", isPresented: $showError) {
+        .onAppear {
+            withAnimation {
+                animateContent = true
+            }
+        }
+        .alert("Erreur de connexion", isPresented: $showError) {
             Button("OK") { }
         } message: {
             Text(errorMessage)
@@ -125,13 +122,12 @@ struct AuthenticationView: View {
         switch result {
         case .success(let authorization):
             if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
-                // Traitement réussi de Sign in with Apple
                 print("Connexion Apple réussie: \(appleIDCredential.user)")
                 authManager.login()
             }
         case .failure(let error):
             print("Erreur Sign in with Apple: \(error.localizedDescription)")
-            errorMessage = "Error signing in with Apple. Please try again."
+            errorMessage = "Erreur lors de la connexion avec Apple. Réessaie."
             showError = true
         }
     }
