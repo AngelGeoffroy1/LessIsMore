@@ -311,6 +311,22 @@ struct ShareStatsCard: View {
         return (comparison.icon, "≈ \(count) \(text)")
     }
     
+    // Mascot image based on weekly usage
+    private var mascotImage: Image {
+        let totalHours = totalWeekSeconds / 3600
+        
+        if totalHours < 3 {
+            // Great usage - thumbs up
+            return Image("mascott pouce")
+        } else if totalHours < 7 {
+            // Medium usage - wave
+            return Image("mascott bonjour")
+        } else {
+            // High usage - tired
+            return Image("mascotte tired")
+        }
+    }
+    
     private let chartHeight: CGFloat = 100
     
     var body: some View {
@@ -371,29 +387,41 @@ struct ShareStatsCard: View {
                 .padding(.top, 24)
                 .padding(.bottom, 16)
                 
-                // Main Stats
-                VStack(spacing: 6) {
-                    Text(formattedWeekTotal)
-                        .font(AppFonts.title(36))
-                        .foregroundColor(.white)
+                // Main Stats with Mascot
+                HStack(spacing: 12) {
+                    Spacer()
                     
-                    // Trend pill
-                    if percentageChange != 0 {
-                        HStack(spacing: 4) {
-                            Image(systemName: percentageChange < 0 ? "arrow.down" : "arrow.up")
-                                .font(.system(size: 9, weight: .bold))
-                            
-                            Text("\(abs(Int(percentageChange)))% vs yesterday")
-                                .font(AppFonts.caption(11))
+                    VStack(spacing: 6) {
+                        Text(formattedWeekTotal)
+                            .font(AppFonts.title(36))
+                            .foregroundColor(.white)
+                        
+                        // Trend pill
+                        if percentageChange != 0 {
+                            HStack(spacing: 4) {
+                                Image(systemName: percentageChange < 0 ? "arrow.down" : "arrow.up")
+                                    .font(.system(size: 9, weight: .bold))
+                                
+                                Text("\(abs(Int(percentageChange)))% vs yesterday")
+                                    .font(AppFonts.caption(11))
+                            }
+                            .foregroundColor(percentageChange < 0 ? .green : .red)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(
+                                Capsule()
+                                    .fill((percentageChange < 0 ? Color.green : Color.red).opacity(0.15))
+                            )
                         }
-                        .foregroundColor(percentageChange < 0 ? .green : .red)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(
-                            Capsule()
-                                .fill((percentageChange < 0 ? Color.green : Color.red).opacity(0.15))
-                        )
                     }
+                    
+                    // Mascot based on usage
+                    mascotImage
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 60, height: 60)
+                    
+                    Spacer()
                 }
                 .padding(.bottom, 16)
                 

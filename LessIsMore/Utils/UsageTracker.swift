@@ -367,8 +367,10 @@ class UsageTracker: ObservableObject {
     private func loadUsage() {
         let savedDate = userDefaults.string(forKey: lastDateKey) ?? ""
         let savedMonth = userDefaults.string(forKey: "usage_last_month") ?? ""
+        let savedWeek = userDefaults.integer(forKey: "usage_last_week")
         let today = currentDateString()
         let currentMonth = currentMonthString()
+        let currentWeek = currentWeekOfYear()
 
         // Load weekly data if exists
         if let data = userDefaults.data(forKey: "weekly_usage_detailed"),
@@ -387,10 +389,20 @@ class UsageTracker: ObservableObject {
             initializeMonthlyUsage()
             userDefaults.set(currentMonth, forKey: "usage_last_month")
         }
+        
+        // Check if week changed - reset ALL weekly data (not just current day)
+        if savedWeek != currentWeek && savedWeek != 0 {
+            // New week: reset all weekly data
+            initializeWeeklyUsage()
+            userDefaults.set(currentWeek, forKey: "usage_last_week")
+            saveUsage()
+        } else if savedWeek == 0 {
+            // First time tracking week
+            userDefaults.set(currentWeek, forKey: "usage_last_week")
+        }
 
         if savedDate != today {
-            // New day: cleanup but keep weekly history (max 7 days logic would go here)
-            // For now we just reset the current day entry in weeklyUsage
+            // New day: reset only current day entry
             let currentDayName = getCurrentDayName()
             if let index = weeklyUsage.firstIndex(where: { $0.day == currentDayName }) {
                 weeklyUsage[index].categorySeconds = [:]
@@ -401,6 +413,12 @@ class UsageTracker: ObservableObject {
         
         updateTodayInWeekly()
         updateCurrentWeekInMonthly()
+    }
+    
+    /// Returns the current week of year for tracking
+    private func currentWeekOfYear() -> Int {
+        let calendar = Calendar.current
+        return calendar.component(.weekOfYear, from: Date())
     }
     
     private func currentMonthString() -> String {

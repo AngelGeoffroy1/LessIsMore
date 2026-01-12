@@ -278,8 +278,11 @@ struct WelcomePage: View {
             
             Spacer()
             
-            // Mascot
-            LessyMascotContainer(size: 220, showGlow: true)
+            // Mascot saying hi
+            Image("mascott bonjour")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 220, height: 220)
                 .opacity(animateContent ? 1 : 0)
                 .scaleEffect(animateContent ? 1 : 0.8)
                 .animation(.spring(response: 0.6, dampingFraction: 0.7).delay(0.2), value: animateContent)
@@ -300,12 +303,13 @@ struct NameInputPage: View {
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
-                .frame(height: 60)
+                .frame(height: 30)
             
             // Question
             Text("Comment je peux t'appeler ? 😊")
                 .font(AppFonts.title2())
                 .foregroundColor(OnboardingColors.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 24)
                 .opacity(animateContent ? 1 : 0)
@@ -335,18 +339,21 @@ struct NameInputPage: View {
                     .foregroundColor(OnboardingColors.textSecondary)
             }
             .padding(.horizontal, 24)
-            .padding(.top, 20)
+            .padding(.top, 16)
             .opacity(animateContent ? 1 : 0)
             .animation(.easeOut(duration: 0.5).delay(0.1), value: animateContent)
             
             Spacer()
             
-            // Mascot (smaller, curious expression)
-            LessyMascotContainer(size: 160, showGlow: true)
+            // Mascot (question variant - centered and larger)
+            Image("mascott question")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 180, height: 180)
+                .frame(maxWidth: .infinity)
                 .opacity(animateContent ? 1 : 0)
                 .animation(.easeOut(duration: 0.5).delay(0.2), value: animateContent)
             
-            Spacer()
             Spacer()
         }
         .contentShape(Rectangle())
@@ -575,6 +582,7 @@ struct ScreenTimePage: View {
                     .font(AppFonts.title2())
                     .foregroundColor(OnboardingColors.textPrimary)
             }
+            .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 24)
             .opacity(animateContent ? 1 : 0)
@@ -627,9 +635,12 @@ struct ScreenTimePage: View {
             
             Spacer()
             
-            // Mascot with reaction
+            // Mascot with reaction (tired variant)
             VStack(spacing: 12) {
-                LessyMascotContainer(size: 140, showGlow: true)
+                Image("mascotte tired")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 160, height: 160)
                 
                 Text(reactionMessage)
                     .font(AppFonts.subheadline())
@@ -694,21 +705,30 @@ struct FiltersPage: View {
             Spacer()
                 .frame(height: 40)
             
-            // Header
-            VStack(alignment: .leading, spacing: 4) {
-                if !authManager.userName.isEmpty {
-                    Text("\(authManager.userName),")
+            // Header with mascot
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    if !authManager.userName.isEmpty {
+                        Text("\(authManager.userName),")
+                            .font(AppFonts.title2())
+                            .foregroundColor(OnboardingColors.primary)
+                    }
+                    Text("voici mes recommandations")
                         .font(AppFonts.title2())
-                        .foregroundColor(OnboardingColors.primary)
+                        .foregroundColor(OnboardingColors.textPrimary)
+                    Text("pour toi ! ✨")
+                        .font(AppFonts.title2())
+                        .foregroundColor(OnboardingColors.textPrimary)
                 }
-                Text("voici mes recommandations")
-                    .font(AppFonts.title2())
-                    .foregroundColor(OnboardingColors.textPrimary)
-                Text("pour toi ! ✨")
-                    .font(AppFonts.title2())
-                    .foregroundColor(OnboardingColors.textPrimary)
+                
+                Spacer()
+                
+                // Mascot thumbs up
+                Image("mascott pouce")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 80, height: 80)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 24)
             .opacity(animateContent ? 1 : 0)
             .offset(y: animateContent ? 0 : 20)
@@ -1313,8 +1333,11 @@ struct LetsGoPage: View {
                 
                 Spacer()
                 
-                // Mascot celebrating
-                LessyMascotContainer(size: 200, showGlow: true, glowColor: OnboardingColors.primary)
+                // Mascot saluting
+                Image("mascott salut")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 180, height: 180)
                     .opacity(animateContent ? 1 : 0)
                     .scaleEffect(animateContent ? 1 : 0.8)
                     .animation(.spring(response: 0.6, dampingFraction: 0.7).delay(0.2), value: animateContent)
