@@ -12,6 +12,7 @@
 		11C82C882F0FF3600080CD3C /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 11C82C872F0FF3600080CD3C /* WidgetKit.framework */; };
 		11C82C8A2F0FF3600080CD3C /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 11C82C892F0FF3600080CD3C /* SwiftUI.framework */; };
 		11C82C972F0FF3630080CD3C /* LessIsMoreWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 11C82C862F0FF3600080CD3C /* LessIsMoreWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		11FCD8BC2F16F16F00DACBDA /* Mixpanel in Frameworks */ = {isa = PBXBuildFile; productRef = 11FCD8BB2F16F16F00DACBDA /* Mixpanel */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -114,6 +115,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				11FCD8BC2F16F16F00DACBDA /* Mixpanel in Frameworks */,
 				111EF8FE2E698EFC004B0CFE /* StoreKit.framework in Frameworks */,
 				1163F4552EE0737A0046FFAC /* SuperwallKit in Frameworks */,
 			);
@@ -202,6 +204,7 @@
 			name = LessIsMore;
 			packageProductDependencies = (
 				1163F4542EE0737A0046FFAC /* SuperwallKit */,
+				11FCD8BB2F16F16F00DACBDA /* Mixpanel */,
 			);
 			productName = LessIsMore;
 			productReference = 111EF8C62E68B4DC004B0CFE /* LessIsMore.app */;
@@ -314,6 +317,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				1163F4532EE0737A0046FFAC /* XCRemoteSwiftPackageReference "Superwall-iOS" */,
+				11FCD8BA2F16F16E00DACBDA /* XCRemoteSwiftPackageReference "mixpanel-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 111EF8C72E68B4DC004B0CFE /* Products */;
@@ -811,6 +815,14 @@
 				minimumVersion = 4.10.6;
 			};
 		};
+		11FCD8BA2F16F16E00DACBDA /* XCRemoteSwiftPackageReference "mixpanel-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mixpanel/mixpanel-swift";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -818,6 +830,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1163F4532EE0737A0046FFAC /* XCRemoteSwiftPackageReference "Superwall-iOS" */;
 			productName = SuperwallKit;
+		};
+		11FCD8BB2F16F16F00DACBDA /* Mixpanel */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 11FCD8BA2F16F16E00DACBDA /* XCRemoteSwiftPackageReference "mixpanel-swift" */;
+			productName = Mixpanel;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

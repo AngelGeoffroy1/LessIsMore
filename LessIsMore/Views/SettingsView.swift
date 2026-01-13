@@ -79,10 +79,12 @@ struct SettingsView: View {
                                 }
                                 Divider().padding(.leading, 50)
                                 SettingRow(icon: "envelope", iconColor: .blue, title: "settings.contact".localized) {
+                                    MixpanelManager.shared.trackContactSupport()
                                     showContactModal = true
                                 }
                                 Divider().padding(.leading, 50)
                                 SettingRow(icon: "doc.text", iconColor: .gray, title: "settings.aboutApp".localized) {
+                                    MixpanelManager.shared.trackAboutViewed()
                                     showAboutModal = true
                                 }
                             }
@@ -133,6 +135,9 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showAboutModal) {
             AboutModal()
+        }
+        .onAppear {
+            MixpanelManager.shared.trackSettingsOpened()
         }
     }
 

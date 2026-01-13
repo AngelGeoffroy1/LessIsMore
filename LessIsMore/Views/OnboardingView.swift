@@ -124,9 +124,11 @@ struct OnboardingView: View {
         }
         .onAppear {
             triggerAnimation()
+            trackCurrentPage()
         }
         .onChange(of: currentPage) {
             triggerAnimation()
+            trackCurrentPage()
         }
     }
     
@@ -153,6 +155,24 @@ struct OnboardingView: View {
         case 3: return !authManager.userGoals.isEmpty
         default: return true
         }
+    }
+    
+    private func trackCurrentPage() {
+        let pageNames = [
+            "welcome",
+            "name",
+            "problem",
+            "goals",
+            "screen_time",
+            "filters",
+            "projection",
+            "social_proof",
+            "lets_go",
+            "paywall"
+        ]
+        
+        guard currentPage < pageNames.count else { return }
+        MixpanelManager.shared.trackOnboardingPage(currentPage, pageName: pageNames[currentPage])
     }
 }
 
@@ -1442,11 +1462,18 @@ struct SuperwallPaywallPage: View {
             PaywallView(
                 placement: "campaign_trigger",
                 onRequestDismiss: { info, result in
-                    // When user closes the paywall (via X button), complete onboarding
+                    // Track onboarding completion when user closes paywall
+                    MixpanelManager.shared.trackOnboardingCompleted()
+                    
+                    // Complete onboarding
                     authManager.completeOnboarding()
                 }
             )
             .opacity(animateContent ? 1 : 0)
+        }
+        .onAppear {
+            // Track paywall view
+            MixpanelManager.shared.trackPaywallViewed(placement: "onboarding")
         }
     }
 }
