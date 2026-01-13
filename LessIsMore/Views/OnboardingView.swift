@@ -1438,10 +1438,15 @@ struct SuperwallPaywallPage: View {
             OnboardingColors.background
                 .ignoresSafeArea()
             
-            // PaywallView from Superwall - simplified approach
-            PaywallView(placement: "campaign_trigger")
-                .opacity(animateContent ? 1 : 0)
-                .animation(.easeOut(duration: 0.3), value: animateContent)
+            // PaywallView from Superwall with dismissal handling
+            PaywallView(
+                placement: "campaign_trigger",
+                onRequestDismiss: { info, result in
+                    // When user closes the paywall (via X button), complete onboarding
+                    authManager.completeOnboarding()
+                }
+            )
+            .opacity(animateContent ? 1 : 0)
         }
     }
 }
