@@ -166,7 +166,7 @@ struct SettingsView: View {
 
     private var premiumCard: some View {
         Button(action: {
-            Superwall.shared.register(placement: "settings_premium")
+            Superwall.shared.register(placement: "campaign_trigger")
         }) {
             HStack(spacing: 16) {
 

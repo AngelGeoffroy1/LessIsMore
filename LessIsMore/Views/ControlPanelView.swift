@@ -587,7 +587,7 @@ struct ControlPanelView: View {
     private func showPaywall() {
         let impactFeedback = UIImpactFeedbackGenerator(style: .light)
         impactFeedback.impactOccurred()
-        Superwall.shared.register(placement: "settings_premium")
+        Superwall.shared.register(placement: "campaign_trigger")
     }
 }
 

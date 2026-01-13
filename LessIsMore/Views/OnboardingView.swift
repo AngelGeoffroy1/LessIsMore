@@ -27,7 +27,7 @@ struct OnboardingView: View {
     @State private var currentPage = 0
     @State private var animateContent = false
     
-    private let totalPages = 11
+    private let totalPages = 10
     
     var body: some View {
         ZStack {
@@ -78,13 +78,9 @@ struct OnboardingView: View {
                     LetsGoPage(authManager: authManager, animateContent: $animateContent)
                         .tag(8)
                     
-                    // Page 9: Premium CTA
-                    PremiumCTAPage(authManager: authManager, animateContent: $animateContent, onContinue: { goToNextPage() })
-                        .tag(9)
-                    
-                    // Page 10: Superwall Paywall
+                    // Page 9: Superwall Paywall
                     SuperwallPaywallPage(authManager: authManager, animateContent: $animateContent)
-                        .tag(10)
+                        .tag(9)
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                 .animation(.easeInOut(duration: 0.3), value: currentPage)
@@ -218,8 +214,8 @@ struct OnboardingFooter: View {
     }
     
     private var shouldShowMainButton: Bool {
-        // Page 9 has a custom button, page 10 (Superwall paywall) has no footer button
-        return currentPage != 9 && currentPage != 10
+        // Page 9 (Superwall paywall) has no footer button
+        return currentPage != 9
     }
     
     private var mainButtonText: String {
@@ -1446,26 +1442,6 @@ struct SuperwallPaywallPage: View {
             PaywallView(placement: "campaign_trigger")
                 .opacity(animateContent ? 1 : 0)
                 .animation(.easeOut(duration: 0.3), value: animateContent)
-            
-            // Close button overlay
-            VStack {
-                HStack {
-                    Spacer()
-                    Button(action: {
-                        authManager.completeOnboarding()
-                    }) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(OnboardingColors.textSecondary)
-                            .frame(width: 32, height: 32)
-                            .background(OnboardingColors.surface)
-                            .clipShape(Circle())
-                    }
-                    .padding(.trailing, 20)
-                    .padding(.top, 16)
-                }
-                Spacer()
-            }
         }
     }
 }
