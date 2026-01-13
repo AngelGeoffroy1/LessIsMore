@@ -67,6 +67,12 @@
 "settings.resetFilters" = "Reset All Filters";
 "settings.resetOnboarding" = "Reset Onboarding";
 "settings.aboutApp" = "About LessIsMore";
+"settings.contact" = "Contact Us";
+"settings.contactTitle" = "Contact Us";
+"settings.contactDescription" = "Got a question, suggestion, or just want to chat? Send us an email!";
+"settings.copyEmail" = "Copy Email";
+"settings.aboutDescription" = "LessIsMore helps you take back control of your time on Instagram by blocking distractions.";
+"settings.madeWith" = "Made with ❤️";
 "settings.logOut" = "Log Out";
 "settings.logOutConfirm" = "Are you sure you want to log out? You will need to log back in to use the app.";
 "settings.upgradeToPro" = "Upgrade to Pro";

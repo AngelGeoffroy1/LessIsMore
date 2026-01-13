@@ -25,7 +25,7 @@ class LanguageManager: ObservableObject {
     // MARK: - Private Properties
     
     private let languageKey = "app_language"
-    private let supportedLanguages = ["en", "fr"]
+    private let supportedLanguages = ["en", "fr", "de"]
     
     // MARK: - Computed Properties
     
@@ -39,11 +39,17 @@ class LanguageManager: ObservableObject {
         currentLanguage == "en"
     }
     
+    /// Returns whether the current language is German
+    var isGerman: Bool {
+        currentLanguage == "de"
+    }
+    
     /// Display name for current language
     var currentLanguageDisplayName: String {
         switch currentLanguage {
         case "fr": return "Français"
         case "en": return "English"
+        case "de": return "Deutsch"
         default: return "English"
         }
     }
@@ -52,7 +58,8 @@ class LanguageManager: ObservableObject {
     var availableLanguages: [(code: String, name: String)] {
         [
             ("en", "English"),
-            ("fr", "Français")
+            ("fr", "Français"),
+            ("de", "Deutsch")
         ]
     }
     

@@ -8,6 +8,8 @@ struct SettingsView: View {
     @ObservedObject private var languageManager = LanguageManager.shared
     @Environment(\.dismiss) var dismiss
     @State private var showLogoutAlert = false
+    @State private var showContactModal = false
+    @State private var showAboutModal = false
     @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
@@ -76,8 +78,12 @@ struct SettingsView: View {
                                     dismiss()
                                 }
                                 Divider().padding(.leading, 50)
+                                SettingRow(icon: "envelope", iconColor: .blue, title: "settings.contact".localized) {
+                                    showContactModal = true
+                                }
+                                Divider().padding(.leading, 50)
                                 SettingRow(icon: "doc.text", iconColor: .gray, title: "settings.aboutApp".localized) {
-                                    // Could open a detail view or website
+                                    showAboutModal = true
                                 }
                             }
                             .background(Color.primary.opacity(0.05))
@@ -121,6 +127,12 @@ struct SettingsView: View {
             }
         } message: {
             Text("settings.logOutConfirm".localized)
+        }
+        .sheet(isPresented: $showContactModal) {
+            ContactModal()
+        }
+        .sheet(isPresented: $showAboutModal) {
+            AboutModal()
         }
     }
 
@@ -277,18 +289,166 @@ struct LanguageSelectorRow: View {
                     .foregroundColor(.blue)
             }
             
-            // Language Picker
-            Picker("", selection: Binding(
-                get: { languageManager.currentLanguage },
-                set: { languageManager.setLanguage($0) }
-            )) {
+            // Current language name
+            Text(languageManager.availableLanguages.first { $0.code == languageManager.currentLanguage }?.name ?? "")
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(.primary)
+            
+            Spacer()
+            
+            // Language Picker (dropdown menu)
+            Menu {
                 ForEach(languageManager.availableLanguages, id: \.code) { lang in
-                    Text(lang.name).tag(lang.code)
+                    Button(action: {
+                        languageManager.setLanguage(lang.code)
+                    }) {
+                        HStack {
+                            Text(lang.name)
+                            if lang.code == languageManager.currentLanguage {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
                 }
+            } label: {
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.secondary.opacity(0.5))
             }
-            .pickerStyle(.segmented)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
+    }
+}
+
+// MARK: - Contact Modal
+
+struct ContactModal: View {
+    @Environment(\.dismiss) var dismiss
+    @Environment(\.colorScheme) var colorScheme
+    
+    var body: some View {
+        ZStack {
+            // Translucent background
+            VisualEffectView(effect: UIBlurEffect(style: colorScheme == .dark ? .systemUltraThinMaterialDark : .systemUltraThinMaterialLight))
+                .ignoresSafeArea()
+            
+            VStack(spacing: 24) {
+                // Drag indicator
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(Color.secondary.opacity(0.4))
+                    .frame(width: 40, height: 5)
+                    .padding(.top, 12)
+                
+                Spacer()
+                
+                // Icon
+                ZStack {
+                    Circle()
+                        .fill(Color.blue.opacity(0.15))
+                        .frame(width: 80, height: 80)
+                    
+                    Image(systemName: "envelope.fill")
+                        .font(.system(size: 36))
+                        .foregroundColor(.blue)
+                }
+                
+                // Title
+                Text("settings.contactTitle".localized)
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundColor(.primary)
+                    .fixedSize(horizontal: false, vertical: true)
+                
+                // Description
+                Text("settings.contactDescription".localized)
+                    .font(.system(size: 16))
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 40)
+                
+                // Email card with copy button
+                HStack(spacing: 12) {
+                    Text("angelgeoffroy@outlook.fr")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.primary)
+                    
+                    Button(action: {
+                        UIPasteboard.general.string = "angelgeoffroy@outlook.fr"
+                    }) {
+                        Image(systemName: "doc.on.doc")
+                            .font(.system(size: 16))
+                            .foregroundColor(.blue)
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
+                .background(Color.primary.opacity(0.05))
+                .cornerRadius(16)
+                
+                Spacer()
+            }
+        }
+        .presentationDetents([.medium])
+    }
+}
+
+// MARK: - About Modal
+
+struct AboutModal: View {
+    @Environment(\.dismiss) var dismiss
+    @Environment(\.colorScheme) var colorScheme
+    
+    var body: some View {
+        ZStack {
+            // Translucent background
+            VisualEffectView(effect: UIBlurEffect(style: colorScheme == .dark ? .systemUltraThinMaterialDark : .systemUltraThinMaterialLight))
+                .ignoresSafeArea()
+            
+            VStack(spacing: 24) {
+                // Drag indicator
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(Color.secondary.opacity(0.4))
+                    .frame(width: 40, height: 5)
+                    .padding(.top, 12)
+                
+                Spacer()
+                
+                // Mascot
+                Image("mascott bonjour")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 120, height: 120)
+                
+                // App Name
+                Text("LessIsMore")
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundColor(.primary)
+                    .fixedSize(horizontal: false, vertical: true)
+                
+                // Version
+                Text(String(format: "settings.version".localized, "1.0.0"))
+                    .font(.system(size: 14))
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                
+                // Description
+                Text("settings.aboutDescription".localized)
+                    .font(.system(size: 16))
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 40)
+                
+                Spacer()
+                
+                // Footer
+                Text("settings.madeWith".localized)
+                    .font(.system(size: 14))
+                    .foregroundColor(.secondary.opacity(0.7))
+                    .padding(.bottom, 30)
+            }
+        }
+        .presentationDetents([.medium])
     }
 }
