@@ -388,9 +388,8 @@ struct ShareStatsCard: View {
                 .padding(.bottom, 16)
                 
                 // Main Stats with Mascot
-                HStack(spacing: 12) {
-                    Spacer()
-                    
+                ZStack {
+                    // Centered time
                     VStack(spacing: 6) {
                         Text(formattedWeekTotal)
                             .font(AppFonts.title(36))
@@ -415,13 +414,15 @@ struct ShareStatsCard: View {
                         }
                     }
                     
-                    // Mascot based on usage
-                    mascotImage
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 60, height: 60)
-                    
-                    Spacer()
+                    // Mascot on the left
+                    HStack {
+                        mascotImage
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 60, height: 60)
+                            .padding(.leading, 20)
+                        Spacer()
+                    }
                 }
                 .padding(.bottom, 16)
                 
