@@ -24,8 +24,16 @@ class SubscriptionManager: ObservableObject {
             .sink { [weak self] status in
                 switch status {
                 case .active:
+                    if self?.isPremium == false {
+                        // User just became premium
+                        TelemetryManager.shared.trackSubscriptionStarted()
+                    }
                     self?.isPremium = true
                 case .inactive, .unknown:
+                    if self?.isPremium == true {
+                        // User lost premium status
+                        TelemetryManager.shared.trackSubscriptionCancelled()
+                    }
                     self?.isPremium = false
                 @unknown default:
                     self?.isPremium = false

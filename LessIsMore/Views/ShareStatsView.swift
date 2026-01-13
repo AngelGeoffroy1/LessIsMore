@@ -172,6 +172,9 @@ struct ShareStatsPreviewSheet: View {
         let haptic = UIImpactFeedbackGenerator(style: .medium)
         haptic.impactOccurred()
         
+        // Track share event
+        TelemetryManager.shared.trackShareStats()
+        
         // Create the share card at full resolution
         if isMonthlyMode, let monthlyData = monthlyData, let weekUsage = weekUsage, let monthName = monthName {
             let shareCard = ShareStatsCardMonthly(

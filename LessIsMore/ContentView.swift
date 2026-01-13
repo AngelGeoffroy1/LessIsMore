@@ -26,8 +26,12 @@ struct ContentView: View {
                     subscriptionManager: subscriptionManager
                 )
                 .onAppear {
+                    // Track session start
+                    TelemetryManager.shared.trackSessionStart()
+                    
                     // Présenter le paywall uniquement la première fois après l'onboarding
                     if !hasShownPaywall {
+                        TelemetryManager.shared.trackPaywallImpression(placement: "post_onboarding")
                         subscriptionManager.showPaywall()
                         hasShownPaywall = true
                     }

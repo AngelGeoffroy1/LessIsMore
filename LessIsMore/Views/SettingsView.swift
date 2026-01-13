@@ -79,10 +79,12 @@ struct SettingsView: View {
                                 }
                                 Divider().padding(.leading, 50)
                                 SettingRow(icon: "envelope", iconColor: .blue, title: "settings.contact".localized) {
+                                    TelemetryManager.shared.trackContactSupport()
                                     showContactModal = true
                                 }
                                 Divider().padding(.leading, 50)
                                 SettingRow(icon: "doc.text", iconColor: .gray, title: "settings.aboutApp".localized) {
+                                    TelemetryManager.shared.trackAboutViewed()
                                     showAboutModal = true
                                 }
                             }
@@ -115,6 +117,9 @@ struct SettingsView: View {
                     .padding(16)
                 }
             }
+        }
+        .onAppear {
+            TelemetryManager.shared.trackSettingsOpened()
         }
         .id(languageManager.currentLanguage) // Force refresh on language change
         .navigationBarHidden(true)
@@ -166,6 +171,7 @@ struct SettingsView: View {
 
     private var premiumCard: some View {
         Button(action: {
+            TelemetryManager.shared.trackPaywallImpression(placement: "settings")
             Superwall.shared.register(placement: "campaign_trigger")
         }) {
             HStack(spacing: 16) {

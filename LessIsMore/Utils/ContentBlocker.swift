@@ -39,6 +39,9 @@ enum FilterType: String, CaseIterable {
 
     func setEnabled(_ enabled: Bool) {
         PersistenceService.shared.setFilterEnabled(enabled, for: self.rawValue)
+        
+        // Track filter toggle
+        TelemetryManager.shared.trackFilterToggled(filterType: self.rawValue, enabled: enabled)
     }
 }
 

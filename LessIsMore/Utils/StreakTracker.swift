@@ -87,6 +87,16 @@ class StreakTracker: ObservableObject {
             streak.isActive = true
         }
         
+        // Track milestone achievements
+        let currentDays = streak.currentStreak
+        if currentDays == 7 {
+            TelemetryManager.shared.trackStreakMilestone(days: 7, type: "weekly")
+        } else if currentDays == 30 {
+            TelemetryManager.shared.trackStreakMilestone(days: 30, type: "monthly")
+        } else if currentDays == 100 {
+            TelemetryManager.shared.trackStreakMilestone(days: 100, type: "legendary")
+        }
+        
         streaks[filterType.rawValue] = streak
         saveStreaks()
     }

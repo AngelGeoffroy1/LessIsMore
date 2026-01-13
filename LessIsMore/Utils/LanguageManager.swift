@@ -82,7 +82,11 @@ class LanguageManager: ObservableObject {
     /// Set the app language
     func setLanguage(_ languageCode: String) {
         guard supportedLanguages.contains(languageCode) else { return }
+        let previousLanguage = currentLanguage
         currentLanguage = languageCode
+        
+        // Track language change
+        TelemetryManager.shared.trackLanguageChanged(from: previousLanguage, to: languageCode)
     }
     
     /// Get the bundle for the current language

@@ -12,6 +12,10 @@ import SuperwallKit
 @main
 struct LessIsMoreApp: App {
     init() {
+        // Configuration de TelemetryDeck
+        TelemetryManager.shared.configure()
+        TelemetryManager.shared.trackAppLaunch()
+        
         // Configuration de Superwall avec la clé depuis Info.plist
         if let apiKey = Bundle.main.object(forInfoDictionaryKey: "SUPERWALL_API_KEY") as? String {
             Superwall.configure(apiKey: apiKey)

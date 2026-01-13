@@ -12,6 +12,8 @@
 		11C82C882F0FF3600080CD3C /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 11C82C872F0FF3600080CD3C /* WidgetKit.framework */; };
 		11C82C8A2F0FF3600080CD3C /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 11C82C892F0FF3600080CD3C /* SwiftUI.framework */; };
 		11C82C972F0FF3630080CD3C /* LessIsMoreWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 11C82C862F0FF3600080CD3C /* LessIsMoreWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		11FCD86C2F16DD7F00DACBDA /* TelemetryClient in Frameworks */ = {isa = PBXBuildFile; productRef = 11FCD86B2F16DD7F00DACBDA /* TelemetryClient */; };
+		11FCD86E2F16DD7F00DACBDA /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = 11FCD86D2F16DD7F00DACBDA /* TelemetryDeck */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -115,7 +117,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				111EF8FE2E698EFC004B0CFE /* StoreKit.framework in Frameworks */,
+				11FCD86C2F16DD7F00DACBDA /* TelemetryClient in Frameworks */,
 				1163F4552EE0737A0046FFAC /* SuperwallKit in Frameworks */,
+				11FCD86E2F16DD7F00DACBDA /* TelemetryDeck in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -202,6 +206,8 @@
 			name = LessIsMore;
 			packageProductDependencies = (
 				1163F4542EE0737A0046FFAC /* SuperwallKit */,
+				11FCD86B2F16DD7F00DACBDA /* TelemetryClient */,
+				11FCD86D2F16DD7F00DACBDA /* TelemetryDeck */,
 			);
 			productName = LessIsMore;
 			productReference = 111EF8C62E68B4DC004B0CFE /* LessIsMore.app */;
@@ -314,6 +320,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				1163F4532EE0737A0046FFAC /* XCRemoteSwiftPackageReference "Superwall-iOS" */,
+				11FCD86A2F16DD7F00DACBDA /* XCRemoteSwiftPackageReference "SwiftSDK" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 111EF8C72E68B4DC004B0CFE /* Products */;
@@ -706,7 +713,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.8;
+				MARKETING_VERSION = 1.9;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lessismore.com.LessIsMoreWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -739,7 +746,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.8;
+				MARKETING_VERSION = 1.9;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lessismore.com.LessIsMoreWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -811,6 +818,14 @@
 				minimumVersion = 4.10.6;
 			};
 		};
+		11FCD86A2F16DD7F00DACBDA /* XCRemoteSwiftPackageReference "SwiftSDK" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/TelemetryDeck/SwiftSDK";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.11.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -818,6 +833,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1163F4532EE0737A0046FFAC /* XCRemoteSwiftPackageReference "Superwall-iOS" */;
 			productName = SuperwallKit;
+		};
+		11FCD86B2F16DD7F00DACBDA /* TelemetryClient */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 11FCD86A2F16DD7F00DACBDA /* XCRemoteSwiftPackageReference "SwiftSDK" */;
+			productName = TelemetryClient;
+		};
+		11FCD86D2F16DD7F00DACBDA /* TelemetryDeck */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 11FCD86A2F16DD7F00DACBDA /* XCRemoteSwiftPackageReference "SwiftSDK" */;
+			productName = TelemetryDeck;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
