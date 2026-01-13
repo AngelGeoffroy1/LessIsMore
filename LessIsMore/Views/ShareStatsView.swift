@@ -331,24 +331,14 @@ struct ShareStatsCard: View {
     
     var body: some View {
         ZStack {
-            // Glassmorphism background - like ControlPanel
-            LinearGradient(
-                colors: [
-                    Color(red: 0.12, green: 0.12, blue: 0.15),
-                    Color(red: 0.08, green: 0.08, blue: 0.10)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            // Background - using onboarding colors
+            Color(hex: "111111")
             
-            // Glass overlay
-            Color.white.opacity(0.05)
-            
-            // Ambient glow effects
+            // Ambient glow effects with onboarding pink
             Circle()
                 .fill(
                     RadialGradient(
-                        colors: [Color.purple.opacity(0.15), Color.clear],
+                        colors: [Color(hex: "ffb3cf").opacity(0.15), Color.clear],
                         center: .center,
                         startRadius: 0,
                         endRadius: 120
@@ -361,7 +351,7 @@ struct ShareStatsCard: View {
             Circle()
                 .fill(
                     RadialGradient(
-                        colors: [Color.pink.opacity(0.1), Color.clear],
+                        colors: [Color(hex: "ffb3cf").opacity(0.2), Color.clear],
                         center: .center,
                         startRadius: 0,
                         endRadius: 140
@@ -640,24 +630,14 @@ struct ShareStatsCardMonthly: View {
     
     var body: some View {
         ZStack {
-            // Glassmorphism background - like ControlPanel
-            LinearGradient(
-                colors: [
-                    Color(red: 0.12, green: 0.12, blue: 0.15),
-                    Color(red: 0.08, green: 0.08, blue: 0.10)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            // Background - using onboarding colors
+            Color(hex: "111111")
             
-            // Glass overlay
-            Color.white.opacity(0.05)
-            
-            // Ambient glow effects
+            // Ambient glow effects with onboarding pink
             Circle()
                 .fill(
                     RadialGradient(
-                        colors: [Color.purple.opacity(0.15), Color.clear],
+                        colors: [Color(hex: "ffb3cf").opacity(0.15), Color.clear],
                         center: .center,
                         startRadius: 0,
                         endRadius: 120
@@ -670,7 +650,7 @@ struct ShareStatsCardMonthly: View {
             Circle()
                 .fill(
                     RadialGradient(
-                        colors: [Color.pink.opacity(0.1), Color.clear],
+                        colors: [Color(hex: "ffb3cf").opacity(0.2), Color.clear],
                         center: .center,
                         startRadius: 0,
                         endRadius: 140

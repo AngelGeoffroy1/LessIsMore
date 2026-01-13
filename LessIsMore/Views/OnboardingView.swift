@@ -27,7 +27,7 @@ struct OnboardingView: View {
     @State private var currentPage = 0
     @State private var animateContent = false
     
-    private let totalPages = 10
+    private let totalPages = 11
     
     var body: some View {
         ZStack {
@@ -79,15 +79,19 @@ struct OnboardingView: View {
                         .tag(8)
                     
                     // Page 9: Premium CTA
-                    PremiumCTAPage(authManager: authManager, animateContent: $animateContent)
+                    PremiumCTAPage(authManager: authManager, animateContent: $animateContent, onContinue: { goToNextPage() })
                         .tag(9)
+                    
+                    // Page 10: Superwall Paywall
+                    SuperwallPaywallPage(authManager: authManager, animateContent: $animateContent)
+                        .tag(10)
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                 .animation(.easeInOut(duration: 0.3), value: currentPage)
             }
             
             // Back button overlay (top left, below progress bar)
-            if currentPage > 1 && currentPage < totalPages - 1 && currentPage != 8 {
+            if currentPage > 1 && currentPage < totalPages - 1 {
                 VStack {
                     HStack {
                         Button(action: {
@@ -214,8 +218,8 @@ struct OnboardingFooter: View {
     }
     
     private var shouldShowMainButton: Bool {
-        // Pages 8 (premium) and 9 (let's go) have custom buttons
-        return currentPage != 8 && currentPage != 9
+        // Page 9 has a custom button, page 10 (Superwall paywall) has no footer button
+        return currentPage != 9 && currentPage != 10
     }
     
     private var mainButtonText: String {
@@ -1003,7 +1007,7 @@ struct SocialProofPage: View {
             Text("onboarding.social.notAlone".localized)
                 .font(AppFonts.title2())
                 .foregroundColor(OnboardingColors.textPrimary)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.horizontal, 24)
                 .opacity(animateContent ? 1 : 0)
                 .offset(y: animateContent ? 0 : 20)
@@ -1131,6 +1135,7 @@ struct TrustBadge: View {
 struct PremiumCTAPage: View {
     @ObservedObject var authManager: AuthenticationManager
     @Binding var animateContent: Bool
+    var onContinue: () -> Void
     @State private var isPulsing = false
     
     var body: some View {
@@ -1207,9 +1212,8 @@ struct PremiumCTAPage: View {
                 // CTA Button
                 VStack(spacing: 12) {
                     Button(action: {
-                        Superwall.shared.register(placement: "campaign_trigger") {
-                            authManager.completeOnboarding()
-                        }
+                        // Navigate to the paywall page instead of showing modal
+                        onContinue()
                     }) {
                         HStack(spacing: 8) {
                             Image(systemName: "crown.fill")
@@ -1352,30 +1356,7 @@ struct LetsGoPage: View {
                     .animation(.easeOut(duration: 0.5).delay(0.3), value: animateContent)
                 
                 Spacer()
-                
-                // Start button
-                Button(action: {
-                    authManager.completeOnboarding()
-                }) {
-                    HStack(spacing: 8) {
-                        Text("onboarding.final.start".localized)
-                            .font(AppFonts.headline())
-                        Image(systemName: "arrow.right")
-                            .font(.system(size: 14, weight: .semibold))
-                    }
-                    .foregroundColor(OnboardingColors.background)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 56)
-                    .background(
-                        RoundedRectangle(cornerRadius: 28)
-                            .fill(OnboardingColors.primary)
-                    )
-                }
-                .buttonStyle(OnboardingButtonStyle())
-                .padding(.horizontal, 24)
-                .padding(.bottom, 40)
-                .opacity(animateContent ? 1 : 0)
-                .animation(.easeOut(duration: 0.5).delay(0.4), value: animateContent)
+                    .frame(height: 100)
             }
             
             // Confetti overlay
@@ -1448,6 +1429,47 @@ struct ConfettiParticle: Identifiable {
     var position: CGPoint
     var opacity: Double
 }
+
+// MARK: - Page 10: Superwall Paywall
+struct SuperwallPaywallPage: View {
+    @ObservedObject var authManager: AuthenticationManager
+    @Binding var animateContent: Bool
+    @Environment(\.presentationMode) var presentationMode
+    
+    var body: some View {
+        ZStack {
+            // Background matching onboarding style
+            OnboardingColors.background
+                .ignoresSafeArea()
+            
+            // PaywallView from Superwall - simplified approach
+            PaywallView(placement: "campaign_trigger")
+                .opacity(animateContent ? 1 : 0)
+                .animation(.easeOut(duration: 0.3), value: animateContent)
+            
+            // Close button overlay
+            VStack {
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        authManager.completeOnboarding()
+                    }) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(OnboardingColors.textSecondary)
+                            .frame(width: 32, height: 32)
+                            .background(OnboardingColors.surface)
+                            .clipShape(Circle())
+                    }
+                    .padding(.trailing, 20)
+                    .padding(.top, 16)
+                }
+                Spacer()
+            }
+        }
+    }
+}
+
 
 // MARK: - Preview
 #Preview {
