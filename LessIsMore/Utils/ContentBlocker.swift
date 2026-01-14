@@ -44,6 +44,85 @@ enum FilterType: String, CaseIterable {
     }
 }
 
+// MARK: - Instagram Theme
+enum InstagramTheme: String, CaseIterable {
+    case `default` = "default"
+    case midnightPurple = "midnightPurple"
+    case pinkGlow = "pinkGlow"
+    case amoledBlack = "amoledBlack"
+    
+    var displayName: String {
+        switch self {
+        case .default: return "Default"
+        case .midnightPurple: return "Midnight"
+        case .pinkGlow: return "Pink"
+        case .amoledBlack: return "Amoled"
+        }
+    }
+    
+    var isPremium: Bool {
+        switch self {
+        case .default: return false
+        case .midnightPurple, .pinkGlow, .amoledBlack: return true
+        }
+    }
+    
+    // Primary background color (hex)
+    var backgroundColor: String {
+        switch self {
+        case .default: return "" // No custom color
+        case .midnightPurple: return "#1a1a2e"
+        case .pinkGlow: return "#1a0a14" // Dark pink/magenta base
+        case .amoledBlack: return "#000000"
+        }
+    }
+    
+    // Secondary/card background color (hex)
+    var cardColor: String {
+        switch self {
+        case .default: return ""
+        case .midnightPurple: return "#16213e"
+        case .pinkGlow: return "#2d1a24" // Slightly lighter pink
+        case .amoledBlack: return "#0a0a0a"
+        }
+    }
+    
+    // Accent color for highlights (hex)
+    var accentColor: String {
+        switch self {
+        case .default: return ""
+        case .midnightPurple: return "#e94560"
+        case .pinkGlow: return "#fa0d70" // Bright pink like onboarding
+        case .amoledBlack: return "#ffffff"
+        }
+    }
+    
+    // Preview colors for the UI cards (SwiftUI Color)
+    var previewColors: (primary: (r: Double, g: Double, b: Double), secondary: (r: Double, g: Double, b: Double)) {
+        switch self {
+        case .default:
+            return (primary: (0.1, 0.1, 0.1), secondary: (0.2, 0.2, 0.2))
+        case .midnightPurple:
+            return (primary: (0.10, 0.10, 0.18), secondary: (0.086, 0.129, 0.243))
+        case .pinkGlow:
+            return (primary: (0.10, 0.04, 0.08), secondary: (0.18, 0.10, 0.14)) // Pink preview
+        case .amoledBlack:
+            return (primary: (0.0, 0.0, 0.0), secondary: (0.04, 0.04, 0.04))
+        }
+    }
+    
+    // Persistence
+    static var current: InstagramTheme {
+        get {
+            let rawValue = PersistenceService.shared.getSelectedTheme()
+            return InstagramTheme(rawValue: rawValue) ?? .default
+        }
+        set {
+            PersistenceService.shared.setSelectedTheme(newValue.rawValue)
+        }
+    }
+}
+
 class ContentBlocker {
     
     static func getBlockingScript() -> String {
@@ -860,6 +939,254 @@ class ContentBlocker {
         if (window.lessIsMoreApplyAllFilters) {
             window.lessIsMoreApplyAllFilters({\(filters)});
         }
+        """
+    }
+    
+    // MARK: - Theme Application
+    
+    static func getApplyThemeScript(theme: InstagramTheme) -> String {
+        // Remove theme if default
+        if theme == .default {
+            return """
+            (function() {
+                const existingStyle = document.getElementById('lessismore-theme-style');
+                if (existingStyle) {
+                    existingStyle.remove();
+                }
+                document.body.classList.remove('lessismore-themed');
+                console.log('LessIsMore: Thème par défaut restauré');
+            })();
+            """
+        }
+        
+        let bgColor = theme.backgroundColor
+        let cardColor = theme.cardColor
+        let accentColor = theme.accentColor
+        
+        return """
+        (function() {
+            // Supprimer l'ancien style de thème si présent
+            const existingStyle = document.getElementById('lessismore-theme-style');
+            if (existingStyle) {
+                existingStyle.remove();
+            }
+            
+            // Créer le nouveau style de thème
+            const themeStyle = document.createElement('style');
+            themeStyle.id = 'lessismore-theme-style';
+            themeStyle.textContent = `
+                /* LessIsMore Custom Theme: \(theme.rawValue) */
+                
+                /* ===== BACKGROUNDS PRINCIPAUX ===== */
+                body,
+                html,
+                #react-root,
+                #react-root > div,
+                #react-root > section,
+                main,
+                div[role="main"],
+                ._aa_i,
+                ._aagu,
+                ._aak0,
+                ._aak1 {
+                    background-color: \(bgColor) !important;
+                    background: \(bgColor) !important;
+                }
+                
+                /* ===== HEADERS ET NAVIGATION / TAB BAR ===== */
+                nav,
+                header,
+                ._aak5,
+                ._aak6,
+                ._aak4,
+                ._ab8w,
+                div[role="banner"],
+                div[role="navigation"],
+                /* Bottom Tab Bar Instagram - AGGRESSIVE SELECTORS */
+                ._acao,
+                ._acaq,
+                ._acar,
+                ._acat,
+                ._acau,
+                div[role="tablist"],
+                [role="tablist"],
+                [role="tablist"] > div,
+                /* Fixed/Sticky bottom bar */
+                div[style*="position: fixed"],
+                div[style*="position:fixed"],
+                div[style*="bottom: 0"],
+                div[style*="bottom:0"],
+                /* Mobile footer navigation */
+                footer,
+                ._abl-,
+                ._ablz,
+                ._abm0,
+                ._abm1,
+                ._abn_,
+                /* All fixed positioning elements at bottom */
+                div[style*="z-index"][style*="bottom"] {
+                    background-color: \(cardColor) !important;
+                    background: \(cardColor) !important;
+                }
+                
+                /* ===== STORIES CONTAINER ===== */
+                /* Zone derrière les stories - SAME COLOR AS POSTS */
+                section > div:first-child,
+                div[style*="overflow-x: auto"],
+                div[style*="overflow-x:auto"],
+                div[style*="overflow: auto"],
+                div[style*="scrollbar-width"],
+                ._aac4,
+                ._aac5,
+                ._aacl,
+                ._aack,
+                /* Container des stories circulaires */
+                div:has(> canvas),
+                div:has(> div > canvas) {
+                    background-color: \(cardColor) !important;
+                    background: \(cardColor) !important;
+                }
+                
+                /* ===== POSTS ET ARTICLES ===== */
+                article,
+                article > div,
+                ._aatb,
+                ._aam1,
+                ._acan,
+                ._acap,
+                ._acas,
+                ._acav,
+                ._ae1h,
+                ._ae1i {
+                    background-color: \(cardColor) !important;
+                    background: \(cardColor) !important;
+                }
+                
+                /* ===== DESCRIPTIONS ET TEXTES (zone derrière le texte) ===== */
+                /* Conteneurs de texte de description */
+                article span,
+                article div,
+                ._a9zs,
+                ._a9zt,
+                ._a9zu,
+                ._aade,
+                ._aacl > div,
+                /* Zone de légende/description */
+                div[style*="padding-left: 16px"],
+                div[style*="padding: 0 16px"],
+                h2 + div,
+                a + span,
+                /* Arrière-plan des textes */
+                ._aagv,
+                ._aagw {
+                    background-color: transparent !important;
+                    background: transparent !important;
+                }
+                
+                /* ===== TOUS LES FONDS BLANCS ===== */
+                div[style*="background-color: rgb(255, 255, 255)"],
+                div[style*="background-color:rgb(255, 255, 255)"],
+                div[style*="background-color: white"],
+                div[style*="background-color:white"],
+                div[style*="background: white"],
+                div[style*="background:white"],
+                div[style*="background: rgb(255, 255, 255)"],
+                div[style*="background:rgb(255, 255, 255)"],
+                span[style*="background-color: rgb(255, 255, 255)"],
+                section[style*="background"],
+                /* Classes courantes de fond blanc */
+                ._aa61,
+                ._ab8w {
+                    background-color: \(cardColor) !important;
+                    background: \(cardColor) !important;
+                }
+                
+                /* ===== SIDEBAR ===== */
+                aside,
+                ._aal_,
+                div[style*="position: sticky"]:not([style*="bottom"]) {
+                    background-color: \(bgColor) !important;
+                    background: \(bgColor) !important;
+                }
+                
+                /* ===== MODALS ET OVERLAYS ===== */
+                div[role="dialog"],
+                div[role="dialog"] > div,
+                div[role="dialog"] > div:first-child,
+                ._aaz6,
+                ._ab8s {
+                    background-color: \(cardColor) !important;
+                    background: \(cardColor) !important;
+                }
+                
+                /* ===== INPUT FIELDS ===== */
+                input,
+                textarea,
+                [contenteditable="true"] {
+                    background-color: \(cardColor) !important;
+                    background: \(cardColor) !important;
+                    border-color: \(accentColor)33 !important;
+                }
+                
+                /* ===== POIGNÉE/SWIPE INDICATOR (si visible) ===== */
+                div[style*="border-radius: 2.5px"],
+                div[style*="border-radius:2.5px"],
+                ._abm0 {
+                    background-color: \(accentColor)66 !important;
+                }
+                
+                /* ===== COMMENTAIRES ===== */
+                ul,
+                li,
+                ._a9ym,
+                ._a9yn {
+                    background-color: transparent !important;
+                }
+                
+                /* ===== CARROUSEL INFÉRIEUR ===== */
+                div[style*="flex-direction: row"][style*="overflow"],
+                ._aahi,
+                ._aahj {
+                    background-color: \(bgColor) !important;
+                    background: \(bgColor) !important;
+                }
+                
+                /* ===== SCROLLBAR ===== */
+                ::-webkit-scrollbar {
+                    width: 8px;
+                    background-color: \(bgColor) !important;
+                }
+                ::-webkit-scrollbar-thumb {
+                    background-color: \(accentColor)44 !important;
+                    border-radius: 4px;
+                }
+                ::-webkit-scrollbar-track {
+                    background-color: \(bgColor) !important;
+                }
+                
+                /* ===== UNIVERSAL CATCH-ALL ===== */
+                /* Forcer les div enfants directs du body */
+                body > div,
+                body > div > div,
+                body > div > div > div {
+                    background-color: \(bgColor) !important;
+                }
+                
+                /* ===== MARKER ===== */
+                body.lessismore-themed {
+                    /* Theme active marker */
+                }
+            `;
+            
+            document.head.appendChild(themeStyle);
+            document.body.classList.add('lessismore-themed');
+            
+            // Forcer l'application sur le body inline style
+            document.body.style.backgroundColor = '\(bgColor)';
+            document.documentElement.style.backgroundColor = '\(bgColor)';
+            
+            console.log('LessIsMore: Thème appliqué - \(theme.rawValue)');
+        })();
         """
     }
 }

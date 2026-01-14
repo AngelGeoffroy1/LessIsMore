@@ -24,6 +24,7 @@ struct ControlPanelView: View {
     @State private var showBreakStreakModal = false
     @State private var showTimeSavedExplanation = false
     @State private var pendingFilterToDisable: FilterType? = nil
+    @State private var selectedTheme: InstagramTheme = InstagramTheme.current
 
     var body: some View {
         ZStack {
@@ -44,6 +45,9 @@ struct ControlPanelView: View {
                     VStack(spacing: 20) {
                         // Header avec graphique
                         usageHeader
+                        
+                        // Section Thèmes Instagram
+                        themesSection
 
                         // Section filtres basiques
                         basicFiltersSection
@@ -322,6 +326,71 @@ struct ControlPanelView: View {
         }
         .padding(.bottom, 6)
         .animation(.easeInOut(duration: 0.2), value: chartMode)
+    }
+    
+    // MARK: - Themes Section
+    
+    private var themesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("controlPanel.themes".localized)
+                    .font(AppFonts.subheadline())
+                    .foregroundColor(.secondary)
+                
+                if !subscriptionManager.isPremium {
+                    Text("Pro")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(
+                            LinearGradient(
+                                colors: [
+                                    Color(red: 0.98, green: 0.05, blue: 0.44),
+                                    Color(red: 0.73, green: 0.20, blue: 0.82),
+                                    Color(red: 1.0, green: 0.60, blue: 0.0)
+                                ],
+                                startPoint: .topTrailing,
+                                endPoint: .bottomLeading
+                            )
+                        )
+                        .cornerRadius(6)
+                }
+            }
+            .padding(.leading, 4)
+            
+            HStack(spacing: 12) {
+                ForEach(InstagramTheme.allCases, id: \.self) { theme in
+                    ThemeCard(
+                        theme: theme,
+                        isSelected: selectedTheme == theme,
+                        isLocked: theme.isPremium && !subscriptionManager.isPremium,
+                        onTap: {
+                            selectTheme(theme)
+                        }
+                    )
+                }
+            }
+        }
+    }
+    
+    private func selectTheme(_ theme: InstagramTheme) {
+        // Check if premium is required
+        if theme.isPremium && !subscriptionManager.isPremium {
+            showPaywall()
+            return
+        }
+        
+        // Haptic feedback
+        let haptic = UIImpactFeedbackGenerator(style: .light)
+        haptic.impactOccurred()
+        
+        // Update state and persist
+        selectedTheme = theme
+        InstagramTheme.current = theme
+        
+        // Apply theme to WebView
+        webViewManager.applyTheme(theme)
     }
 
     // MARK: - Basic Filters Section
@@ -920,6 +989,115 @@ struct MonthlyUsageChart: View {
                 .padding(.horizontal, 4)
             }
         }
+    }
+}
+
+// MARK: - Theme Card Component
+
+struct ThemeCard: View {
+    let theme: InstagramTheme
+    let isSelected: Bool
+    let isLocked: Bool
+    let onTap: () -> Void
+    
+    private var primaryColor: Color {
+        let colors = theme.previewColors.primary
+        return Color(red: colors.r, green: colors.g, blue: colors.b)
+    }
+    
+    private var secondaryColor: Color {
+        let colors = theme.previewColors.secondary
+        return Color(red: colors.r, green: colors.g, blue: colors.b)
+    }
+    
+    var body: some View {
+        Button(action: onTap) {
+            VStack(spacing: 6) {
+                // Theme preview square
+                ZStack {
+                    // Background gradient
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(
+                            LinearGradient(
+                                colors: [primaryColor, secondaryColor],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 70, height: 70)
+                    
+                    // Simulated content lines
+                    VStack(spacing: 4) {
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Color.white.opacity(0.2))
+                            .frame(width: 40, height: 4)
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Color.white.opacity(0.15))
+                            .frame(width: 30, height: 4)
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Color.white.opacity(0.1))
+                            .frame(width: 35, height: 4)
+                    }
+                    
+                    // Selection/Lock overlay
+                    if isSelected {
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [
+                                        Color(red: 0.98, green: 0.05, blue: 0.44),
+                                        Color(red: 0.73, green: 0.20, blue: 0.82)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 3
+                            )
+                            .frame(width: 70, height: 70)
+                        
+                        // Checkmark
+                        ZStack {
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            Color(red: 0.98, green: 0.05, blue: 0.44),
+                                            Color(red: 0.73, green: 0.20, blue: 0.82)
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .frame(width: 22, height: 22)
+                            
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundColor(.white)
+                        }
+                        .offset(x: 28, y: -28)
+                    } else if isLocked {
+                        // Lock overlay
+                        ZStack {
+                            Circle()
+                                .fill(.ultraThinMaterial)
+                                .frame(width: 26, height: 26)
+                            
+                            Image(systemName: "lock.fill")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundColor(.primary.opacity(0.7))
+                        }
+                    }
+                }
+                
+                // Theme name
+                Text(theme.displayName)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(isSelected ? .primary : .secondary)
+            }
+        }
+        .buttonStyle(PlainButtonStyle())
+        .scaleEffect(isSelected ? 1.05 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
     }
 }
 

@@ -234,11 +234,13 @@ class WebViewManager: NSObject, ObservableObject {
         guard let webView = webView else { return }
 
         let script = ContentBlocker.getApplyAllFiltersScript()
-        webView.evaluateJavaScript(script) { _, error in
+        webView.evaluateJavaScript(script) { [weak self] _, error in
             if let error = error {
                 print("Erreur application des filtres: \(error.localizedDescription)")
             } else {
                 print("Tous les filtres appliqués avec succès")
+                // Appliquer le thème après les filtres
+                self?.applyCurrentTheme()
             }
         }
     }
@@ -267,6 +269,28 @@ class WebViewManager: NSObject, ObservableObject {
                     self.applyAllSavedFilters()
                 }
             }
+        }
+    }
+    
+    // MARK: - Theme Application
+    
+    func applyTheme(_ theme: InstagramTheme) {
+        guard let webView = webView else { return }
+        
+        let script = ContentBlocker.getApplyThemeScript(theme: theme)
+        webView.evaluateJavaScript(script) { _, error in
+            if let error = error {
+                print("Erreur application du thème: \(error.localizedDescription)")
+            } else {
+                print("Thème '\(theme.rawValue)' appliqué avec succès")
+            }
+        }
+    }
+    
+    func applyCurrentTheme() {
+        let currentTheme = InstagramTheme.current
+        if currentTheme != .default {
+            applyTheme(currentTheme)
         }
     }
 }
