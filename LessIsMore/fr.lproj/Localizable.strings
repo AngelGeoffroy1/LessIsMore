@@ -195,3 +195,23 @@
 
 // MARK: - Chart Labels
 "chart.weekLabel" = "Sem %d";
+
+// MARK: - Onboarding Notifications
+"onboarding.notifications.title" = "Reste concentré avec des rappels intelligents 🔔";
+"onboarding.notifications.subtitle" = "Des notifications douces pour t'aider à maintenir des habitudes saines";
+"onboarding.notifications.benefit1.title" = "Soirée déconnexion";
+"onboarding.notifications.benefit1.desc" = "Un rappel à 21h pour une soirée plus calme";
+"onboarding.notifications.benefit2.title" = "Week-end détox";
+"onboarding.notifications.benefit2.desc" = "Profite du week-end en bloquant les Reels";
+"onboarding.notifications.benefit3.title" = "Rappel nocturne";
+"onboarding.notifications.benefit3.desc" = "Un petit rappel pour bien dormir";
+"onboarding.notifications.enable" = "Activer les notifications";
+"onboarding.notifications.skip" = "Peut-être plus tard";
+
+// MARK: - Notification Messages
+"notification.evening.title" = "🌙 Soirée déconnexion";
+"notification.evening.body" = "Il est 21h. Pensez à activer le mode 'Abonnements uniquement' pour une soirée plus calme";
+"notification.weekend.title" = "☀️ Week-end détox";
+"notification.weekend.body" = "C'est le week-end ! Bloquez les Reels et profitez du monde réel";
+"notification.night.title" = "😴 Rappel nocturne";
+"notification.night.body" = "Il est tard. Fermez Instagram et reposez-vous !";

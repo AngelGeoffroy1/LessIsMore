@@ -24,10 +24,14 @@ struct OnboardingColors {
 // MARK: - Main Onboarding View
 struct OnboardingView: View {
     @ObservedObject var authManager: AuthenticationManager
+    @StateObject private var subscriptionManager = SubscriptionManager()
     @State private var currentPage = 0
     @State private var animateContent = false
     
-    private let totalPages = 10
+    // Total pages: 10 for premium users (no paywall), 11 for free users
+    private var totalPages: Int {
+        subscriptionManager.isPremium ? 10 : 11
+    }
     
     var body: some View {
         ZStack {
@@ -74,13 +78,22 @@ struct OnboardingView: View {
                     SocialProofPage(animateContent: $animateContent)
                         .tag(7)
                     
-                    // Page 8: Let's Go
-                    LetsGoPage(authManager: authManager, animateContent: $animateContent)
+                    // Page 8: Notification Permission
+                    NotificationPermissionPage(animateContent: $animateContent, onContinue: { goToNextPage() })
                         .tag(8)
                     
-                    // Page 9: Superwall Paywall
-                    SuperwallPaywallPage(authManager: authManager, animateContent: $animateContent)
+                    // Page 9: Let's Go (final page for premium users)
+                    LetsGoPage(authManager: authManager, animateContent: $animateContent, isPremium: subscriptionManager.isPremium, onComplete: {
+                        MixpanelManager.shared.trackOnboardingCompleted()
+                        authManager.completeOnboarding()
+                    })
                         .tag(9)
+                    
+                    // Page 10: Superwall Paywall (only for non-premium users)
+                    if !subscriptionManager.isPremium {
+                        SuperwallPaywallPage(authManager: authManager, animateContent: $animateContent)
+                            .tag(10)
+                    }
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                 .animation(.easeInOut(duration: 0.3), value: currentPage)
@@ -167,6 +180,7 @@ struct OnboardingView: View {
             "filters",
             "projection",
             "social_proof",
+            "notifications",
             "lets_go",
             "paywall"
         ]
@@ -207,6 +221,7 @@ struct OnboardingFooter: View {
     let totalPages: Int
     @ObservedObject var authManager: AuthenticationManager
     let canContinue: Bool
+    @StateObject private var subscriptionManager = SubscriptionManager()
     
     var body: some View {
         VStack(spacing: 16) {
@@ -234,21 +249,31 @@ struct OnboardingFooter: View {
     }
     
     private var shouldShowMainButton: Bool {
-        // Page 9 (Superwall paywall) has no footer button
-        return currentPage != 9
+        // Page 8 (notifications) has custom button
+        // Page 9 for premium users has custom button (no paywall follows)
+        // Page 10 (Superwall paywall) has no footer button
+        if currentPage == 8 { return false }
+        if currentPage == 9 && subscriptionManager.isPremium { return false }
+        if currentPage == 10 { return false }
+        return true
     }
     
     private var mainButtonText: String {
         switch currentPage {
         case 0: return "common.continue".localized
         case 7: return "onboarding.social.joinTeam".localized
+        case 9: return "onboarding.final.start".localized
         default: return "common.continue".localized
         }
     }
     
     private func handleMainButtonAction() {
         withAnimation(.easeInOut(duration: 0.4)) {
-            if currentPage < totalPages - 1 {
+            // If on page 9 (LetsGo) and user is already premium, skip paywall and complete onboarding
+            if currentPage == 9 && subscriptionManager.isPremium {
+                MixpanelManager.shared.trackOnboardingCompleted()
+                authManager.completeOnboarding()
+            } else if currentPage < totalPages - 1 {
                 currentPage += 1
             }
         }
@@ -1299,10 +1324,190 @@ struct PremiumFeatureRow: View {
     }
 }
 
+// MARK: - Page 8: Notification Permission
+struct NotificationPermissionPage: View {
+    @Binding var animateContent: Bool
+    var onContinue: () -> Void
+    @StateObject private var notificationManager = NotificationManager.shared
+    @State private var bellRotation: Double = 0
+    @State private var isRequestingPermission = false
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer()
+                .frame(height: 60)
+            
+            // Title - multiline, no subtitle
+            VStack(alignment: .leading, spacing: 4) {
+                Text("onboarding.notifications.title".localized)
+                    .font(AppFonts.title2())
+                    .foregroundColor(OnboardingColors.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 24)
+            .opacity(animateContent ? 1 : 0)
+            .offset(y: animateContent ? 0 : 20)
+            
+            Spacer()
+            
+            // Bell icon - simple and big
+            Image(systemName: "bell.badge.fill")
+                .font(.system(size: 100))
+                .foregroundStyle(OnboardingColors.primary, .red)
+                .rotationEffect(.degrees(bellRotation))
+                .opacity(animateContent ? 1 : 0)
+                .scaleEffect(animateContent ? 1 : 0.8)
+                .animation(.spring(response: 0.6, dampingFraction: 0.7).delay(0.1), value: animateContent)
+                .onAppear {
+                    // Bell ringing animation
+                    withAnimation(.easeInOut(duration: 0.1).repeatCount(6, autoreverses: true).delay(0.5)) {
+                        bellRotation = 15
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.1) {
+                        withAnimation(.easeInOut(duration: 0.1)) {
+                            bellRotation = 0
+                        }
+                    }
+                }
+            
+            Spacer()
+                .frame(height: 32)
+            
+            // Benefits list - vertical, no background
+            VStack(spacing: 16) {
+                NotificationBenefitRow(
+                    icon: "moon.fill",
+                    title: "onboarding.notifications.benefit1.title".localized,
+                    description: "onboarding.notifications.benefit1.desc".localized,
+                    color: .purple
+                )
+                .opacity(animateContent ? 1 : 0)
+                .offset(y: animateContent ? 0 : 20)
+                .animation(.easeOut(duration: 0.4).delay(0.2), value: animateContent)
+                
+                NotificationBenefitRow(
+                    icon: "sun.max.fill",
+                    title: "onboarding.notifications.benefit2.title".localized,
+                    description: "onboarding.notifications.benefit2.desc".localized,
+                    color: .orange
+                )
+                .opacity(animateContent ? 1 : 0)
+                .offset(y: animateContent ? 0 : 20)
+                .animation(.easeOut(duration: 0.4).delay(0.3), value: animateContent)
+                
+                NotificationBenefitRow(
+                    icon: "bed.double.fill",
+                    title: "onboarding.notifications.benefit3.title".localized,
+                    description: "onboarding.notifications.benefit3.desc".localized,
+                    color: .blue
+                )
+                .opacity(animateContent ? 1 : 0)
+                .offset(y: animateContent ? 0 : 20)
+                .animation(.easeOut(duration: 0.4).delay(0.4), value: animateContent)
+            }
+            .padding(.horizontal, 24)
+            
+            Spacer()
+            
+            // Buttons
+            VStack(spacing: 12) {
+                // Enable notifications button
+                Button(action: {
+                    requestNotificationPermission()
+                }) {
+                    HStack(spacing: 8) {
+                        if isRequestingPermission {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: OnboardingColors.background))
+                        } else {
+                            Image(systemName: "bell.fill")
+                            Text("onboarding.notifications.enable".localized)
+                                .font(AppFonts.headline())
+                        }
+                    }
+                    .foregroundColor(OnboardingColors.background)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(
+                        RoundedRectangle(cornerRadius: 28)
+                            .fill(OnboardingColors.primary)
+                    )
+                }
+                .disabled(isRequestingPermission)
+                .buttonStyle(OnboardingButtonStyle())
+                
+                // Skip button
+                Button(action: {
+                    onContinue()
+                }) {
+                    Text("onboarding.notifications.skip".localized)
+                        .font(AppFonts.subheadline())
+                        .foregroundColor(OnboardingColors.textSecondary)
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.bottom, 40)
+            .opacity(animateContent ? 1 : 0)
+            .animation(.easeOut(duration: 0.5).delay(0.5), value: animateContent)
+        }
+    }
+    
+    private func requestNotificationPermission() {
+        isRequestingPermission = true
+        
+        notificationManager.requestAuthorization { granted in
+            isRequestingPermission = false
+            
+            // Track the result
+            MixpanelManager.shared.trackNotificationPermission(granted: granted)
+            
+            // Continue to next page regardless of result
+            onContinue()
+        }
+    }
+}
+
+struct NotificationBenefitRow: View {
+    let icon: String
+    let title: String
+    let description: String
+    let color: Color
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 14) {
+            ZStack {
+                Circle()
+                    .fill(color.opacity(0.15))
+                    .frame(width: 44, height: 44)
+                
+                Image(systemName: icon)
+                    .font(.system(size: 20))
+                    .foregroundColor(color)
+            }
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(AppFonts.headline())
+                    .foregroundColor(OnboardingColors.textPrimary)
+                
+                Text(description)
+                    .font(AppFonts.caption())
+                    .foregroundColor(OnboardingColors.textSecondary)
+                    .lineLimit(2)
+            }
+            
+            Spacer()
+        }
+    }
+}
+
 // MARK: - Page 9: Let's Go
 struct LetsGoPage: View {
     @ObservedObject var authManager: AuthenticationManager
     @Binding var animateContent: Bool
+    var isPremium: Bool = false
+    var onComplete: (() -> Void)? = nil
     @State private var showConfetti = false
     
     var body: some View {
@@ -1371,8 +1576,32 @@ struct LetsGoPage: View {
                     .opacity(animateContent ? 1 : 0)
                     .animation(.easeOut(duration: 0.5).delay(0.3), value: animateContent)
                 
+                // Premium users see a completion button here (since no paywall follows)
+                if isPremium {
+                    Spacer()
+                        .frame(height: 20)
+                    
+                    Button(action: {
+                        onComplete?()
+                    }) {
+                        Text("onboarding.final.start".localized)
+                            .font(AppFonts.headline())
+                            .foregroundColor(OnboardingColors.background)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 56)
+                            .background(
+                                RoundedRectangle(cornerRadius: 28)
+                                    .fill(OnboardingColors.primary)
+                            )
+                    }
+                    .buttonStyle(OnboardingButtonStyle())
+                    .padding(.horizontal, 24)
+                    .opacity(animateContent ? 1 : 0)
+                    .animation(.easeOut(duration: 0.5).delay(0.4), value: animateContent)
+                }
+                
                 Spacer()
-                    .frame(height: 100)
+                    .frame(height: isPremium ? 40 : 100)
             }
             
             // Confetti overlay

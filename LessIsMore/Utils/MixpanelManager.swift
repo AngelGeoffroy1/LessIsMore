@@ -122,6 +122,20 @@ class MixpanelManager {
         track(event: "About Viewed")
     }
     
+    // MARK: - Notification Events
+    
+    func trackNotificationPermission(granted: Bool) {
+        track(event: "Notification Permission", properties: [
+            "granted": granted
+        ])
+    }
+    
+    func trackNotificationTapped(notificationId: String) {
+        track(event: "Notification Tapped", properties: [
+            "notification_id": notificationId
+        ])
+    }
+    
     // MARK: - Helper Methods
     
     private func track(event: String, properties: [String: MixpanelType]? = nil) {
