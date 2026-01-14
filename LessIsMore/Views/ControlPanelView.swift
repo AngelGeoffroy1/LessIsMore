@@ -332,26 +332,6 @@ struct ControlPanelView: View {
                 Text("controlPanel.content".localized)
                     .font(AppFonts.subheadline())
                     .foregroundColor(.secondary)
-
-                if !subscriptionManager.isPremium {
-                    Text("controlPanel.pro".localized)
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(
-                            LinearGradient(
-                                colors: [
-                                    Color(red: 0.98, green: 0.05, blue: 0.44), // Rose
-                                    Color(red: 0.73, green: 0.20, blue: 0.82), // Violet
-                                    Color(red: 1.0, green: 0.60, blue: 0.0)    // Orange
-                                ],
-                                startPoint: .topTrailing,
-                                endPoint: .bottomLeading
-                            )
-                        )
-                        .cornerRadius(6)
-                }
                 
                 Spacer()
                 
@@ -381,21 +361,9 @@ struct ControlPanelView: View {
                 FilterRow(
                     title: "filter.hideReels".localized,
                     isEnabled: binding(for: .reels),
-                    isLocked: !subscriptionManager.isPremium,
+                    isLocked: false, // Gratuit pour tous les utilisateurs
                     streakDays: streakTracker.getCurrentStreakDays(for: .reels),
                     avgTimePerDay: usageTracker.formattedAveragePerDay(for: .reels),
-                    onLockedTap: showPaywall
-                )
-
-                Divider()
-                    .padding(.leading, 16)
-
-                FilterRow(
-                    title: "filter.hideStories".localized,
-                    isEnabled: binding(for: .stories),
-                    isLocked: !subscriptionManager.isPremium,
-                    streakDays: streakTracker.getCurrentStreakDays(for: .stories),
-                    avgTimePerDay: usageTracker.formattedAveragePerDay(for: .stories),
                     onLockedTap: showPaywall
                 )
             }
@@ -440,6 +408,18 @@ struct ControlPanelView: View {
             .padding(.leading, 4)
 
             VStack(spacing: 0) {
+                FilterRow(
+                    title: "filter.hideStories".localized,
+                    isEnabled: binding(for: .stories),
+                    isLocked: !subscriptionManager.isPremium,
+                    streakDays: streakTracker.getCurrentStreakDays(for: .stories),
+                    avgTimePerDay: usageTracker.formattedAveragePerDay(for: .stories),
+                    onLockedTap: showPaywall
+                )
+
+                Divider()
+                    .padding(.leading, 16)
+
                 FilterRow(
                     title: "filter.followingOnly".localized,
                     isEnabled: binding(for: .following),
