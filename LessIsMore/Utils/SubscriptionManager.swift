@@ -11,6 +11,9 @@ import SuperwallKit
 
 class SubscriptionManager: ObservableObject {
     @Published var isPremium: Bool = false
+    
+    /// Notification posted when all filters are disabled due to subscription expiration
+    static let filtersDisabledNotification = Notification.Name("SubscriptionManager.filtersDisabled")
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -22,16 +25,52 @@ class SubscriptionManager: ObservableObject {
     private func observeSubscriptionStatus() {
         Superwall.shared.$subscriptionStatus
             .sink { [weak self] status in
+                guard let self = self else { return }
+                
                 switch status {
                 case .active:
-                    self?.isPremium = true
+                    self.isPremium = true
                 case .inactive, .unknown:
-                    self?.isPremium = false
+                    self.isPremium = false
+                    
+                    // Si l'utilisateur n'est pas premium, désactiver tous les filtres actifs
+                    // Cela s'applique au démarrage ET lors d'un changement de statut
+                    self.disableAllFiltersIfAnyEnabled()
                 @unknown default:
-                    self?.isPremium = false
+                    self.isPremium = false
+                    self.disableAllFiltersIfAnyEnabled()
                 }
             }
             .store(in: &cancellables)
+    }
+    
+    /// Désactive tous les filtres premium et leurs streaks associés (si au moins un filtre est actif)
+    private func disableAllFiltersIfAnyEnabled() {
+        // Vérifier si au moins un filtre est activé
+        let hasAnyFilterEnabled = FilterType.allCases.contains { $0.isEnabled }
+        guard hasAnyFilterEnabled else { return }
+        print("SubscriptionManager: Abonnement expiré - Désactivation de tous les filtres")
+        
+        // Désactiver chaque filtre
+        for filterType in FilterType.allCases {
+            if filterType.isEnabled {
+                // Désactiver le filtre
+                filterType.setEnabled(false)
+                
+                // Désactiver le streak associé
+                StreakTracker.shared.deactivateStreak(for: filterType)
+                
+                print("SubscriptionManager: Filtre \(filterType.rawValue) désactivé")
+            }
+        }
+        
+        // Poster une notification pour informer les autres composants (notamment le WebView)
+        NotificationCenter.default.post(
+            name: SubscriptionManager.filtersDisabledNotification,
+            object: nil
+        )
+        
+        print("SubscriptionManager: Tous les filtres ont été désactivés")
     }
 
     func showPaywall() {

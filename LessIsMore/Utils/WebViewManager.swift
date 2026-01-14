@@ -61,6 +61,28 @@ class WebViewManager: NSObject, ObservableObject {
 
     override init() {
         super.init()
+        
+        // Observer la désactivation des filtres lors de l'expiration de l'abonnement
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleFiltersDisabled),
+            name: SubscriptionManager.filtersDisabledNotification,
+            object: nil
+        )
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    /// Appelé quand tous les filtres sont désactivés suite à l'expiration de l'abonnement
+    @objc private func handleFiltersDisabled() {
+        print("WebViewManager: Réception de la notification - Réapplication des filtres désactivés")
+        
+        // Réappliquer tous les filtres (maintenant tous désactivés) dans le WebView
+        DispatchQueue.main.async { [weak self] in
+            self?.applyAllSavedFilters()
+        }
     }
 
     // MARK: - Gestion des erreurs
