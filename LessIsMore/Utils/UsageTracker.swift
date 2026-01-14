@@ -454,12 +454,16 @@ class UsageTracker: ObservableObject {
         // Calculate weekly total
         let weeklyTotal = weeklyUsage.reduce(0) { $0 + $1.totalSeconds }
         
+        // Encode weekly data for widget chart
+        let weeklyDataJSON = try? JSONEncoder().encode(weeklyUsage)
+        
         // Update shared data
         SharedDataManager.shared.updateUsageData(
             todaySeconds: todayUsageSeconds,
             yesterdaySeconds: yesterdaySeconds,
             weeklyTotal: weeklyTotal,
-            percentageChange: getComparisonToYesterday()
+            percentageChange: getComparisonToYesterday(),
+            weeklyDataJSON: weeklyDataJSON
         )
     }
     

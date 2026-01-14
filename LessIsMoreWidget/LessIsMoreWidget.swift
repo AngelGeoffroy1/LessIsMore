@@ -11,6 +11,38 @@ import SwiftUI
 // MARK: - App Group Identifier
 let appGroupIdentifier = "group.LessIsMoreWidget"
 
+// MARK: - Widget Weekly Data Structure (must match UsageTracker.WeeklyUsageData)
+struct WidgetWeeklyData: Identifiable, Codable {
+    let id: UUID
+    let day: String
+    var categorySeconds: [String: Int]
+    
+    var totalSeconds: Int {
+        categorySeconds.values.reduce(0, +)
+    }
+}
+
+// MARK: - Widget Usage Category
+enum WidgetUsageCategory: String, CaseIterable {
+    case feed = "Feed"
+    case reels = "Reels"
+    case stories = "Stories"
+    case messages = "Messages"
+    case explore = "Explore"
+    case other = "Other"
+    
+    var color: Color {
+        switch self {
+        case .feed: return .blue
+        case .reels: return Color(red: 0.98, green: 0.05, blue: 0.44)
+        case .stories: return Color(red: 1.0, green: 0.60, blue: 0.0)
+        case .messages: return .purple
+        case .explore: return .green
+        case .other: return .gray
+        }
+    }
+}
+
 // MARK: - Shared Data Reader (Widget Side)
 
 struct WidgetDataReader {
@@ -31,6 +63,18 @@ struct WidgetDataReader {
     
     var usagePercentageChange: Double {
         sharedDefaults?.double(forKey: "usage_percentage_change") ?? 0.0
+    }
+    
+    // Weekly Chart Data
+    var weeklyUsageData: [WidgetWeeklyData] {
+        guard let data = sharedDefaults?.data(forKey: "weekly_usage_data"),
+              let decoded = try? JSONDecoder().decode([WidgetWeeklyData].self, from: data) else {
+            // Return placeholder data
+            return ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map { day in
+                WidgetWeeklyData(id: UUID(), day: day, categorySeconds: [:])
+            }
+        }
+        return decoded
     }
     
     // Streak Data
@@ -166,70 +210,62 @@ struct SmallStreakWidgetView: View {
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
-        ZStack {
-            // Background
-            ContainerRelativeShape()
-                .fill(colorScheme == .dark 
-                    ? Color(red: 0.1, green: 0.1, blue: 0.12) 
-                    : Color(red: 0.96, green: 0.96, blue: 0.98))
+        VStack(spacing: 6) {
+            // Header
+            Text("STREAK")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundColor(.secondary)
+                .tracking(1)
             
-            VStack(spacing: 6) {
-                // Header
-                Text("STREAK")
-                    .font(.system(size: 10, weight: .semibold))
+            Spacer()
+            
+            if entry.streakDays > 0 {
+                // Flame emoji
+                Text("🔥")
+                    .font(.system(size: 36))
+                
+                // Days count
+                Text("\(entry.streakDays)")
+                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .foregroundStyle(instagramGradient)
+                
+                Text(entry.streakDays == 1 ? "day" : "days")
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundColor(.secondary)
-                    .tracking(1)
                 
-                Spacer()
+                // Filter name
+                Text("No \(entry.streakFilterName)")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.secondary.opacity(0.8))
+                    .lineLimit(1)
+            } else {
+                // No active streak
+                Text("🔒")
+                    .font(.system(size: 36))
                 
-                if entry.streakDays > 0 {
-                    // Flame emoji
-                    Text("🔥")
-                        .font(.system(size: 36))
-                    
-                    // Days count
-                    Text("\(entry.streakDays)")
-                        .font(.system(size: 32, weight: .bold, design: .rounded))
-                        .foregroundStyle(instagramGradient)
-                    
-                    Text(entry.streakDays == 1 ? "day" : "days")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.secondary)
-                    
-                    // Filter name
-                    Text("No \(entry.streakFilterName)")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.secondary.opacity(0.8))
-                        .lineLimit(1)
-                } else {
-                    // No active streak
-                    Text("🔒")
-                        .font(.system(size: 36))
-                    
-                    Text("No streak")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.secondary)
-                    
-                    Text("Tap to start")
-                        .font(.system(size: 10))
-                        .foregroundColor(.secondary.opacity(0.6))
-                }
+                Text("No streak")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.secondary)
                 
-                Spacer()
-                
-                // Personal record (if exists)
-                if entry.personalRecord > 0 && entry.streakDays > 0 {
-                    HStack(spacing: 2) {
-                        Image(systemName: "trophy.fill")
-                            .font(.system(size: 8))
-                        Text("\(entry.personalRecord)")
-                            .font(.system(size: 10, weight: .semibold))
-                    }
-                    .foregroundColor(.yellow.opacity(0.8))
-                }
+                Text("Tap to start")
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary.opacity(0.6))
             }
-            .padding(12)
+            
+            Spacer()
+            
+            // Personal record (if exists)
+            if entry.personalRecord > 0 && entry.streakDays > 0 {
+                HStack(spacing: 2) {
+                    Image(systemName: "trophy.fill")
+                        .font(.system(size: 8))
+                    Text("\(entry.personalRecord)")
+                        .font(.system(size: 10, weight: .semibold))
+                }
+                .foregroundColor(.yellow.opacity(0.8))
+            }
         }
+        .padding(12)
     }
 }
 
@@ -240,60 +276,52 @@ struct SmallTimeWidgetView: View {
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
-        ZStack {
-            // Background
-            ContainerRelativeShape()
-                .fill(colorScheme == .dark 
-                    ? Color(red: 0.1, green: 0.1, blue: 0.12) 
-                    : Color(red: 0.96, green: 0.96, blue: 0.98))
+        VStack(spacing: 6) {
+            // Header
+            Text("TODAY")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundColor(.secondary)
+                .tracking(1)
             
-            VStack(spacing: 6) {
-                // Header
-                Text("TODAY")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(.secondary)
-                    .tracking(1)
-                
-                Spacer()
-                
-                // Time display
-                Text(entry.formattedTime)
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
-                    .foregroundColor(entry.usageColor)
-                    .minimumScaleFactor(0.6)
-                    .lineLimit(1)
-                
-                // Usage indicator bar
-                UsageProgressBar(minutes: entry.todaySeconds / 60)
-                    .frame(height: 6)
-                    .padding(.horizontal, 8)
-                
-                Spacer()
-                
-                // Trend
-                if entry.percentageChange != 0 {
-                    HStack(spacing: 3) {
-                        Image(systemName: entry.percentageChange < 0 ? "arrow.down" : "arrow.up")
-                            .font(.system(size: 9, weight: .bold))
-                        
-                        Text("\(abs(Int(entry.percentageChange)))%")
-                            .font(.system(size: 11, weight: .semibold))
-                    }
-                    .foregroundColor(entry.percentageChange < 0 ? .green : .red)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(
-                        Capsule()
-                            .fill((entry.percentageChange < 0 ? Color.green : Color.red).opacity(0.15))
-                    )
-                } else {
-                    Text("vs yesterday")
-                        .font(.system(size: 10))
-                        .foregroundColor(.secondary.opacity(0.6))
+            Spacer()
+            
+            // Time display
+            Text(entry.formattedTime)
+                .font(.system(size: 34, weight: .bold, design: .rounded))
+                .foregroundColor(entry.usageColor)
+                .minimumScaleFactor(0.6)
+                .lineLimit(1)
+            
+            // Usage indicator bar
+            UsageProgressBar(minutes: entry.todaySeconds / 60)
+                .frame(height: 6)
+                .padding(.horizontal, 8)
+            
+            Spacer()
+            
+            // Trend
+            if entry.percentageChange != 0 {
+                HStack(spacing: 3) {
+                    Image(systemName: entry.percentageChange < 0 ? "arrow.down" : "arrow.up")
+                        .font(.system(size: 9, weight: .bold))
+                    
+                    Text("\(abs(Int(entry.percentageChange)))%")
+                        .font(.system(size: 11, weight: .semibold))
                 }
+                .foregroundColor(entry.percentageChange < 0 ? .green : .red)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(
+                    Capsule()
+                        .fill((entry.percentageChange < 0 ? Color.green : Color.red).opacity(0.15))
+                )
+            } else {
+                Text("vs yesterday")
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary.opacity(0.6))
             }
-            .padding(12)
         }
+        .padding(12)
     }
 }
 
@@ -340,85 +368,77 @@ struct MediumComboWidgetView: View {
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
-        ZStack {
-            // Background
-            ContainerRelativeShape()
-                .fill(colorScheme == .dark 
-                    ? Color(red: 0.1, green: 0.1, blue: 0.12) 
-                    : Color(red: 0.96, green: 0.96, blue: 0.98))
-            
-            HStack(spacing: 16) {
-                // Left side: Streak
-                VStack(spacing: 4) {
-                    if entry.streakDays > 0 {
-                        Text("🔥")
-                            .font(.system(size: 30))
-                        
-                        Text("\(entry.streakDays)")
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
-                            .foregroundStyle(instagramGradient)
-                        
-                        Text(entry.streakDays == 1 ? "day" : "days")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(.secondary)
-                        
-                        Text("No \(entry.streakFilterName)")
-                            .font(.system(size: 9, weight: .medium))
-                            .foregroundColor(.secondary.opacity(0.7))
-                            .lineLimit(1)
-                    } else {
-                        Text("🔒")
-                            .font(.system(size: 30))
-                        
-                        Text("Start a")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.secondary)
-                        
-                        Text("streak!")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                
-                // Divider
-                Rectangle()
-                    .fill(Color.primary.opacity(0.1))
-                    .frame(width: 1)
-                    .padding(.vertical, 12)
-                
-                // Right side: Time
-                VStack(spacing: 4) {
-                    Text("TODAY")
-                        .font(.system(size: 9, weight: .semibold))
-                        .foregroundColor(.secondary)
-                        .tracking(1)
+        HStack(spacing: 16) {
+            // Left side: Streak
+            VStack(spacing: 4) {
+                if entry.streakDays > 0 {
+                    Text("🔥")
+                        .font(.system(size: 30))
                     
-                    Text(entry.formattedTime)
+                    Text("\(entry.streakDays)")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
-                        .foregroundColor(entry.usageColor)
-                        .minimumScaleFactor(0.7)
+                        .foregroundStyle(instagramGradient)
+                    
+                    Text(entry.streakDays == 1 ? "day" : "days")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.secondary)
+                    
+                    Text("No \(entry.streakFilterName)")
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundColor(.secondary.opacity(0.7))
                         .lineLimit(1)
+                } else {
+                    Text("🔒")
+                        .font(.system(size: 30))
                     
-                    UsageProgressBar(minutes: entry.todaySeconds / 60)
-                        .frame(height: 5)
-                        .padding(.horizontal, 4)
+                    Text("Start a")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.secondary)
                     
-                    if entry.percentageChange != 0 {
-                        HStack(spacing: 2) {
-                            Image(systemName: entry.percentageChange < 0 ? "arrow.down" : "arrow.up")
-                                .font(.system(size: 8, weight: .bold))
-                            
-                            Text("\(abs(Int(entry.percentageChange)))% vs hier")
-                                .font(.system(size: 9, weight: .medium))
-                        }
-                        .foregroundColor(entry.percentageChange < 0 ? .green : .red)
-                    }
+                    Text("streak!")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.secondary)
                 }
-                .frame(maxWidth: .infinity)
             }
-            .padding(16)
+            .frame(maxWidth: .infinity)
+            
+            // Divider
+            Rectangle()
+                .fill(Color.primary.opacity(0.1))
+                .frame(width: 1)
+                .padding(.vertical, 12)
+            
+            // Right side: Time
+            VStack(spacing: 4) {
+                Text("TODAY")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundColor(.secondary)
+                    .tracking(1)
+                
+                Text(entry.formattedTime)
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .foregroundColor(entry.usageColor)
+                    .minimumScaleFactor(0.7)
+                    .lineLimit(1)
+                
+                UsageProgressBar(minutes: entry.todaySeconds / 60)
+                    .frame(height: 5)
+                    .padding(.horizontal, 4)
+                
+                if entry.percentageChange != 0 {
+                    HStack(spacing: 2) {
+                        Image(systemName: entry.percentageChange < 0 ? "arrow.down" : "arrow.up")
+                            .font(.system(size: 8, weight: .bold))
+                        
+                        Text("\(abs(Int(entry.percentageChange)))% vs hier")
+                            .font(.system(size: 9, weight: .medium))
+                    }
+                    .foregroundColor(entry.percentageChange < 0 ? .green : .red)
+                }
+            }
+            .frame(maxWidth: .infinity)
         }
+        .padding(16)
     }
 }
 
@@ -502,6 +522,243 @@ struct LessIsMoreWidget: Widget {
     }
 }
 
+// MARK: - Large Chart Entry
+
+struct LargeChartEntry: TimelineEntry {
+    let date: Date
+    let weeklyData: [WidgetWeeklyData]
+    let todaySeconds: Int
+    let percentageChange: Double
+    let streakDays: Int
+    let streakFilterName: String
+    
+    var formattedTime: String {
+        let hours = todaySeconds / 3600
+        let minutes = (todaySeconds % 3600) / 60
+        if hours > 0 {
+            return "\(hours)h\(minutes > 0 ? " \(minutes)m" : "")"
+        } else if minutes > 0 {
+            return "\(minutes)m"
+        }
+        return "0m"
+    }
+    
+    var formattedWeeklyTime: String {
+        let totalSeconds = weeklyData.reduce(0) { $0 + $1.totalSeconds }
+        let hours = totalSeconds / 3600
+        let minutes = (totalSeconds % 3600) / 60
+        if hours > 0 {
+            return "\(hours)h\(minutes > 0 ? " \(minutes)m" : "")"
+        } else if minutes > 0 {
+            return "\(minutes)m"
+        }
+        return "0m"
+    }
+    
+    static var placeholder: LargeChartEntry {
+        let placeholderData = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].enumerated().map { index, day in
+            WidgetWeeklyData(
+                id: UUID(),
+                day: day,
+                categorySeconds: [
+                    "Feed": (index + 1) * 600,
+                    "Reels": (index + 1) * 900,
+                    "Stories": (index + 1) * 300
+                ]
+            )
+        }
+        return LargeChartEntry(
+            date: Date(),
+            weeklyData: placeholderData,
+            todaySeconds: 2700,
+            percentageChange: -15.0,
+            streakDays: 7,
+            streakFilterName: "Reels"
+        )
+    }
+}
+
+// MARK: - Large Chart Provider
+
+struct LargeChartProvider: TimelineProvider {
+    typealias Entry = LargeChartEntry
+    
+    func placeholder(in context: Context) -> LargeChartEntry {
+        .placeholder
+    }
+    
+    func getSnapshot(in context: Context, completion: @escaping (LargeChartEntry) -> Void) {
+        let entry = readCurrentData()
+        completion(entry)
+    }
+    
+    func getTimeline(in context: Context, completion: @escaping (Timeline<LargeChartEntry>) -> Void) {
+        let entry = readCurrentData()
+        
+        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: Date())!
+        let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
+        completion(timeline)
+    }
+    
+    private func readCurrentData() -> LargeChartEntry {
+        let reader = WidgetDataReader()
+        
+        return LargeChartEntry(
+            date: Date(),
+            weeklyData: reader.weeklyUsageData,
+            todaySeconds: reader.todayUsageSeconds,
+            percentageChange: reader.usagePercentageChange,
+            streakDays: reader.bestStreakDays,
+            streakFilterName: reader.bestStreakFilterName
+        )
+    }
+}
+
+// MARK: - Large Chart Widget View
+
+struct LargeChartWidgetView: View {
+    let entry: LargeChartEntry
+    @Environment(\.colorScheme) var colorScheme
+    
+    private var currentDayName: String {
+        let calendar = Calendar.current
+        let weekday = calendar.component(.weekday, from: Date())
+        let dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+        return dayNames[weekday - 1]
+    }
+    
+    private let chartHeight: CGFloat = 120
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            // Header
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("THIS WEEK")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.secondary)
+                        .tracking(1)
+                    
+                    Text(entry.formattedWeeklyTime)
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                }
+                
+                Spacer()
+                
+                // Trend Badge
+                if entry.percentageChange != 0 {
+                    HStack(spacing: 4) {
+                        Image(systemName: entry.percentageChange < 0 ? "arrow.down" : "arrow.up")
+                            .font(.system(size: 10, weight: .bold))
+                        Text("\(abs(Int(entry.percentageChange)))%")
+                            .font(.system(size: 12, weight: .semibold))
+                    }
+                    .foregroundColor(entry.percentageChange < 0 ? .green : .red)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(
+                        Capsule()
+                            .fill((entry.percentageChange < 0 ? Color.green : Color.red).opacity(0.15))
+                    )
+                }
+                
+                // Streak if active
+                if entry.streakDays > 0 {
+                    HStack(spacing: 4) {
+                        Text("🔥")
+                            .font(.system(size: 14))
+                        Text("\(entry.streakDays)")
+                            .font(.system(size: 14, weight: .bold, design: .rounded))
+                            .foregroundStyle(instagramGradient)
+                    }
+                }
+            }
+            
+            // Chart
+            HStack(alignment: .bottom, spacing: 6) {
+                ForEach(entry.weeklyData) { item in
+                    VStack(spacing: 4) {
+                        // Stacked Bar
+                        ZStack(alignment: .bottom) {
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color.primary.opacity(0.05))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: chartHeight)
+                            
+                            if item.totalSeconds == 0 {
+                                let simulatedHeight: CGFloat = 8 + CGFloat(abs(item.day.hashValue % 15))
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color.primary.opacity(0.1))
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: simulatedHeight)
+                            }
+                            
+                            let maxSeconds = entry.weeklyData.map { $0.totalSeconds }.max() ?? 1
+                            let barHeight = item.totalSeconds > 0 
+                                ? CGFloat(item.totalSeconds) / CGFloat(max(maxSeconds, 1)) * chartHeight 
+                                : 0
+                            
+                            VStack(spacing: 0) {
+                                ForEach(Array(WidgetUsageCategory.allCases.reversed()), id: \.self) { category in
+                                    let seconds = item.categorySeconds[category.rawValue] ?? 0
+                                    if seconds > 0 && item.totalSeconds > 0 {
+                                        Rectangle()
+                                            .fill(category.color.opacity(item.day == currentDayName ? 1.0 : 0.5))
+                                            .frame(height: CGFloat(seconds) / CGFloat(item.totalSeconds) * barHeight)
+                                    }
+                                }
+                            }
+                            .frame(height: barHeight)
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                        }
+                        
+                        Text(item.day)
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundColor(item.day == currentDayName ? .primary : .secondary)
+                    }
+                }
+            }
+            .frame(height: chartHeight + 16)
+            
+            // Legend
+            HStack(spacing: 12) {
+                ForEach(WidgetUsageCategory.allCases.prefix(4), id: \.self) { category in
+                    HStack(spacing: 3) {
+                        Circle()
+                            .fill(category.color)
+                            .frame(width: 6, height: 6)
+                        Text(category.rawValue)
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+        }
+        .padding(16)
+    }
+}
+
+// MARK: - Chart Widget Configuration
+
+struct ChartWidget: Widget {
+    let kind: String = "ChartWidget"
+    
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: LargeChartProvider()) { entry in
+            if #available(iOS 17.0, *) {
+                LargeChartWidgetView(entry: entry)
+                    .containerBackground(.fill.tertiary, for: .widget)
+            } else {
+                LargeChartWidgetView(entry: entry)
+            }
+        }
+        .configurationDisplayName("Weekly Chart")
+        .description("Your weekly usage breakdown by category")
+        .supportedFamilies([.systemLarge])
+    }
+}
+
 // MARK: - Previews
 
 #Preview("Streak Small", as: .systemSmall) {
@@ -522,4 +779,10 @@ struct LessIsMoreWidget: Widget {
     ComboWidget()
 } timeline: {
     LessIsMoreEntry.placeholder
+}
+
+#Preview("Chart Large", as: .systemLarge) {
+    ChartWidget()
+} timeline: {
+    LargeChartEntry.placeholder
 }

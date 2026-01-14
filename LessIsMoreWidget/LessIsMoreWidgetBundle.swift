@@ -15,6 +15,7 @@ struct LessIsMoreWidgetBundle: WidgetBundle {
         StreakWidget()          // Small - Streak only
         TimeWidget()            // Small - Time only
         ComboWidget()           // Medium - Both
+        ChartWidget()           // Large - Weekly chart
         
         // Lock Screen Widgets
         LockScreenStreakWidget()        // Circular - Streak
