@@ -59,6 +59,15 @@ class WebViewManager: NSObject, ObservableObject {
 
     weak var webView: WKWebView?
 
+    /// Flag pour éviter les chargements multiples
+    private var hasInitiallyLoaded = false
+
+    /// Flag pour éviter les doubles injections lors des redirections
+    private var hasInjectedFilters = false
+
+    /// URL de la dernière navigation pour détecter les vraies navigations vs redirections
+    private var lastNavigationURL: String?
+
     override init() {
         super.init()
         
@@ -100,17 +109,22 @@ class WebViewManager: NSObject, ObservableObject {
 
     func retryAfterError() {
         dismissError()
-        loadInstagram()
+        loadInstagram(force: true)
     }
     
     func setupWebView() -> WKWebView {
+        // Retourner la WebView existante si elle existe déjà (évite les recréations par SwiftUI)
+        if let existingWebView = webView {
+            return existingWebView
+        }
+
         let configuration = WKWebViewConfiguration()
-        
+
         // Configuration pour permettre l'injection de JavaScript
         let userContentController = WKUserContentController()
         userContentController.add(self, name: "lessIsMoreTracker")
         configuration.userContentController = userContentController
-        
+
         // Injection du script dès le début du chargement (plus rapide)
         let contentBlockerScript = WKUserScript(
             source: ContentBlocker.getBlockingScript(),
@@ -118,34 +132,42 @@ class WebViewManager: NSObject, ObservableObject {
             forMainFrameOnly: false
         )
         userContentController.addUserScript(contentBlockerScript)
-        
+
         // Permettre la lecture des médias
         configuration.allowsInlineMediaPlayback = true
         configuration.mediaTypesRequiringUserActionForPlayback = []
-        
-        let webView = WKWebView(frame: .zero, configuration: configuration)
-        webView.navigationDelegate = self
-        webView.uiDelegate = self
-        webView.allowsBackForwardNavigationGestures = true
+
+        let newWebView = WKWebView(frame: .zero, configuration: configuration)
+        newWebView.navigationDelegate = self
+        newWebView.uiDelegate = self
+        newWebView.allowsBackForwardNavigationGestures = true
 
         // Masquer les indicateurs de scroll natifs
-        webView.scrollView.showsVerticalScrollIndicator = false
-        webView.scrollView.showsHorizontalScrollIndicator = false
+        newWebView.scrollView.showsVerticalScrollIndicator = false
+        newWebView.scrollView.showsHorizontalScrollIndicator = false
 
-        self.webView = webView
-        return webView
+        self.webView = newWebView
+        return newWebView
     }
     
-    func loadInstagram() {
+    func loadInstagram(force: Bool = false) {
         guard let webView = webView else { return }
-        
+
+        // Éviter les chargements multiples lors du lancement
+        if hasInitiallyLoaded && !force {
+            return
+        }
+        hasInitiallyLoaded = true
+
         // Vérifier si le filtre Following est activé
         let followingFilterEnabled = FilterType.following.isEnabled
-        
-        let urlString = followingFilterEnabled ? 
-            "https://www.instagram.com/?variant=following" : 
-            "https://www.instagram.com"
-        
+
+        // Toujours spécifier le variant pour éviter la redirection automatique d'Instagram
+        // Instagram redirige instagram.com vers instagram.com/?variant=foryou, ce qui cause un double chargement
+        let urlString = followingFilterEnabled ?
+            "https://www.instagram.com/?variant=following" :
+            "https://www.instagram.com/?variant=foryou"
+
         if let url = URL(string: urlString) {
             let request = URLRequest(url: url)
             webView.load(request)
@@ -253,22 +275,44 @@ class WebViewManager: NSObject, ObservableObject {
 extension WebViewManager: WKNavigationDelegate {
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
         isLoading = true
-        url = webView.url?.absoluteString ?? ""
+        let currentURL = webView.url?.absoluteString ?? ""
+        url = currentURL
+
+        // Détecter si c'est une nouvelle navigation (pas une redirection)
+        let isNewNavigation = lastNavigationURL == nil ||
+            !currentURL.hasPrefix("https://www.instagram.com") ||
+            currentURL.contains("/p/") ||
+            currentURL.contains("/reels/") ||
+            currentURL.contains("/stories/")
+
+        if isNewNavigation {
+            // Réinitialiser le flag pour les nouvelles navigations
+            hasInjectedFilters = false
+        }
+
+        lastNavigationURL = currentURL
+        print("WebViewManager: didStart - URL: \(currentURL), isNewNavigation: \(isNewNavigation)")
     }
-    
+
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         isLoading = false
         canGoBack = webView.canGoBack
         canGoForward = webView.canGoForward
-        url = webView.url?.absoluteString ?? ""
-        
-        // Injection intelligente du script
-        self.injectContentBlocker()
-        
-        // Vérification rapide en parallèle
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.reapplyFiltersIfNeeded()
+        let currentURL = webView.url?.absoluteString ?? ""
+        url = currentURL
+
+        print("WebViewManager: didFinish - URL: \(currentURL), hasInjectedFilters: \(hasInjectedFilters)")
+
+        // Éviter les doubles injections lors des redirections
+        if hasInjectedFilters {
+            print("WebViewManager: Filtres déjà injectés, skip")
+            return
         }
+
+        hasInjectedFilters = true
+
+        // Injection intelligente du script (applique déjà les filtres)
+        self.injectContentBlocker()
     }
     
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {

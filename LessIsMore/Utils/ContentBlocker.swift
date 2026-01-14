@@ -47,9 +47,15 @@ enum FilterType: String, CaseIterable {
 class ContentBlocker {
     
     static func getBlockingScript() -> String {
+        // Injecter les valeurs actuelles des filtres directement dans le script
+        let filtersJson = FilterType.allCases.map { "\"\($0.rawValue)\": \($0.isEnabled)" }.joined(separator: ", ")
+
         return """
         (function() {
             console.log('LessIsMore: Initialisation du bloqueur de contenu');
+
+            // Filtres initiaux injectés depuis l'app iOS
+            window.__lessIsMoreInitialFilters = {\(filtersJson)};
             
             // Style CSS pour masquer les éléments
             const style = document.createElement('style');
@@ -743,31 +749,45 @@ class ContentBlocker {
                 }
             }, 1000);
             
-            // Préchargement des filtres actifs pour une application plus rapide
-            const activeFilters = {
-                reels: document.body.classList.contains('lessismore-hidden-reels'),
-                explore: document.body.classList.contains('lessismore-hidden-explore'),
-                stories: document.body.classList.contains('lessismore-hidden-stories'),
-                suggestions: document.body.classList.contains('lessismore-hidden-suggestions'),
-                suggestedPosts: document.body.classList.contains('lessismore-hidden-suggestedPosts'),
-                likes: document.body.classList.contains('lessismore-hidden-likes'),
-                following: document.body.classList.contains('lessismore-hidden-following'),
-                messages: document.body.classList.contains('lessismore-hidden-messages')
+            // Préchargement des filtres actifs depuis l'app iOS (injectés au démarrage)
+            const activeFilters = window.__lessIsMoreInitialFilters || {
+                reels: false,
+                explore: false,
+                stories: false,
+                suggestions: false,
+                suggestedPosts: false,
+                likes: false,
+                following: false,
+                messages: false
             };
-            
-            // Redirection automatique si le filtre Following est activé et qu'on est sur la page d'accueil
-            if (activeFilters.following && !window.location.href.includes('variant=following')) {
-                console.log('Redirection automatique vers Following');
-                window.location.href = 'https://www.instagram.com/?variant=following';
-                return; // Sortir pour éviter l'application des autres filtres
-            }
-            
-            // Application immédiate des filtres préchargés
-            Object.keys(activeFilters).forEach(filterType => {
-                if (activeFilters[filterType]) {
-                    window.lessIsMoreToggleFilter(filterType, true);
+
+            // Fonction pour appliquer les filtres dès que le body est disponible
+            const applyFiltersWhenReady = () => {
+                if (!document.body) {
+                    // Attendre que le body soit disponible
+                    requestAnimationFrame(applyFiltersWhenReady);
+                    return;
                 }
-            });
+
+                // Redirection automatique si le filtre Following est activé
+                if (activeFilters.following && !window.location.href.includes('variant=following')) {
+                    console.log('Redirection automatique vers Following');
+                    window.location.href = 'https://www.instagram.com/?variant=following';
+                    return;
+                }
+
+                // Application immédiate des filtres préchargés
+                Object.keys(activeFilters).forEach(filterType => {
+                    if (activeFilters[filterType]) {
+                        window.lessIsMoreToggleFilter(filterType, true);
+                    }
+                });
+
+                console.log('LessIsMore: Filtres initiaux appliqués:', activeFilters);
+            };
+
+            // Lancer l'application des filtres
+            applyFiltersWhenReady();
             
             // --- Tracker de catégorie ---
             (function() {
