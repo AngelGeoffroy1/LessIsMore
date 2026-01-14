@@ -31,6 +31,7 @@
 "filter.followingOnly" = "Abonnements uniquement";
 "filter.hideExplore" = "Masquer Explorer";
 "filter.hideSuggestions" = "Masquer Suggestions";
+"filter.hideSuggestedPosts" = "Masquer Posts Suggérés";
 "filter.hideMessages" = "Masquer Messages";
 "filter.hideLikes" = "Masquer Likes";
 "filter.perDaySaved" = "~%@/jour économisé";

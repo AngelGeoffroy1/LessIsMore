@@ -12,6 +12,7 @@ enum FilterType: String, CaseIterable {
     case explore = "explore"
     case stories = "stories"
     case suggestions = "suggestions"
+    case suggestedPosts = "suggestedPosts"
     case likes = "likes"
     case following = "following"
     case messages = "messages"
@@ -22,6 +23,7 @@ enum FilterType: String, CaseIterable {
         case .explore: return "Explore"
         case .stories: return "Stories"
         case .suggestions: return "Suggestions"
+        case .suggestedPosts: return "Suggested Posts"
         case .likes: return "Like Counter"
         case .following: return "Following Only Mode"
         case .messages: return "Messages"
@@ -109,6 +111,18 @@ class ContentBlocker {
                     display: none !important;
                 }
                 
+                /* Masquer les posts suggérés dans le feed */
+                .lessismore-hidden-suggestedPosts article:has(span:contains("Suggested for you")),
+                .lessismore-hidden-suggestedPosts article:has(span:contains("Suggéré pour vous")),
+                .lessismore-hidden-suggestedPosts article:has(span:contains("Suggerido para ti")),
+                .lessismore-hidden-suggestedPosts article:has(span:contains("Für dich vorgeschlagen")),
+                .lessismore-hidden-suggestedPosts article:has([data-testid*="suggested"]),
+                .lessismore-hidden-suggestedPosts div:has(> article):has(span:contains("Suggested")),
+                .lessismore-hidden-suggestedPosts div:has(> article):has(span:contains("Suggéré")),
+                .lessismore-hidden-suggestedPosts [data-lessismore-suggested-post="true"] {
+                    display: none !important;
+                }
+                
                 /* Masquer les compteurs de likes - sélecteurs très précis */
                 .lessismore-hidden-likes [data-testid="like-count"],
                 .lessismore-hidden-likes [data-testid="likes-count"],
@@ -169,6 +183,14 @@ class ContentBlocker {
                             window.lessIsMoreHideForYou();
                         }, 50);
                     }
+                    
+                    
+                    // Pour les posts suggérés dans le feed
+                    if (filterType === 'suggestedPosts') {
+                        setTimeout(() => {
+                            window.lessIsMoreHideSuggestedPosts();
+                        }, 50);
+                    }
                 } else {
                     document.body.classList.remove(className);
                     
@@ -190,6 +212,14 @@ class ContentBlocker {
                     if (filterType === 'following') {
                         setTimeout(() => {
                             window.lessIsMoreShowForYou();
+                        }, 50);
+                    }
+                    
+                    
+                    // Pour les posts suggérés, restaurer l'affichage
+                    if (filterType === 'suggestedPosts') {
+                        setTimeout(() => {
+                            window.lessIsMoreShowSuggestedPosts();
                         }, 50);
                     }
                 }
@@ -515,6 +545,90 @@ class ContentBlocker {
                 }
             };
             
+            // Fonction pour masquer les posts suggérés dans le feed
+            window.lessIsMoreHideSuggestedPosts = function() {
+                try {
+                    // Mots-clés de suggestion dans différentes langues
+                    const suggestionKeywords = [
+                        'Suggested for you',
+                        'Suggéré pour vous',
+                        'Suggerido para ti',
+                        'Für dich vorgeschlagen',
+                        'Sugerido para ti',
+                        'Consigliato per te',
+                        'Suggested',
+                        'Suggéré',
+                        'Voor jou aanbevolen'
+                    ];
+                    
+                    // Parcourir tous les articles (posts) dans le feed
+                    const articles = document.querySelectorAll('article');
+                    let hiddenCount = 0;
+                    
+                    articles.forEach(article => {
+                        // Vérifier si l'article contient un texte de suggestion
+                        const articleText = article.innerText || article.textContent || '';
+                        const isSuggested = suggestionKeywords.some(keyword => 
+                            articleText.includes(keyword)
+                        );
+                        
+                        if (isSuggested && article.style.display !== 'none') {
+                            // Masquer l'article et son conteneur parent si nécessaire
+                            article.style.setProperty('display', 'none', 'important');
+                            article.setAttribute('data-lessismore-suggested-post', 'true');
+                            hiddenCount++;
+                            
+                            // Vérifier le parent direct pour masquer le conteneur complet
+                            const parent = article.parentElement;
+                            if (parent && parent.children.length === 1) {
+                                parent.style.setProperty('display', 'none', 'important');
+                                parent.setAttribute('data-lessismore-suggested-post', 'true');
+                            }
+                        }
+                    });
+                    
+                    // Chercher également les spans avec le texte de suggestion et masquer leurs parents articles
+                    const allSpans = document.querySelectorAll('span, div');
+                    allSpans.forEach(span => {
+                        const text = span.innerText || span.textContent || '';
+                        const isSuggestionText = suggestionKeywords.some(keyword => 
+                            text.trim() === keyword || text.includes(keyword)
+                        );
+                        
+                        if (isSuggestionText) {
+                            // Remonter pour trouver l'article parent
+                            let parentArticle = span.closest('article');
+                            if (parentArticle && parentArticle.style.display !== 'none') {
+                                parentArticle.style.setProperty('display', 'none', 'important');
+                                parentArticle.setAttribute('data-lessismore-suggested-post', 'true');
+                                hiddenCount++;
+                            }
+                        }
+                    });
+                    
+                    if (hiddenCount > 0) {
+                        console.log('LessIsMore: Posts suggérés masqués:', hiddenCount);
+                    }
+                } catch (error) {
+                    console.log('Erreur dans lessIsMoreHideSuggestedPosts:', error.message);
+                }
+            };
+            
+            // Fonction pour restaurer l'affichage des posts suggérés
+            window.lessIsMoreShowSuggestedPosts = function() {
+                try {
+                    const hiddenPosts = document.querySelectorAll('[data-lessismore-suggested-post="true"]');
+                    hiddenPosts.forEach(el => {
+                        el.style.removeProperty('display');
+                        el.removeAttribute('data-lessismore-suggested-post');
+                    });
+                    
+                    console.log('LessIsMore: Posts suggérés restaurés:', hiddenPosts.length);
+                } catch (error) {
+                    console.log('Erreur dans lessIsMoreShowSuggestedPosts:', error.message);
+                }
+            };
+            
             // Les gestionnaires d'événements du bouton éclair ont été supprimés
             
             // Fonction pour appliquer tous les filtres depuis l'app iOS
@@ -546,9 +660,16 @@ class ContentBlocker {
                         window.lessIsMoreHideForYou();
                     }, 100);
                 }
+                
+                // Appliquer un masquage supplémentaire des posts suggérés si activé
+                if (filters.suggestedPosts) {
+                    setTimeout(() => {
+                        window.lessIsMoreHideSuggestedPosts();
+                    }, 100);
+                }
             };
             
-            // Observer les mutations DOM pour détecter les nouvelles stories
+            // Observer les mutations DOM pour détecter les nouvelles stories et posts suggérés
             const observer = new MutationObserver(function(mutations) {
                 mutations.forEach(function(mutation) {
                     if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
@@ -556,6 +677,13 @@ class ContentBlocker {
                         if (document.body.classList.contains('lessismore-hidden-stories')) {
                             setTimeout(() => {
                                 window.lessIsMoreHideStories();
+                            }, 25);
+                        }
+                        
+                        // Vérifier si le filtre suggestedPosts est activé
+                        if (document.body.classList.contains('lessismore-hidden-suggestedPosts')) {
+                            setTimeout(() => {
+                                window.lessIsMoreHideSuggestedPosts();
                             }, 25);
                         }
                     }
@@ -602,6 +730,17 @@ class ContentBlocker {
                         window.lessIsMoreShowForYou();
                     }
                 }
+                
+                // Gestion des posts suggérés dans le feed
+                if (document.body.classList.contains('lessismore-hidden-suggestedPosts')) {
+                    window.lessIsMoreHideSuggestedPosts();
+                } else {
+                    // Si le filtre suggestedPosts est désactivé, s'assurer que les posts suggérés sont visibles
+                    const hiddenSuggestions = document.querySelectorAll('[data-lessismore-suggested-post="true"]');
+                    if (hiddenSuggestions.length > 0) {
+                        window.lessIsMoreShowSuggestedPosts();
+                    }
+                }
             }, 1000);
             
             // Préchargement des filtres actifs pour une application plus rapide
@@ -610,6 +749,7 @@ class ContentBlocker {
                 explore: document.body.classList.contains('lessismore-hidden-explore'),
                 stories: document.body.classList.contains('lessismore-hidden-stories'),
                 suggestions: document.body.classList.contains('lessismore-hidden-suggestions'),
+                suggestedPosts: document.body.classList.contains('lessismore-hidden-suggestedPosts'),
                 likes: document.body.classList.contains('lessismore-hidden-likes'),
                 following: document.body.classList.contains('lessismore-hidden-following'),
                 messages: document.body.classList.contains('lessismore-hidden-messages')

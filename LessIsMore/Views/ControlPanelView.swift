@@ -274,6 +274,7 @@ struct ControlPanelView: View {
             // Fallback for types not directly trackable by category
             switch filterType {
             case .suggestions: avgMinutes = 10
+            case .suggestedPosts: avgMinutes = 15
             case .likes: avgMinutes = 5
             default: avgMinutes = 15
             }
@@ -469,6 +470,18 @@ struct ControlPanelView: View {
                     isLocked: !subscriptionManager.isPremium,
                     streakDays: streakTracker.getCurrentStreakDays(for: .suggestions),
                     avgTimePerDay: "10m",
+                    onLockedTap: showPaywall
+                )
+
+                Divider()
+                    .padding(.leading, 16)
+
+                FilterRow(
+                    title: "filter.hideSuggestedPosts".localized,
+                    isEnabled: binding(for: .suggestedPosts),
+                    isLocked: !subscriptionManager.isPremium,
+                    streakDays: streakTracker.getCurrentStreakDays(for: .suggestedPosts),
+                    avgTimePerDay: "15m",
                     onLockedTap: showPaywall
                 )
 

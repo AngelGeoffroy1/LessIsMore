@@ -344,6 +344,7 @@ class UsageTracker: ObservableObject {
         case .messages: return .messages
         case .following: return .feed  // Following mode affects Feed usage
         case .suggestions: return nil   // Not directly trackable
+        case .suggestedPosts: return nil // Not directly trackable
         case .likes: return nil         // Not directly trackable
         }
     }

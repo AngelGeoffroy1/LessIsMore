@@ -31,6 +31,7 @@
 "filter.followingOnly" = "Following only";
 "filter.hideExplore" = "Hide Explore Feed";
 "filter.hideSuggestions" = "Hide Suggestions";
+"filter.hideSuggestedPosts" = "Hide Suggested Posts";
 "filter.hideMessages" = "Hide Messages";
 "filter.hideLikes" = "Hide Likes";
 "filter.perDaySaved" = "~%@/day saved";
