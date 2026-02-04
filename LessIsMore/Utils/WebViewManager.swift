@@ -307,7 +307,8 @@ extension WebViewManager: WKNavigationDelegate {
             !currentURL.hasPrefix("https://www.instagram.com") ||
             currentURL.contains("/p/") ||
             currentURL.contains("/reels/") ||
-            currentURL.contains("/stories/")
+            currentURL.contains("/stories/") ||
+            currentURL.contains("/accounts/")  // Login/onetap nécessite une réinjection
 
         if isNewNavigation {
             // Réinitialiser le flag pour les nouvelles navigations
@@ -327,9 +328,26 @@ extension WebViewManager: WKNavigationDelegate {
 
         print("WebViewManager: didFinish - URL: \(currentURL), hasInjectedFilters: \(hasInjectedFilters)")
 
-        // Éviter les doubles injections lors des redirections
+        // Vérifier si les fonctions JavaScript sont disponibles avant de skip
         if hasInjectedFilters {
-            print("WebViewManager: Filtres déjà injectés, skip")
+            let checkScript = """
+            if (typeof window.lessIsMoreApplyAllFilters === 'function') {
+                'functions_available';
+            } else {
+                'functions_missing';
+            }
+            """
+
+            webView.evaluateJavaScript(checkScript) { [weak self] result, error in
+                guard let self = self else { return }
+
+                if let resultString = result as? String, resultString == "functions_available" {
+                    print("WebViewManager: Filtres déjà injectés et fonctionnels, skip")
+                } else {
+                    print("WebViewManager: Filtres marqués comme injectés mais fonctions manquantes, réinjection")
+                    self.injectContentBlocker()
+                }
+            }
             return
         }
 
