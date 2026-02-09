@@ -13,7 +13,6 @@ struct ContentView: View {
     @StateObject private var authManager = AuthenticationManager()
     @StateObject private var webViewManager = WebViewManager()
     @StateObject private var subscriptionManager = SubscriptionManager()
-    @State private var hasShownPaywall = false
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -28,13 +27,6 @@ struct ContentView: View {
                 .onAppear {
                     // Track session start
                     MixpanelManager.shared.trackSessionStart()
-                    
-                    // Présenter le paywall uniquement la première fois après l'onboarding
-                    if !hasShownPaywall {
-                        MixpanelManager.shared.trackPaywallViewed(placement: "post_onboarding")
-                        subscriptionManager.showPaywall()
-                        hasShownPaywall = true
-                    }
                 }
             } else {
                 // Nouvel utilisateur - afficher l'onboarding
