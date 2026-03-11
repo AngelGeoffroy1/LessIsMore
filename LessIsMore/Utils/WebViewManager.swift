@@ -142,6 +142,9 @@ class WebViewManager: NSObject, ObservableObject {
         newWebView.uiDelegate = self
         newWebView.allowsBackForwardNavigationGestures = true
 
+        // Force mobile User-Agent on iPad to prevent Instagram desktop login loop
+        newWebView.customUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
+
         // Masquer les indicateurs de scroll natifs
         newWebView.scrollView.showsVerticalScrollIndicator = false
         newWebView.scrollView.showsHorizontalScrollIndicator = false
@@ -352,6 +355,12 @@ extension WebViewManager: WKNavigationDelegate {
         }
 
         hasInjectedFilters = true
+
+        // Skip content blocker injection on login/account pages to prevent login loop on iPad
+        if currentURL.contains("/accounts/") || currentURL.contains("/login") || currentURL.contains("/challenge/") {
+            print("WebViewManager: Page de login/compte détectée, skip injection des filtres")
+            return
+        }
 
         // Injection intelligente du script (applique déjà les filtres)
         self.injectContentBlocker()

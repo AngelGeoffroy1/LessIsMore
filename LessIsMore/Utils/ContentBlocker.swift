@@ -547,8 +547,13 @@ class ContentBlocker {
             // Fonction pour masquer le bouton "For you" et forcer le mode Following
             window.lessIsMoreHideForYou = function() {
                 try {
-                    // D'abord, rediriger vers la page Following si on n'y est pas déjà
+                    // Skip on login/account pages to prevent login loop on iPad
                     const currentUrl = window.location.href;
+                    if (currentUrl.includes('/accounts/') || currentUrl.includes('/login') || currentUrl.includes('/challenge/')) {
+                        console.log('LessIsMore: Skip HideForYou on login page');
+                        return;
+                    }
+                    // D'abord, rediriger vers la page Following si on n'y est pas déjà
                     if (!currentUrl.includes('variant=following')) {
                         console.log('Redirection vers Following');
                         // Essayer d'abord de cliquer sur le bouton Following
@@ -599,8 +604,13 @@ class ContentBlocker {
             // Fonction pour restaurer l'affichage du bouton "For you"
             window.lessIsMoreShowForYou = function() {
                 try {
-                    // D'abord, rediriger vers la page For you si on n'y est pas déjà
+                    // Skip on login/account pages to prevent login loop on iPad
                     const currentUrl = window.location.href;
+                    if (currentUrl.includes('/accounts/') || currentUrl.includes('/login') || currentUrl.includes('/challenge/')) {
+                        console.log('LessIsMore: Skip ShowForYou on login page');
+                        return;
+                    }
+                    // D'abord, rediriger vers la page For you si on n'y est pas déjà
                     if (!currentUrl.includes('variant=foryou')) {
                         console.log('Redirection vers For you');
                         // Essayer d'abord de cliquer sur le bouton For you
@@ -783,6 +793,11 @@ class ContentBlocker {
             
             // Nettoyage continu des stories, likes et following si les filtres sont activés
             setInterval(function() {
+                // Skip on login/account pages to prevent login loop on iPad
+                var currentHref = window.location.href;
+                if (currentHref.includes('/accounts/') || currentHref.includes('/login') || currentHref.includes('/challenge/')) {
+                    return;
+                }
                 // Gestion des stories
                 if (document.body.classList.contains('lessismore-hidden-stories')) {
                     window.lessIsMoreHideStories();
@@ -848,8 +863,19 @@ class ContentBlocker {
                     return;
                 }
 
+                // Skip on login/account pages to prevent login loop on iPad
+                var pageUrl = window.location.href;
+                if (pageUrl.includes('/accounts/') || pageUrl.includes('/login') || pageUrl.includes('/challenge/')) {
+                    console.log('LessIsMore: Skip filters on login page');
+                    return;
+                }
+
                 // Redirection automatique si le filtre Following est activé
-                if (activeFilters.following && !window.location.href.includes('variant=following')) {
+                // Skip redirect on login/account pages to prevent login loop on iPad
+                var isLoginPage = window.location.href.includes('/accounts/') ||
+                                  window.location.href.includes('/login') ||
+                                  window.location.href.includes('/challenge/');
+                if (activeFilters.following && !window.location.href.includes('variant=following') && !isLoginPage) {
                     console.log('Redirection automatique vers Following');
                     window.location.href = 'https://www.instagram.com/?variant=following';
                     return;
