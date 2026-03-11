@@ -247,6 +247,11 @@ struct HeaderSwipeZone: View {
         return colorScheme == .dark ? Color.white.opacity(0.25) : Color.black.opacity(0.15)
     }
 
+    // Detect iPad
+    private var isIPad: Bool {
+        UIDevice.current.userInterfaceIdiom == .pad
+    }
+
     var body: some View {
         // Zone en haut avec indicateur
         VStack {
@@ -254,11 +259,11 @@ struct HeaderSwipeZone: View {
 
             Capsule()
                 .fill(handleColor)
-                .frame(width: 36, height: 4)
-                .padding(.bottom, 6)
+                .frame(width: isIPad ? 56 : 36, height: isIPad ? 6 : 4)
+                .padding(.bottom, isIPad ? 8 : 6)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 28)
+        .frame(height: isIPad ? 36 : 28)
         .background(backgroundColor)
         .contentShape(Rectangle())
         .onTapGesture {
