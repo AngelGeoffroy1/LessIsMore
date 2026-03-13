@@ -126,10 +126,11 @@ class WebViewManager: NSObject, ObservableObject {
         configuration.userContentController = userContentController
 
         // Injection du script dès le début du chargement (plus rapide)
+        // forMainFrameOnly: true to avoid injecting into login/auth iframes which causes "Something went wrong" on iPad
         let contentBlockerScript = WKUserScript(
             source: ContentBlocker.getBlockingScript(),
             injectionTime: .atDocumentStart,
-            forMainFrameOnly: false
+            forMainFrameOnly: true
         )
         userContentController.addUserScript(contentBlockerScript)
 
@@ -143,7 +144,8 @@ class WebViewManager: NSObject, ObservableObject {
         newWebView.allowsBackForwardNavigationGestures = true
 
         // Force mobile User-Agent on iPad to prevent Instagram desktop login loop
-        newWebView.customUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
+        // Use a recent iOS version to avoid Instagram detecting a mismatch with device capabilities
+        newWebView.customUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Mobile/15E148 Safari/604.1"
 
         // Masquer les indicateurs de scroll natifs
         newWebView.scrollView.showsVerticalScrollIndicator = false
@@ -357,7 +359,7 @@ extension WebViewManager: WKNavigationDelegate {
         hasInjectedFilters = true
 
         // Skip content blocker injection on login/account pages to prevent login loop on iPad
-        if currentURL.contains("/accounts/") || currentURL.contains("/login") || currentURL.contains("/challenge/") {
+        if currentURL.contains("/accounts/") || currentURL.contains("/login") || currentURL.contains("/challenge/") || currentURL.contains("/consent/") || currentURL.contains("/oauth/") || currentURL.contains("/onetap/") {
             print("WebViewManager: Page de login/compte détectée, skip injection des filtres")
             return
         }

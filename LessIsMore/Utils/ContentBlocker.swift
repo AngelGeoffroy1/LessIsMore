@@ -549,7 +549,7 @@ class ContentBlocker {
                 try {
                     // Skip on login/account pages to prevent login loop on iPad
                     const currentUrl = window.location.href;
-                    if (currentUrl.includes('/accounts/') || currentUrl.includes('/login') || currentUrl.includes('/challenge/')) {
+                    if (currentUrl.includes('/accounts/') || currentUrl.includes('/login') || currentUrl.includes('/challenge/') || currentUrl.includes('/consent/') || currentUrl.includes('/oauth/') || currentUrl.includes('/onetap/')) {
                         console.log('LessIsMore: Skip HideForYou on login page');
                         return;
                     }
@@ -606,7 +606,7 @@ class ContentBlocker {
                 try {
                     // Skip on login/account pages to prevent login loop on iPad
                     const currentUrl = window.location.href;
-                    if (currentUrl.includes('/accounts/') || currentUrl.includes('/login') || currentUrl.includes('/challenge/')) {
+                    if (currentUrl.includes('/accounts/') || currentUrl.includes('/login') || currentUrl.includes('/challenge/') || currentUrl.includes('/consent/') || currentUrl.includes('/oauth/') || currentUrl.includes('/onetap/')) {
                         console.log('LessIsMore: Skip ShowForYou on login page');
                         return;
                     }
@@ -795,7 +795,7 @@ class ContentBlocker {
             setInterval(function() {
                 // Skip on login/account pages to prevent login loop on iPad
                 var currentHref = window.location.href;
-                if (currentHref.includes('/accounts/') || currentHref.includes('/login') || currentHref.includes('/challenge/')) {
+                if (currentHref.includes('/accounts/') || currentHref.includes('/login') || currentHref.includes('/challenge/') || currentHref.includes('/consent/') || currentHref.includes('/oauth/') || currentHref.includes('/onetap/')) {
                     return;
                 }
                 // Gestion des stories
@@ -865,7 +865,7 @@ class ContentBlocker {
 
                 // Skip on login/account pages to prevent login loop on iPad
                 var pageUrl = window.location.href;
-                if (pageUrl.includes('/accounts/') || pageUrl.includes('/login') || pageUrl.includes('/challenge/')) {
+                if (pageUrl.includes('/accounts/') || pageUrl.includes('/login') || pageUrl.includes('/challenge/') || pageUrl.includes('/consent/') || pageUrl.includes('/oauth/') || pageUrl.includes('/onetap/')) {
                     console.log('LessIsMore: Skip filters on login page');
                     return;
                 }
@@ -874,7 +874,10 @@ class ContentBlocker {
                 // Skip redirect on login/account pages to prevent login loop on iPad
                 var isLoginPage = window.location.href.includes('/accounts/') ||
                                   window.location.href.includes('/login') ||
-                                  window.location.href.includes('/challenge/');
+                                  window.location.href.includes('/challenge/') ||
+                                  window.location.href.includes('/consent/') ||
+                                  window.location.href.includes('/oauth/') ||
+                                  window.location.href.includes('/onetap/');
                 if (activeFilters.following && !window.location.href.includes('variant=following') && !isLoginPage) {
                     console.log('Redirection automatique vers Following');
                     window.location.href = 'https://www.instagram.com/?variant=following';
