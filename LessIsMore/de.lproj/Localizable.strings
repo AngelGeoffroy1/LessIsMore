@@ -23,6 +23,7 @@
 "controlPanel.content" = "Inhalt";
 "controlPanel.algorithm" = "Algorithmus";
 "controlPanel.style" = "Stil";
+"controlPanel.activity" = "Aktivität";
 "controlPanel.themes" = "Themes";
 "controlPanel.pro" = "Pro";
 

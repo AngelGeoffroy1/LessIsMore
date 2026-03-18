@@ -72,6 +72,7 @@ class UsageTracker: ObservableObject {
     @Published var todayUsageSeconds: Int = 0
     @Published var weeklyUsage: [WeeklyUsageData] = []
     @Published var monthlyUsage: [MonthlyWeekData] = []
+    @Published var activityDates: Set<String> = []
 
     private var timer: Timer?
     private var isTracking = false
@@ -79,15 +80,40 @@ class UsageTracker: ObservableObject {
 
     private let usageSecondsKey = "usage_today_seconds"
     private let lastDateKey = "usage_last_date"
+    private let activityDatesKey = "activity_dates"
 
     private init() {
         initializeWeeklyUsage()
         initializeMonthlyUsage()
+        loadActivityDates()
         loadUsage()
+        recordTodayActivity()
         updateTodayInWeekly()
         updateCurrentWeekInMonthly()
         setupNotifications()
         startTracking()
+    }
+
+    // MARK: - Activity Calendar
+
+    private func loadActivityDates() {
+        if let saved = userDefaults.stringArray(forKey: activityDatesKey) {
+            activityDates = Set(saved)
+        }
+    }
+
+    func recordTodayActivity() {
+        let today = currentDateString()
+        if !activityDates.contains(today) {
+            activityDates.insert(today)
+            userDefaults.set(Array(activityDates), forKey: activityDatesKey)
+        }
+    }
+
+    func hasActivity(on date: Date) -> Bool {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return activityDates.contains(formatter.string(from: date))
     }
 
     private func initializeWeeklyUsage() {
@@ -498,6 +524,7 @@ class UsageTracker: ObservableObject {
 
     @objc private func appDidBecomeActive() {
         loadUsage() // Recharger au cas où le jour a changé
+        recordTodayActivity()
         startTracking()
     }
 

@@ -46,6 +46,9 @@ struct ControlPanelView: View {
                         // Header avec graphique
                         usageHeader
                         
+                        // Section Calendrier d'activité
+                        ActivityCalendarView(usageTracker: usageTracker)
+
                         // Section Thèmes Instagram
                         themesSection
 
@@ -989,6 +992,149 @@ struct MonthlyUsageChart: View {
                 .padding(.horizontal, 4)
             }
         }
+    }
+}
+
+// MARK: - Activity Calendar Component (GitHub-style)
+
+struct ActivityCalendarView: View {
+    @ObservedObject var usageTracker: UsageTracker
+
+    private let rows = 7
+    private let spacing: CGFloat = 3
+    private let labelWidth: CGFloat = 14
+    private let dayLabels = ["M", "T", "W", "T", "F", "S", "S"]
+
+    /// Calculate columns to fill available width
+    private func columnsAndSize(for totalWidth: CGFloat) -> (columns: Int, squareSize: CGFloat) {
+        let availableForGrid = totalWidth - labelWidth - spacing
+        // Solve: columns * size + (columns - 1) * spacing = availableForGrid
+        // Try increasing columns until squares get too small
+        var bestColumns = 15
+        for c in 12...22 {
+            let size = (availableForGrid - CGFloat(c - 1) * spacing) / CGFloat(c)
+            if size >= 11 {
+                bestColumns = c
+            }
+        }
+        let size = (availableForGrid - CGFloat(bestColumns - 1) * spacing) / CGFloat(bestColumns)
+        return (bestColumns, size)
+    }
+
+    /// First date the user ever used the app
+    private var firstActivityDate: Date? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return usageTracker.activityDates
+            .compactMap { formatter.date(from: $0) }
+            .min()
+    }
+
+    /// Grid: columns = weeks (oldest left, newest right), rows = weekdays (Mon=0..Sun=6)
+    private func calendarDates(columns: Int) -> [[Date?]] {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+
+        var grid: [[Date?]] = Array(repeating: Array(repeating: nil, count: rows), count: columns)
+
+        let todayWeekday = calendar.component(.weekday, from: today) // 1=Sun..7=Sat
+        let todayRow = todayWeekday == 1 ? 6 : todayWeekday - 2
+
+        for col in 0..<columns {
+            let maxRow = (col == columns - 1) ? todayRow : rows - 1
+            for row in 0...maxRow {
+                let weekOffset = (columns - 1) - col
+                let dayOffset = todayRow - row + (weekOffset * 7)
+                if let date = calendar.date(byAdding: .day, value: -dayOffset, to: today) {
+                    grid[col][row] = date
+                }
+            }
+        }
+
+        return grid
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("controlPanel.activity".localized)
+                    .font(AppFonts.subheadline())
+                    .foregroundColor(.secondary)
+
+                Spacer()
+
+                let totalDays = usageTracker.activityDates.count
+                Text("\(totalDays) \(totalDays == 1 ? "common.day".localized : "common.days".localized)")
+                    .font(AppFonts.caption(11))
+                    .foregroundColor(.secondary.opacity(0.6))
+            }
+            .padding(.leading, 4)
+
+            GeometryReader { geometry in
+                let layout = columnsAndSize(for: geometry.size.width)
+                let grid = calendarDates(columns: layout.columns)
+                let sq = layout.squareSize
+
+                HStack(alignment: .top, spacing: spacing) {
+                    // Day labels column
+                    VStack(spacing: spacing) {
+                        ForEach(0..<rows, id: \.self) { i in
+                            Text(dayLabels[i])
+                                .font(.system(size: 9, weight: .medium))
+                                .foregroundColor(.secondary.opacity(0.5))
+                                .frame(width: labelWidth, height: sq)
+                        }
+                    }
+
+                    // Grid
+                    ForEach(0..<layout.columns, id: \.self) { col in
+                        VStack(spacing: spacing) {
+                            ForEach(0..<rows, id: \.self) { row in
+                                if let date = grid[col][row] {
+                                    RoundedRectangle(cornerRadius: 3)
+                                        .fill(colorForDate(date))
+                                        .frame(width: sq, height: sq)
+                                } else {
+                                    Color.clear
+                                        .frame(width: sq, height: sq)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .frame(height: CGFloat(rows) * 13 + CGFloat(rows - 1) * spacing)
+        }
+    }
+
+    private func colorForDate(_ date: Date) -> Color {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let dateStart = calendar.startOfDay(for: date)
+        let isToday = calendar.isDateInToday(date)
+        let hasActivity = usageTracker.hasActivity(on: date)
+
+        if hasActivity {
+            return isToday ? Color.green : Color.green.opacity(0.6)
+        }
+
+        // Future → neutral
+        if dateStart > today {
+            return Color.primary.opacity(0.06)
+        }
+
+        // Before first activity → neutral
+        if let first = firstActivityDate, dateStart < calendar.startOfDay(for: first) {
+            return Color.primary.opacity(0.06)
+        }
+
+        // Today (already recorded via hasActivity above, so this is just-opened state)
+        if isToday {
+            return Color.green
+        }
+
+        // Past day after first use, missed → red
+        return Color.red.opacity(0.35)
     }
 }
 
