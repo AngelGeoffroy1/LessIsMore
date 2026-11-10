@@ -1,5 +1,5 @@
 {
-  "originHash" : "33e2a7f120f05e2058e300cca02ccba309267b932b84eac9a86b08997c1174a4",
+  "originHash" : "24ffdbecfc0268089d17b070465ccae481786c582ba8eb986f7e452f8b43dd14",
   "pins" : [
     {
       "identity" : "mixpanel-swift",
@@ -11,12 +11,12 @@
       }
     },
     {
-      "identity" : "superscript-ios",
+      "identity" : "superscript-ios-next",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/superwall/Superscript-iOS",
+      "location" : "https://github.com/superwall/superscript-ios-next",
       "state" : {
-        "revision" : "bde42f1c7652a69a469677978ed97cba92c4dd2c",
-        "version" : "1.0.10"
+        "revision" : "6388170521587bdad417485ba82bffe05d4d2a30",
+        "version" : "1.0.18"
       }
     },
     {
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/superwall/Superwall-iOS",
       "state" : {
-        "revision" : "886c35c556bdac8f8fda6c765239aa908c16e4e5",
-        "version" : "4.10.6"
+        "revision" : "035d7d093b4f7ae837ae9b80b4ab9fd2b72f1e92",
+        "version" : "4.19.1"
       }
     }
   ],

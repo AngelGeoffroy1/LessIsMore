@@ -191,19 +191,13 @@ class ContentBlocker {
                 /* Masquer les suggestions de la sidebar */
                 .lessismore-hidden-suggestions aside,
                 .lessismore-hidden-suggestions [data-testid*="suggestion"],
-                .lessismore-hidden-suggestions div[style*="position: sticky"],
-                .lessismore-hidden-suggestions div:has(> div > div > span:contains("Suggestions pour vous")) {
+                .lessismore-hidden-suggestions div[style*="position: sticky"] {
                     display: none !important;
                 }
                 
                 /* Masquer les posts suggérés dans le feed */
-                .lessismore-hidden-suggestedPosts article:has(span:contains("Suggested for you")),
-                .lessismore-hidden-suggestedPosts article:has(span:contains("Suggéré pour vous")),
-                .lessismore-hidden-suggestedPosts article:has(span:contains("Suggerido para ti")),
-                .lessismore-hidden-suggestedPosts article:has(span:contains("Für dich vorgeschlagen")),
+                /* Note: ":contains()" is not valid CSS and would invalidate the whole rule; text matching is done in JS */
                 .lessismore-hidden-suggestedPosts article:has([data-testid*="suggested"]),
-                .lessismore-hidden-suggestedPosts div:has(> article):has(span:contains("Suggested")),
-                .lessismore-hidden-suggestedPosts div:has(> article):has(span:contains("Suggéré")),
                 .lessismore-hidden-suggestedPosts [data-lessismore-suggested-post="true"] {
                     display: none !important;
                 }
@@ -418,7 +412,7 @@ class ContentBlocker {
                         if (el.style.display !== 'none') {
                             el.style.setProperty('display', 'none', 'important');
                             // Marquer l'élément comme masqué par LessIsMore
-                            el.setAttribute('data-lessismore-hidden', 'true');
+                            el.setAttribute('data-lessismore-hidden-stories', 'true');
                         }
                     });
                 });
@@ -439,7 +433,7 @@ class ContentBlocker {
                             el.offsetWidth > 50 && el.offsetHeight > 50) {
                             el.style.setProperty('display', 'none', 'important');
                             // Marquer l'élément comme masqué par LessIsMore
-                            el.setAttribute('data-lessismore-hidden', 'true');
+                            el.setAttribute('data-lessismore-hidden-stories', 'true');
                         }
                     });
                 });
@@ -451,7 +445,7 @@ class ContentBlocker {
                     if (firstChild.style.overflowX === 'auto' || 
                         firstChild.style.overflowX === 'scroll') {
                         firstChild.style.setProperty('display', 'none', 'important');
-                        firstChild.setAttribute('data-lessismore-hidden', 'true');
+                        firstChild.setAttribute('data-lessismore-hidden-stories', 'true');
                     }
                 }
             };
@@ -459,10 +453,10 @@ class ContentBlocker {
             // Fonction pour restaurer l'affichage des stories
             window.lessIsMoreShowStories = function() {
                 // Restaurer tous les éléments masqués par LessIsMore
-                const hiddenElements = document.querySelectorAll('[data-lessismore-hidden="true"]');
+                const hiddenElements = document.querySelectorAll('[data-lessismore-hidden-stories="true"]');
                 hiddenElements.forEach(el => {
                     el.style.removeProperty('display');
-                    el.removeAttribute('data-lessismore-hidden');
+                    el.removeAttribute('data-lessismore-hidden-stories');
                 });
                 
                 console.log('Stories restaurées:', hiddenElements.length, 'éléments');
@@ -470,73 +464,40 @@ class ContentBlocker {
             
             // Fonction pour masquer les compteurs de likes - très précise
             window.lessIsMoreHideLikes = function() {
-                const likeSelectors = [
-                    '[data-testid="like-count"]',
-                    '[data-testid="likes-count"]',
-                    '[data-testid="likes"]'
-                ];
-                
-                // Masquer avec CSS - sélecteurs très précis
-                likeSelectors.forEach(selector => {
-                    const elements = document.querySelectorAll(selector);
-                    elements.forEach(el => {
-                        if (el.style.display !== 'none') {
-                            el.style.setProperty('display', 'none', 'important');
-                            el.setAttribute('data-lessismore-hidden', 'true');
-                        }
-                    });
-                });
-                
-                // Masquer les liens vers les likes (plus précis)
-                const likeLinks = document.querySelectorAll('a[href*="/liked_by/"], a[href*="/likes/"]');
-                likeLinks.forEach(link => {
-                    if (link.style.display !== 'none') {
-                        link.style.setProperty('display', 'none', 'important');
-                        link.setAttribute('data-lessismore-hidden', 'true');
+                const markHidden = el => {
+                    if (el && el.getAttribute('data-lessismore-hidden-likes') !== 'true') {
+                        el.style.setProperty('display', 'none', 'important');
+                        el.setAttribute('data-lessismore-hidden-likes', 'true');
+                    }
+                };
+
+                // Legacy selectors (older Instagram markup)
+                document.querySelectorAll('[data-testid="like-count"], [data-testid="likes-count"], a[href*="/liked_by/"]').forEach(markHidden);
+
+                // Current markup: in each post's action bar the first child is the like button
+                // and the element right after it is the like counter (a numeric span[role="button"]).
+                // Language-independent: relies on structure, not on labels.
+                const counterPattern = /^[\\d\\s.,\\u00a0\\u202f]+\\s*[A-Za-z\\u00c0-\\u00ff.]{0,4}$/;
+                document.querySelectorAll('article').forEach(article => {
+                    const firstCount = Array.from(article.querySelectorAll('span[role="button"]'))
+                        .find(s => counterPattern.test((s.textContent || '').trim()));
+                    if (!firstCount) { return; }
+                    const actionBar = firstCount.parentElement;
+                    const likeButton = actionBar && actionBar.firstElementChild;
+                    const likeCounter = likeButton && likeButton.nextElementSibling;
+                    if (likeButton && likeButton.querySelector('svg') && likeCounter &&
+                        counterPattern.test((likeCounter.textContent || '').trim())) {
+                        markHidden(likeCounter);
                     }
                 });
-                
-                // Masquer les aria-label très spécifiques aux compteurs de likes
-                const ariaLabels = document.querySelectorAll('[aria-label]');
-                ariaLabels.forEach(el => {
-                    const ariaLabel = el.getAttribute('aria-label') || '';
-                    // Seulement masquer si c'est vraiment un compteur de likes
-                    if ((ariaLabel.includes('like') || ariaLabel.includes('Like') || ariaLabel.includes('LIKES')) &&
-                        ariaLabel.includes('person') && 
-                        (ariaLabel.includes('other') || ariaLabel.includes('person') || ariaLabel.includes('people'))) {
-                        if (el.style.display !== 'none') {
-                            el.style.setProperty('display', 'none', 'important');
-                            el.setAttribute('data-lessismore-hidden', 'true');
-                        }
-                    }
-                });
-                
-                // Masquer les spans qui sont clairement des compteurs de likes
-                const allSpans = document.querySelectorAll('span');
-                allSpans.forEach(span => {
-                    const text = span.textContent || span.innerText || '';
-                    // Seulement masquer si c'est un nombre suivi de "like" ou "likes"
-                    if (text.match(/^\\d+\\s*(like|likes|Like|Likes)$/i)) {
-                        if (span.style.display !== 'none') {
-                            span.style.setProperty('display', 'none', 'important');
-                            span.setAttribute('data-lessismore-hidden', 'true');
-                        }
-                    }
-                });
-                
-                console.log('Filtre likes appliqué - éléments masqués:', document.querySelectorAll('[data-lessismore-hidden="true"]').length);
             };
-            
+
             // Fonction pour restaurer l'affichage des likes
             window.lessIsMoreShowLikes = function() {
-                // Restaurer tous les éléments masqués par LessIsMore
-                const hiddenElements = document.querySelectorAll('[data-lessismore-hidden="true"]');
-                hiddenElements.forEach(el => {
+                document.querySelectorAll('[data-lessismore-hidden-likes="true"]').forEach(el => {
                     el.style.removeProperty('display');
-                    el.removeAttribute('data-lessismore-hidden');
+                    el.removeAttribute('data-lessismore-hidden-likes');
                 });
-                
-                console.log('Likes restaurés:', hiddenElements.length, 'éléments');
             };
             
             // Fonction de débogage simplifiée pour analyser la structure des boutons For you/Following
@@ -573,7 +534,7 @@ class ContentBlocker {
                     forYouElements.forEach(function(el) {
                         if (el && el.style) {
                             el.style.setProperty('display', 'none', 'important');
-                            el.setAttribute('data-lessismore-hidden', 'true');
+                            el.setAttribute('data-lessismore-hidden-following', 'true');
                         }
                     });
                     
@@ -582,7 +543,7 @@ class ContentBlocker {
                     homeLinks.forEach(function(link) {
                         if (link && link.style) {
                             link.style.setProperty('display', 'none', 'important');
-                            link.setAttribute('data-lessismore-hidden', 'true');
+                            link.setAttribute('data-lessismore-hidden-following', 'true');
                         }
                     });
                     
@@ -591,7 +552,7 @@ class ContentBlocker {
                     tabs.forEach(function(tab) {
                         if (tab && tab.getAttribute('aria-selected') === 'false') {
                             tab.style.setProperty('display', 'none', 'important');
-                            tab.setAttribute('data-lessismore-hidden', 'true');
+                            tab.setAttribute('data-lessismore-hidden-following', 'true');
                         }
                     });
                     
@@ -626,11 +587,11 @@ class ContentBlocker {
                     }
                     
                     // Restaurer tous les éléments masqués par LessIsMore
-                    const hiddenElements = document.querySelectorAll('[data-lessismore-hidden="true"]');
+                    const hiddenElements = document.querySelectorAll('[data-lessismore-hidden-following="true"]');
                     hiddenElements.forEach(function(el) {
                         if (el && el.style) {
                             el.style.removeProperty('display');
-                            el.removeAttribute('data-lessismore-hidden');
+                            el.removeAttribute('data-lessismore-hidden-following');
                         }
                     });
                     
@@ -643,67 +604,29 @@ class ContentBlocker {
             // Fonction pour masquer les posts suggérés dans le feed
             window.lessIsMoreHideSuggestedPosts = function() {
                 try {
-                    // Mots-clés de suggestion dans différentes langues
-                    const suggestionKeywords = [
-                        'Suggested for you',
-                        'Suggéré pour vous',
-                        'Suggerido para ti',
-                        'Für dich vorgeschlagen',
-                        'Sugerido para ti',
-                        'Consigliato per te',
-                        'Suggested',
-                        'Suggéré',
-                        'Voor jou aanbevolen'
-                    ];
-                    
-                    // Parcourir tous les articles (posts) dans le feed
-                    const articles = document.querySelectorAll('article');
-                    let hiddenCount = 0;
-                    
-                    articles.forEach(article => {
-                        // Vérifier si l'article contient un texte de suggestion
-                        const articleText = article.innerText || article.textContent || '';
-                        const isSuggested = suggestionKeywords.some(keyword => 
-                            articleText.includes(keyword)
-                        );
-                        
-                        if (isSuggested && article.style.display !== 'none') {
-                            // Masquer l'article et son conteneur parent si nécessaire
-                            article.style.setProperty('display', 'none', 'important');
-                            article.setAttribute('data-lessismore-suggested-post', 'true');
-                            hiddenCount++;
-                            
-                            // Vérifier le parent direct pour masquer le conteneur complet
-                            const parent = article.parentElement;
-                            if (parent && parent.children.length === 1) {
-                                parent.style.setProperty('display', 'none', 'important');
-                                parent.setAttribute('data-lessismore-suggested-post', 'true');
+                    // Exact header labels Instagram shows above a suggested post (one per UI language).
+                    // Matched against whole leaf text only, so captions mentioning these words are not hidden.
+                    const suggestionLabels = new Set([
+                        'Suggested for you', 'Suggestions for you',
+                        'Suggestions pour vous', 'Suggéré pour vous',
+                        'Sugerencias para ti', 'Sugerido para ti', 'Suggerido para ti',
+                        'Vorschläge für dich', 'Für dich vorgeschlagen',
+                        'Suggerimenti per te', 'Consigliato per te',
+                        'Sugestões para você', 'Sugestões para ti',
+                        'Suggesties voor jou', 'Voor jou aanbevolen'
+                    ]);
+
+                    document.querySelectorAll('article').forEach(article => {
+                        if (article.getAttribute('data-lessismore-suggested-post') === 'true') { return; }
+                        const header = article.querySelectorAll('span, div');
+                        for (const el of header) {
+                            if (el.childElementCount === 0 && suggestionLabels.has((el.textContent || '').trim())) {
+                                article.style.setProperty('display', 'none', 'important');
+                                article.setAttribute('data-lessismore-suggested-post', 'true');
+                                break;
                             }
                         }
                     });
-                    
-                    // Chercher également les spans avec le texte de suggestion et masquer leurs parents articles
-                    const allSpans = document.querySelectorAll('span, div');
-                    allSpans.forEach(span => {
-                        const text = span.innerText || span.textContent || '';
-                        const isSuggestionText = suggestionKeywords.some(keyword => 
-                            text.trim() === keyword || text.includes(keyword)
-                        );
-                        
-                        if (isSuggestionText) {
-                            // Remonter pour trouver l'article parent
-                            let parentArticle = span.closest('article');
-                            if (parentArticle && parentArticle.style.display !== 'none') {
-                                parentArticle.style.setProperty('display', 'none', 'important');
-                                parentArticle.setAttribute('data-lessismore-suggested-post', 'true');
-                                hiddenCount++;
-                            }
-                        }
-                    });
-                    
-                    if (hiddenCount > 0) {
-                        console.log('LessIsMore: Posts suggérés masqués:', hiddenCount);
-                    }
                 } catch (error) {
                     console.log('Erreur dans lessIsMoreHideSuggestedPosts:', error.message);
                 }
@@ -731,10 +654,10 @@ class ContentBlocker {
                 console.log('Application des filtres:', filters);
                 
                 // D'abord, restaurer tous les éléments masqués
-                const hiddenElements = document.querySelectorAll('[data-lessismore-hidden="true"]');
+                const hiddenElements = document.querySelectorAll('[data-lessismore-hidden-stories="true"], [data-lessismore-hidden-likes="true"], [data-lessismore-hidden-following="true"]');
                 hiddenElements.forEach(el => {
                     el.style.removeProperty('display');
-                    el.removeAttribute('data-lessismore-hidden');
+                    el.removeAttribute('data-lessismore-hidden-stories'); el.removeAttribute('data-lessismore-hidden-likes'); el.removeAttribute('data-lessismore-hidden-following');
                 });
                 
                 // Ensuite, appliquer les filtres actifs
@@ -803,7 +726,7 @@ class ContentBlocker {
                     window.lessIsMoreHideStories();
                 } else {
                     // Si le filtre stories est désactivé, s'assurer que les stories sont visibles
-                    const hiddenStories = document.querySelectorAll('[data-lessismore-hidden="true"]');
+                    const hiddenStories = document.querySelectorAll('[data-lessismore-hidden-stories="true"]');
                     if (hiddenStories.length > 0) {
                         window.lessIsMoreShowStories();
                     }
@@ -814,7 +737,7 @@ class ContentBlocker {
                     window.lessIsMoreHideLikes();
                 } else {
                     // Si le filtre likes est désactivé, s'assurer que les likes sont visibles
-                    const hiddenLikes = document.querySelectorAll('[data-lessismore-hidden="true"]');
+                    const hiddenLikes = document.querySelectorAll('[data-lessismore-hidden-likes="true"]');
                     if (hiddenLikes.length > 0) {
                         window.lessIsMoreShowLikes();
                     }
@@ -825,7 +748,7 @@ class ContentBlocker {
                     window.lessIsMoreHideForYou();
                 } else {
                     // Si le filtre following est désactivé, s'assurer que le bouton "For you" est visible
-                    const hiddenForYou = document.querySelectorAll('[data-lessismore-hidden="true"]');
+                    const hiddenForYou = document.querySelectorAll('[data-lessismore-hidden-following="true"]');
                     if (hiddenForYou.length > 0) {
                         window.lessIsMoreShowForYou();
                     }

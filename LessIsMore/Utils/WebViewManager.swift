@@ -142,6 +142,11 @@ class WebViewManager: NSObject, ObservableObject {
         newWebView.navigationDelegate = self
         newWebView.uiDelegate = self
         newWebView.allowsBackForwardNavigationGestures = true
+        #if DEBUG
+        // Allow Safari Web Inspector on debug builds (Develop menu > Simulator)
+        newWebView.isInspectable = true
+        startDebugEvalWatcher()
+        #endif
 
         // Force mobile User-Agent on iPad to prevent Instagram desktop login loop
         // Use a recent iOS version to avoid Instagram detecting a mismatch with device capabilities
@@ -277,6 +282,28 @@ class WebViewManager: NSObject, ObservableObject {
         }
     }
     
+    #if DEBUG
+    // MARK: - Debug JS evaluation (debug builds only)
+    /// Every 2s, if `tmp/debug_eval.js` exists in the app container, evaluates it in the
+    /// Instagram page, prints the result as `DEBUG_EVAL_RESULT:` and deletes the file.
+    /// Lets a developer inspect the live DOM from a terminal without the Web Inspector.
+    private func startDebugEvalWatcher() {
+        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("debug_eval.js")
+        Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
+            guard let self, let webView = self.webView,
+                  let source = try? String(contentsOf: fileURL, encoding: .utf8) else { return }
+            try? FileManager.default.removeItem(at: fileURL)
+            webView.evaluateJavaScript(source) { result, error in
+                if let error {
+                    print("DEBUG_EVAL_ERROR: \(error)")
+                } else {
+                    print("DEBUG_EVAL_RESULT: \(result ?? "nil")")
+                }
+            }
+        }
+    }
+    #endif
+
     // MARK: - Theme Application
     
     func applyTheme(_ theme: InstagramTheme) {

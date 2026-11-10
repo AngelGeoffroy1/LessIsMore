@@ -22,11 +22,36 @@ class SubscriptionManager: ObservableObject {
         observeSubscriptionStatus()
     }
 
+    #if DEBUG
+    /// Debug-only override to test premium features without a purchase. Compiled out of release builds.
+    private static let debugForcePremiumKey = "debug_forcePremium"
+
+    var debugForcePremium: Bool {
+        get { UserDefaults.standard.bool(forKey: Self.debugForcePremiumKey) }
+        set {
+            UserDefaults.standard.set(newValue, forKey: Self.debugForcePremiumKey)
+            if newValue {
+                isPremium = true
+            } else if !Superwall.shared.subscriptionStatus.isActive {
+                isPremium = false
+                disableAllFiltersIfAnyEnabled()
+            }
+        }
+    }
+    #endif
+
     private func observeSubscriptionStatus() {
         Superwall.shared.$subscriptionStatus
             .sink { [weak self] status in
                 guard let self = self else { return }
-                
+
+                #if DEBUG
+                if self.debugForcePremium {
+                    self.isPremium = true
+                    return
+                }
+                #endif
+
                 switch status {
                 case .active:
                     self.isPremium = true

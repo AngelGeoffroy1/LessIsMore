@@ -92,6 +92,24 @@ struct SettingsView: View {
                             .cornerRadius(16)
                         }
 
+                        #if DEBUG
+                        // Debug Section (not compiled in release builds)
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("DEBUG")
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundColor(.primary.opacity(0.6))
+                                .padding(.leading, 16)
+
+                            Toggle("Forcer Premium", isOn: Binding(
+                                get: { subscriptionManager.debugForcePremium },
+                                set: { subscriptionManager.debugForcePremium = $0 }
+                            ))
+                            .padding(16)
+                            .background(Color.primary.opacity(0.05))
+                            .cornerRadius(16)
+                        }
+                        #endif
+
                         // Account Section
                         VStack(alignment: .leading, spacing: 12) {
                             Text("settings.account".localized)
