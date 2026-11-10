@@ -28,6 +28,7 @@
 "controlPanel.pro" = "Pro";
 
 // MARK: - Filters
+"filter.hideShorts" = "Masquer Shorts";
 "filter.hideReels" = "Masquer Reels";
 "filter.hideStories" = "Masquer Stories";
 "filter.followingOnly" = "Abonnements uniquement";
@@ -115,10 +116,10 @@
 
 // MARK: - Onboarding Welcome
 "onboarding.back" = "Retour";
-"onboarding.welcome.greeting" = "Salut ! 👋 Je suis Lessy,";
-"onboarding.welcome.line1" = "ton compagnon pour reprendre";
-"onboarding.welcome.line2" = "le contrôle de ton temps";
-"onboarding.welcome.line3" = "sur Instagram !";
+"onboarding.welcome.greeting" = "Ton feed,";
+"onboarding.welcome.line1" = "à ta façon.";
+"onboarding.welcome.line2" = "Instagram et YouTube,";
+"onboarding.welcome.line3" = "sans le scroll infini.";
 
 // MARK: - Onboarding Name
 "onboarding.name.question" = "Comment je peux t'appeler ? 😊";

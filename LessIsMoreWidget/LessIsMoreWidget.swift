@@ -32,14 +32,10 @@ enum WidgetUsageCategory: String, CaseIterable {
     case other = "Other"
     
     var color: Color {
-        switch self {
-        case .feed: return .blue
-        case .reels: return Color(red: 0.98, green: 0.05, blue: 0.44)
-        case .stories: return Color(red: 1.0, green: 0.60, blue: 0.0)
-        case .messages: return .purple
-        case .explore: return .green
-        case .other: return .gray
-        }
+        // Monochrome DA: categories are told apart by grey shade
+        let index = WidgetUsageCategory.allCases.firstIndex(of: self) ?? 0
+        let step = 0.75 / Double(WidgetUsageCategory.allCases.count - 1)
+        return Color.primary.opacity(1.0 - Double(index) * step)
     }
 }
 
@@ -137,10 +133,10 @@ struct LessIsMoreEntry: TimelineEntry {
     var usageColor: Color {
         let minutes = todaySeconds / 60
         switch minutes {
-        case 0...30: return .green
-        case 31...60: return .yellow
-        case 61...90: return .orange
-        default: return .red
+        case 0...30: return .primary.opacity(0.45)
+        case 31...60: return .primary.opacity(0.65)
+        case 61...90: return .primary.opacity(0.85)
+        default: return .primary
         }
     }
     
@@ -195,9 +191,8 @@ struct LessIsMoreProvider: TimelineProvider {
 
 let instagramGradient = LinearGradient(
     colors: [
-        Color(red: 1.0, green: 0.60, blue: 0.0),    // Orange
-        Color(red: 0.98, green: 0.05, blue: 0.44),  // Rose/Pink
-        Color(red: 0.73, green: 0.20, blue: 0.82)   // Purple
+        Color.primary,
+        Color.primary // Monochrome DA
     ],
     startPoint: .leading,
     endPoint: .trailing
@@ -262,7 +257,7 @@ struct SmallStreakWidgetView: View {
                     Text("\(entry.personalRecord)")
                         .font(.system(size: 10, weight: .semibold))
                 }
-                .foregroundColor(.yellow.opacity(0.8))
+                .foregroundColor(.primary.opacity(0.8))
             }
         }
         .padding(12)
@@ -308,12 +303,12 @@ struct SmallTimeWidgetView: View {
                     Text("\(abs(Int(entry.percentageChange)))%")
                         .font(.system(size: 11, weight: .semibold))
                 }
-                .foregroundColor(entry.percentageChange < 0 ? .green : .red)
+                .foregroundColor(.primary)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(
                     Capsule()
-                        .fill((entry.percentageChange < 0 ? Color.green : Color.red).opacity(0.15))
+                        .fill(Color.primary.opacity(0.1))
                 )
             } else {
                 Text("vs yesterday")
@@ -348,10 +343,10 @@ struct UsageProgressBar: View {
     
     private var progressColor: Color {
         switch minutes {
-        case 0...30: return .green
-        case 31...60: return .yellow
-        case 61...90: return .orange
-        default: return .red
+        case 0...30: return .primary.opacity(0.45)
+        case 31...60: return .primary.opacity(0.65)
+        case 61...90: return .primary.opacity(0.85)
+        default: return .primary
         }
     }
     
@@ -433,7 +428,7 @@ struct MediumComboWidgetView: View {
                         Text("\(abs(Int(entry.percentageChange)))% vs hier")
                             .font(.system(size: 9, weight: .medium))
                     }
-                    .foregroundColor(entry.percentageChange < 0 ? .green : .red)
+                    .foregroundColor(.primary)
                 }
             }
             .frame(maxWidth: .infinity)
@@ -654,12 +649,12 @@ struct LargeChartWidgetView: View {
                         Text("\(abs(Int(entry.percentageChange)))%")
                             .font(.system(size: 12, weight: .semibold))
                     }
-                    .foregroundColor(entry.percentageChange < 0 ? .green : .red)
+                    .foregroundColor(.primary)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(
                         Capsule()
-                            .fill((entry.percentageChange < 0 ? Color.green : Color.red).opacity(0.15))
+                            .fill(Color.primary.opacity(0.1))
                     )
                 }
                 

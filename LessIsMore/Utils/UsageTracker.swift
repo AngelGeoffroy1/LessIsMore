@@ -23,14 +23,10 @@ class UsageTracker: ObservableObject {
         case other = "Other"
         
         var color: Color {
-            switch self {
-            case .feed: return .blue
-            case .reels: return Color(red: 0.98, green: 0.05, blue: 0.44) // Rose Insta
-            case .stories: return Color(red: 1.0, green: 0.60, blue: 0.0) // Orange Insta
-            case .messages: return .purple
-            case .explore: return .green
-            case .other: return .gray
-            }
+            // Monochrome DA: categories are told apart by grey shade, darkest = most important
+            let index = UsageCategory.allCases.firstIndex(of: self) ?? 0
+            let step = 0.75 / Double(UsageCategory.allCases.count - 1)
+            return Color.primary.opacity(1.0 - Double(index) * step)
         }
     }
 
@@ -372,6 +368,7 @@ class UsageTracker: ObservableObject {
         case .suggestions: return nil   // Not directly trackable
         case .suggestedPosts: return nil // Not directly trackable
         case .likes: return nil         // Not directly trackable
+        case .youtubeShorts: return nil // YouTube time is not split by category
         }
     }
     

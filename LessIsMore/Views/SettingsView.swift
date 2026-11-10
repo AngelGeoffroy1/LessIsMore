@@ -15,8 +15,7 @@ struct SettingsView: View {
     var body: some View {
         ZStack {
             // Translucent glassmorphism background
-            VisualEffectView(effect: UIBlurEffect(style: colorScheme == .dark ? .systemUltraThinMaterialDark : .systemUltraThinMaterialLight))
-                .opacity(0.4)
+            Color(uiColor: .systemBackground)
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
@@ -38,7 +37,7 @@ struct SettingsView: View {
                                 .padding(.leading, 16)
 
                             VStack(spacing: 0) {
-                                SettingRow(icon: "arrow.clockwise", iconColor: .blue, title: "settings.reloadInstagram".localized) {
+                                SettingRow(icon: "arrow.clockwise", iconColor: .primary, title: "settings.reloadInstagram".localized) {
                                     webViewManager.loadInstagram()
                                     dismiss()
                                 }
@@ -73,12 +72,12 @@ struct SettingsView: View {
                                 .padding(.leading, 16)
 
                             VStack(spacing: 0) {
-                                SettingRow(icon: "info.circle", iconColor: .orange, title: "settings.resetOnboarding".localized) {
+                                SettingRow(icon: "info.circle", iconColor: .primary, title: "settings.resetOnboarding".localized) {
                                     authManager.resetOnboarding()
                                     dismiss()
                                 }
                                 Divider().padding(.leading, 50)
-                                SettingRow(icon: "envelope", iconColor: .blue, title: "settings.contact".localized) {
+                                SettingRow(icon: "envelope", iconColor: .primary, title: "settings.contact".localized) {
                                     MixpanelManager.shared.trackContactSupport()
                                     showContactModal = true
                                 }
@@ -166,16 +165,16 @@ struct SettingsView: View {
             Button(action: { dismiss() }) {
                 Image(systemName: "chevron.left")
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.ink)
                     .frame(width: 40, height: 40)
-                    .background(Circle().fill(Color.white.opacity(0.1)))
+                    .background(Circle().fill(Theme.card))
             }
 
             Spacer()
 
             Text("settings.title".localized)
                 .font(.system(size: 18, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(Theme.ink)
 
             Spacer()
 
@@ -196,11 +195,11 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("settings.upgradeToPro".localized)
                         .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.inkInverse)
 
                     Text("settings.upgradeDesc".localized)
                         .font(.system(size: 13))
-                        .foregroundColor(.white.opacity(0.8))
+                        .foregroundColor(Theme.inkInverse.opacity(0.75))
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -209,21 +208,10 @@ struct SettingsView: View {
 
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(.white.opacity(0.5))
+                    .foregroundColor(Theme.inkInverse.opacity(0.5))
             }
             .padding(20)
-            .background(
-                LinearGradient(
-                    colors: [
-                        Color(red: 0.98, green: 0.05, blue: 0.44), // Rose
-                        Color(red: 0.73, green: 0.20, blue: 0.82), // Violet
-                        Color(red: 1.0, green: 0.60, blue: 0.0)    // Orange
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .cornerRadius(24)
+            .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Theme.ink))
         }
     }
 
@@ -250,7 +238,7 @@ struct SettingRow: View {
                 // Icon
                 ZStack {
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(iconColor.opacity(0.15))
+                        .fill(Theme.card)
                         .frame(width: 34, height: 34)
                     
                     Image(systemName: icon)
@@ -304,12 +292,12 @@ struct LanguageSelectorRow: View {
             // Icon
             ZStack {
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.blue.opacity(0.15))
+                    .fill(Theme.card)
                     .frame(width: 34, height: 34)
                 
                 Image(systemName: "globe")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.blue)
+                    .foregroundColor(Theme.ink)
             }
             
             // Current language name
@@ -353,7 +341,7 @@ struct ContactModal: View {
     var body: some View {
         ZStack {
             // Translucent background
-            VisualEffectView(effect: UIBlurEffect(style: colorScheme == .dark ? .systemUltraThinMaterialDark : .systemUltraThinMaterialLight))
+            Color(uiColor: .systemBackground)
                 .ignoresSafeArea()
             
             VStack(spacing: 24) {
@@ -368,12 +356,12 @@ struct ContactModal: View {
                 // Icon
                 ZStack {
                     Circle()
-                        .fill(Color.blue.opacity(0.15))
+                        .fill(Theme.card)
                         .frame(width: 80, height: 80)
                     
                     Image(systemName: "envelope.fill")
                         .font(.system(size: 36))
-                        .foregroundColor(.blue)
+                        .foregroundColor(Theme.ink)
                 }
                 
                 // Title
@@ -401,7 +389,7 @@ struct ContactModal: View {
                     }) {
                         Image(systemName: "doc.on.doc")
                             .font(.system(size: 16))
-                            .foregroundColor(.blue)
+                            .foregroundColor(Theme.ink)
                     }
                 }
                 .padding(.horizontal, 20)
@@ -425,7 +413,7 @@ struct AboutModal: View {
     var body: some View {
         ZStack {
             // Translucent background
-            VisualEffectView(effect: UIBlurEffect(style: colorScheme == .dark ? .systemUltraThinMaterialDark : .systemUltraThinMaterialLight))
+            Color(uiColor: .systemBackground)
                 .ignoresSafeArea()
             
             VStack(spacing: 24) {

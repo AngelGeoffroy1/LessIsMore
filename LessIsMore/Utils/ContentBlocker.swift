@@ -16,7 +16,16 @@ enum FilterType: String, CaseIterable {
     case likes = "likes"
     case following = "following"
     case messages = "messages"
-    
+    case youtubeShorts = "youtubeShorts"
+
+    /// Platform whose page this filter acts on.
+    var platform: Platform {
+        switch self {
+        case .youtubeShorts: return .youtube
+        default: return .instagram
+        }
+    }
+
     var displayName: String {
         switch self {
         case .reels: return "Reels"
@@ -27,6 +36,7 @@ enum FilterType: String, CaseIterable {
         case .likes: return "Like Counter"
         case .following: return "Following Only Mode"
         case .messages: return "Messages"
+        case .youtubeShorts: return "YouTube Shorts"
         }
     }
     
@@ -131,6 +141,8 @@ class ContentBlocker {
 
         return """
         (function() {
+            // Instagram-only script: do nothing on other sites (e.g. YouTube)
+            if (!/(^|\\.)instagram\\.com$/.test(location.hostname)) { return; }
             console.log('LessIsMore: Initialisation du bloqueur de contenu');
 
             // Filtres initiaux injectés depuis l'app iOS

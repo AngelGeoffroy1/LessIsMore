@@ -125,14 +125,8 @@ class WebViewManager: NSObject, ObservableObject {
         userContentController.add(self, name: "lessIsMoreTracker")
         configuration.userContentController = userContentController
 
-        // Injection du script dès le début du chargement (plus rapide)
-        // forMainFrameOnly: true to avoid injecting into login/auth iframes which causes "Something went wrong" on iPad
-        let contentBlockerScript = WKUserScript(
-            source: ContentBlocker.getBlockingScript(),
-            injectionTime: .atDocumentStart,
-            forMainFrameOnly: true
-        )
-        userContentController.addUserScript(contentBlockerScript)
+        // Injection des scripts dès le début du chargement (plus rapide)
+        Self.installFilterScripts(in: userContentController)
 
         // Permettre la lecture des médias
         configuration.allowsInlineMediaPlayback = true
@@ -169,6 +163,11 @@ class WebViewManager: NSObject, ObservableObject {
         }
         hasInitiallyLoaded = true
 
+        if Platform.current == .youtube {
+            webView.load(URLRequest(url: Platform.youtube.homeURL))
+            return
+        }
+
         // Vérifier si le filtre Following est activé
         let followingFilterEnabled = FilterType.following.isEnabled
 
@@ -184,8 +183,22 @@ class WebViewManager: NSObject, ObservableObject {
         }
     }
     
+    /// Switches the web view to another platform and remembers the choice.
+    func switchPlatform(to platform: Platform) {
+        guard platform != Platform.current else { return }
+        Platform.current = platform
+        loadInstagram(force: true)
+    }
+
     func injectContentBlocker() {
         guard let webView = webView else { return }
+
+        // The YouTube script is injected at document start and stays alive across
+        // in-app navigation; only (re)apply the saved filters there.
+        if Platform.youtube.owns(host: webView.url?.host) {
+            applyAllSavedFilters()
+            return
+        }
 
         // Vérifier d'abord si le script est déjà injecté
         let checkScript = """
@@ -228,8 +241,26 @@ class WebViewManager: NSObject, ObservableObject {
         }
     }
     
+    /// Adds the Instagram and YouTube filter scripts, built with the filters' current state.
+    /// forMainFrameOnly: true to avoid injecting into login/auth iframes which causes "Something went wrong" on iPad.
+    /// Each script does nothing outside its own site.
+    private static func installFilterScripts(in controller: WKUserContentController) {
+        controller.removeAllUserScripts()
+        for source in [ContentBlocker.getBlockingScript(), YouTubeBlocker.getBlockingScript()] {
+            controller.addUserScript(WKUserScript(
+                source: source,
+                injectionTime: .atDocumentStart,
+                forMainFrameOnly: true
+            ))
+        }
+    }
+
     func toggleFilter(_ filterType: FilterType) {
         guard let webView = webView else { return }
+
+        // Rebuild the injected scripts so the next full page load starts with the new state
+        // (otherwise e.g. a shared /shorts/ link would play before filters are re-applied).
+        Self.installFilterScripts(in: webView.configuration.userContentController)
 
         let script = ContentBlocker.getToggleScript(for: filterType)
         webView.evaluateJavaScript(script) { [weak self] result, error in
@@ -242,6 +273,8 @@ class WebViewManager: NSObject, ObservableObject {
 
     func applyAllSavedFilters() {
         guard let webView = webView else { return }
+
+        Self.installFilterScripts(in: webView.configuration.userContentController)
 
         let script = ContentBlocker.getApplyAllFiltersScript()
         webView.evaluateJavaScript(script) { [weak self] _, error in
@@ -307,7 +340,8 @@ class WebViewManager: NSObject, ObservableObject {
     // MARK: - Theme Application
     
     func applyTheme(_ theme: InstagramTheme) {
-        guard let webView = webView else { return }
+        // Themes restyle Instagram's markup only
+        guard let webView = webView, Platform.instagram.owns(host: webView.url?.host) else { return }
         
         let script = ContentBlocker.getApplyThemeScript(theme: theme)
         webView.evaluateJavaScript(script) { _, error in

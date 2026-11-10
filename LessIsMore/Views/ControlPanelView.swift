@@ -25,12 +25,12 @@ struct ControlPanelView: View {
     @State private var showTimeSavedExplanation = false
     @State private var pendingFilterToDisable: FilterType? = nil
     @State private var selectedTheme: InstagramTheme = InstagramTheme.current
+    @State private var platform: Platform = Platform.current
 
     var body: some View {
         ZStack {
             // Force Glassmorphism - Extreme transparency
-            VisualEffectView(effect: UIBlurEffect(style: colorScheme == .dark ? .systemUltraThinMaterialDark : .systemUltraThinMaterialLight))
-                .opacity(0.4)
+            Color(uiColor: .systemBackground)
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
@@ -43,23 +43,31 @@ struct ControlPanelView: View {
 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 20) {
+                        // Instagram / YouTube
+                        platformPicker
+
                         // Header avec graphique
                         usageHeader
                         
                         // Section Calendrier d'activité
                         ActivityCalendarView(usageTracker: usageTracker)
 
-                        // Section Thèmes Instagram
-                        themesSection
+                        switch platform {
+                        case .instagram:
+                            // Section Thèmes Instagram
+                            themesSection
 
-                        // Section filtres basiques
-                        basicFiltersSection
+                            // Section filtres basiques
+                            basicFiltersSection
 
-                        // Section Algorithm (Premium)
-                        algorithmSection
+                            // Section Algorithm (Premium)
+                            algorithmSection
 
-                        // Section Style (Premium)
-                        styleSection
+                            // Section Style (Premium)
+                            styleSection
+                        case .youtube:
+                            youtubeSection
+                        }
 
                         Spacer()
                             .frame(height: 40)
@@ -160,6 +168,55 @@ struct ControlPanelView: View {
         }
     }
 
+    // MARK: - Platform Picker
+
+    private var platformPicker: some View {
+        HStack(spacing: 4) {
+            ForEach(Platform.allCases) { option in
+                let isSelected = option == platform
+                Button(action: {
+                    guard option != platform else { return }
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    withAnimation(.easeInOut(duration: 0.2)) { platform = option }
+                    webViewManager.switchPlatform(to: option)
+                }) {
+                    Text(option.displayName)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(isSelected ? Theme.inkInverse : Theme.ink)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 40)
+                        .background(Capsule().fill(isSelected ? Theme.ink : Color.clear))
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+        }
+        .padding(4)
+        .background(Capsule().fill(Theme.card))
+    }
+
+    // MARK: - YouTube Section
+
+    private var youtubeSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("controlPanel.content".localized)
+                .font(AppFonts.subheadline())
+                .foregroundColor(.secondary)
+                .padding(.leading, 4)
+
+            VStack(spacing: 0) {
+                FilterRow(
+                    title: "filter.hideShorts".localized,
+                    isEnabled: binding(for: .youtubeShorts),
+                    isLocked: false, // Gratuit, comme les Reels
+                    streakDays: streakTracker.getCurrentStreakDays(for: .youtubeShorts),
+                    onLockedTap: showPaywall
+                )
+            }
+            .themeCard()
+        }
+    }
+
     // MARK: - Usage Header
 
     private var usageHeader: some View {
@@ -216,17 +273,7 @@ struct ControlPanelView: View {
                         
                         Text("\(best.days)")
                             .font(AppFonts.headline(15))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [
-                                        Color(red: 1.0, green: 0.60, blue: 0.0),
-                                        Color(red: 0.98, green: 0.05, blue: 0.44),
-                                        Color(red: 0.73, green: 0.20, blue: 0.82)
-                                    ],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
+                            .foregroundColor(Theme.ink)
                         
                         Text(best.days == 1 ? "common.day".localized : "common.days".localized)
                             .font(AppFonts.body(13))
@@ -252,7 +299,7 @@ struct ControlPanelView: View {
                         HStack(spacing: 4) {
                             Image(systemName: "clock.arrow.circlepath")
                                 .font(.system(size: 11))
-                                .foregroundColor(.green.opacity(0.8))
+                                .foregroundColor(.secondary)
                             
                             Text("~\(estimatedTimeSaved(for: best.filterType, days: best.days))")
                                 .font(AppFonts.caption(12))
@@ -306,7 +353,7 @@ struct ControlPanelView: View {
         let isZero = Int(diff) == 0
         let isLower = diff < 0
         
-        let color: Color = isZero ? .secondary : (isLower ? .green : .red)
+        let color: Color = isZero ? .secondary : .primary
         let icon = isZero ? "minus" : (isLower ? "arrow.down" : "arrow.up")
         
         return HStack(spacing: 6) {
@@ -341,23 +388,7 @@ struct ControlPanelView: View {
                     .foregroundColor(.secondary)
                 
                 if !subscriptionManager.isPremium {
-                    Text("Pro")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(
-                            LinearGradient(
-                                colors: [
-                                    Color(red: 0.98, green: 0.05, blue: 0.44),
-                                    Color(red: 0.73, green: 0.20, blue: 0.82),
-                                    Color(red: 1.0, green: 0.60, blue: 0.0)
-                                ],
-                                startPoint: .topTrailing,
-                                endPoint: .bottomLeading
-                            )
-                        )
-                        .cornerRadius(6)
+                    ProBadge()
                 }
             }
             .padding(.leading, 4)
@@ -439,12 +470,7 @@ struct ControlPanelView: View {
                     onLockedTap: showPaywall
                 )
             }
-            .background(Color.primary.opacity(0.06))
-            .cornerRadius(14)
-            .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(Color.primary.opacity(0.05), lineWidth: 0.5)
-            )
+            .themeCard()
         }
     }
 
@@ -458,23 +484,7 @@ struct ControlPanelView: View {
                     .foregroundColor(.secondary)
 
                 if !subscriptionManager.isPremium {
-                    Text("Pro")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(
-                            LinearGradient(
-                                colors: [
-                                    Color(red: 0.98, green: 0.05, blue: 0.44),
-                                    Color(red: 0.73, green: 0.20, blue: 0.82),
-                                    Color(red: 1.0, green: 0.60, blue: 0.0)
-                                ],
-                                startPoint: .topTrailing,
-                                endPoint: .bottomLeading
-                            )
-                        )
-                        .cornerRadius(6)
+                    ProBadge()
                 }
             }
             .padding(.leading, 4)
@@ -549,12 +559,7 @@ struct ControlPanelView: View {
                     onLockedTap: showPaywall
                 )
             }
-            .background(Color.primary.opacity(0.06))
-            .cornerRadius(14)
-            .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(Color.primary.opacity(0.05), lineWidth: 0.5)
-            )
+            .themeCard()
         }
     }
 
@@ -568,23 +573,7 @@ struct ControlPanelView: View {
                     .foregroundColor(.secondary)
 
                 if !subscriptionManager.isPremium {
-                    Text("Pro")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(
-                            LinearGradient(
-                                colors: [
-                                    Color(red: 0.98, green: 0.05, blue: 0.44),
-                                    Color(red: 0.73, green: 0.20, blue: 0.82),
-                                    Color(red: 1.0, green: 0.60, blue: 0.0)
-                                ],
-                                startPoint: .topTrailing,
-                                endPoint: .bottomLeading
-                            )
-                        )
-                        .cornerRadius(6)
+                    ProBadge()
                 }
             }
             .padding(.leading, 4)
@@ -599,12 +588,7 @@ struct ControlPanelView: View {
                     onLockedTap: showPaywall
                 )
             }
-            .background(Color.primary.opacity(0.06))
-            .cornerRadius(14)
-            .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(Color.primary.opacity(0.05), lineWidth: 0.5)
-            )
+            .themeCard()
         }
     }
 
@@ -797,7 +781,7 @@ struct FilterRow: View {
             if isLocked {
                 Toggle("", isOn: .constant(false))
                     .labelsHidden()
-                    .toggleStyle(SwitchToggleStyle(tint: .blue))
+                    .toggleStyle(SwitchToggleStyle(tint: .green))
                     .disabled(true)
                     .scaleEffect(0.9)
                     .fixedSize()
@@ -811,7 +795,7 @@ struct FilterRow: View {
             } else {
                 Toggle("", isOn: $isEnabled)
                     .labelsHidden()
-                    .toggleStyle(SwitchToggleStyle(tint: .white))
+                    .toggleStyle(SwitchToggleStyle(tint: .green))
                     .scaleEffect(0.9)
                     .fixedSize()
             }
@@ -1115,7 +1099,7 @@ struct ActivityCalendarView: View {
         let hasActivity = usageTracker.hasActivity(on: date)
 
         if hasActivity {
-            return isToday ? Color.green : Color.green.opacity(0.6)
+            return isToday ? Theme.ink : Theme.ink.opacity(0.55)
         }
 
         // Future → neutral
@@ -1130,11 +1114,11 @@ struct ActivityCalendarView: View {
 
         // Today (already recorded via hasActivity above, so this is just-opened state)
         if isToday {
-            return Color.green
+            return Theme.ink
         }
 
         // Past day after first use, missed → red
-        return Color.red.opacity(0.35)
+        return Theme.ink.opacity(0.15)
     }
 }
 
@@ -1189,14 +1173,7 @@ struct ThemeCard: View {
                     if isSelected {
                         RoundedRectangle(cornerRadius: 12)
                             .stroke(
-                                LinearGradient(
-                                    colors: [
-                                        Color(red: 0.98, green: 0.05, blue: 0.44),
-                                        Color(red: 0.73, green: 0.20, blue: 0.82)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
+                                Theme.ink,
                                 lineWidth: 3
                             )
                             .frame(width: 70, height: 70)
@@ -1205,20 +1182,13 @@ struct ThemeCard: View {
                         ZStack {
                             Circle()
                                 .fill(
-                                    LinearGradient(
-                                        colors: [
-                                            Color(red: 0.98, green: 0.05, blue: 0.44),
-                                            Color(red: 0.73, green: 0.20, blue: 0.82)
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
+                                    Theme.ink
                                 )
                                 .frame(width: 22, height: 22)
                             
                             Image(systemName: "checkmark")
                                 .font(.system(size: 11, weight: .bold))
-                                .foregroundColor(.white)
+                                .foregroundColor(Theme.inkInverse)
                         }
                         .offset(x: 28, y: -28)
                     } else if isLocked {

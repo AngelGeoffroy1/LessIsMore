@@ -28,6 +28,7 @@
 "controlPanel.pro" = "Pro";
 
 // MARK: - Filters
+"filter.hideShorts" = "Hide Shorts";
 "filter.hideReels" = "Hide Reels";
 "filter.hideStories" = "Hide Stories";
 "filter.followingOnly" = "Following only";
@@ -115,10 +116,10 @@
 
 // MARK: - Onboarding Welcome
 "onboarding.back" = "Back";
-"onboarding.welcome.greeting" = "Hi! 👋 I'm Lessy,";
-"onboarding.welcome.line1" = "your companion to take back";
-"onboarding.welcome.line2" = "control of your time";
-"onboarding.welcome.line3" = "on Instagram!";
+"onboarding.welcome.greeting" = "Your feed,";
+"onboarding.welcome.line1" = "your way.";
+"onboarding.welcome.line2" = "Instagram and YouTube,";
+"onboarding.welcome.line3" = "without the endless scroll.";
 
 // MARK: - Onboarding Name
 "onboarding.name.question" = "What can I call you? 😊";

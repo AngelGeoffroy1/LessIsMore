@@ -108,7 +108,7 @@ struct LockScreenRectangularView: View {
             if entry.percentageChange != 0 {
                 Image(systemName: entry.percentageChange < 0 ? "arrow.down" : "arrow.up")
                     .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(entry.percentageChange < 0 ? .green : .red)
+                    .foregroundColor(.primary)
             }
         }
     }

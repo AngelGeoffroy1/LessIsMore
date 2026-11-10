@@ -220,27 +220,21 @@ class StreakTracker: ObservableObject {
 struct GradientFlameView: View {
     var size: CGFloat = 14
     
-    // Instagram gradient colors
+    // Monochrome DA: solid ink (kept as a gradient so call sites stay unchanged)
     private let instagramGradient = LinearGradient(
         colors: [
-            Color(red: 1.0, green: 0.60, blue: 0.0),    // Orange
-            Color(red: 0.98, green: 0.05, blue: 0.44),  // Rose/Pink
-            Color(red: 0.73, green: 0.20, blue: 0.82)   // Purple
+            Color.primary,
+            Color.primary,
+            Color.primary
         ],
         startPoint: .bottom,
         endPoint: .top
     )
     
     var body: some View {
-        Text("🔥")
-            .font(.system(size: size))
-            .overlay(
-                instagramGradient
-                    .mask(
-                        Text("🔥")
-                            .font(.system(size: size))
-                    )
-            )
+        Image(systemName: "flame.fill")
+            .font(.system(size: size * 0.9, weight: .semibold))
+            .foregroundStyle(instagramGradient)
     }
 }
 
@@ -252,9 +246,9 @@ struct StreakBadge: View {
     
     private let instagramGradient = LinearGradient(
         colors: [
-            Color(red: 1.0, green: 0.60, blue: 0.0),    // Orange
-            Color(red: 0.98, green: 0.05, blue: 0.44),  // Rose/Pink
-            Color(red: 0.73, green: 0.20, blue: 0.82)   // Purple
+            Color.primary,
+            Color.primary,
+            Color.primary
         ],
         startPoint: .leading,
         endPoint: .trailing
@@ -286,9 +280,9 @@ struct StreakHighlightView: View {
     
     private let instagramGradient = LinearGradient(
         colors: [
-            Color(red: 1.0, green: 0.60, blue: 0.0),    // Orange
-            Color(red: 0.98, green: 0.05, blue: 0.44),  // Rose/Pink
-            Color(red: 0.73, green: 0.20, blue: 0.82)   // Purple
+            Color.primary,
+            Color.primary,
+            Color.primary
         ],
         startPoint: .leading,
         endPoint: .trailing
@@ -336,9 +330,9 @@ struct BreakStreakModal: View {
     
     private let instagramGradient = LinearGradient(
         colors: [
-            Color(red: 1.0, green: 0.60, blue: 0.0),    // Orange
-            Color(red: 0.98, green: 0.05, blue: 0.44),  // Rose/Pink
-            Color(red: 0.73, green: 0.20, blue: 0.82)   // Purple
+            Color.primary,
+            Color.primary,
+            Color.primary
         ],
         startPoint: .leading,
         endPoint: .trailing
@@ -381,16 +375,11 @@ struct BreakStreakModal: View {
                 // Keep Streak Button (Primary)
                 Button(action: onCancel) {
                     HStack {
-                        GradientFlameView(size: 16)
+                        Image(systemName: "flame.fill")
                         Text("streak.keepMyStreak".localized)
-                            .font(AppFonts.headline(16))
                     }
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(instagramGradient)
-                    .cornerRadius(14)
                 }
+                .buttonStyle(InkButtonStyle())
                 
                 // Break Streak Button (Secondary) - No background
                 Button(action: onConfirm) {
@@ -456,12 +445,12 @@ struct TimeSavedExplanationModal: View {
             // Icon
             ZStack {
                 Circle()
-                    .fill(Color.green.opacity(0.1))
+                    .fill(Color.primary.opacity(0.08))
                     .frame(width: 70, height: 70)
                 
                 Image(systemName: "clock.arrow.circlepath")
                     .font(.system(size: 30))
-                    .foregroundColor(.green)
+                    .foregroundColor(.primary)
             }
             
             // Text Content

@@ -11,14 +11,15 @@ import SuperwallKit
 
 // MARK: - Design System Colors
 struct OnboardingColors {
-    static let background = Color(hex: "111111")
-    static let primary = Color(hex: "ffb3cf")
+    // Monochrome DA (always dark): black background, white ink
+    static let background = Color.black
+    static let primary = Color.white
     static let surface = Color(hex: "1C1C1E")
-    static let surfaceSelected = Color(hex: "ffb3cf").opacity(0.15)
+    static let surfaceSelected = Color.white.opacity(0.12)
     static let textPrimary = Color.white
     static let textSecondary = Color(hex: "8E8E93")
     static let border = Color(hex: "2C2C2E")
-    static let borderSelected = Color(hex: "ffb3cf")
+    static let borderSelected = Color.white
 }
 
 // MARK: - Main Onboarding View
@@ -298,40 +299,31 @@ struct WelcomePage: View {
             Spacer()
             
             // Text content
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 0) {
                 Text("onboarding.welcome.greeting".localized)
-                    .font(AppFonts.title2())
+                    .font(.system(size: 52, weight: .bold))
                     .foregroundColor(OnboardingColors.textPrimary)
-                
+
                 Text("onboarding.welcome.line1".localized)
-                    .font(AppFonts.title2())
-                    .foregroundColor(OnboardingColors.textPrimary)
-                
-                Text("onboarding.welcome.line2".localized)
-                    .font(AppFonts.title2())
-                    .foregroundColor(OnboardingColors.textPrimary)
-                
-                Text("onboarding.welcome.line3".localized)
-                    .font(AppFonts.title2())
-                    .foregroundColor(OnboardingColors.textPrimary)
+                    .font(.system(size: 52, weight: .bold))
+                    .foregroundColor(OnboardingColors.textSecondary)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("onboarding.welcome.line2".localized)
+                    Text("onboarding.welcome.line3".localized)
+                }
+                .font(.system(size: 19, weight: .medium))
+                .foregroundColor(OnboardingColors.textSecondary)
+                .padding(.top, 20)
             }
+            .minimumScaleFactor(0.7)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 24)
             .opacity(animateContent ? 1 : 0)
             .offset(y: animateContent ? 0 : 20)
             .animation(.easeOut(duration: 0.5), value: animateContent)
             
-            Spacer()
-            
-            // Mascot saying hi
-            Image("mascott bonjour")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 220, height: 220)
-                .opacity(animateContent ? 1 : 0)
-                .scaleEffect(animateContent ? 1 : 0.8)
-                .animation(.spring(response: 0.6, dampingFraction: 0.7).delay(0.2), value: animateContent)
-            
+            Spacer()            
             Spacer()
             Spacer()
         }
@@ -388,17 +380,7 @@ struct NameInputPage: View {
             .opacity(animateContent ? 1 : 0)
             .animation(.easeOut(duration: 0.5).delay(0.1), value: animateContent)
             
-            Spacer()
-            
-            // Mascot (question variant - centered and larger)
-            Image("mascott question")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 180, height: 180)
-                .frame(maxWidth: .infinity)
-                .opacity(animateContent ? 1 : 0)
-                .animation(.easeOut(duration: 0.5).delay(0.2), value: animateContent)
-            
+            Spacer()            
             Spacer()
         }
         .contentShape(Rectangle())
@@ -680,14 +662,9 @@ struct ScreenTimePage: View {
             
             Spacer()
             
-            // Mascot with reaction (tired variant)
+            // Reaction message
             VStack(spacing: 12) {
-                Image("mascotte tired")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 160, height: 160)
-                
-                Text(reactionMessage)
+                                Text(reactionMessage)
                     .font(AppFonts.subheadline())
                     .foregroundColor(OnboardingColors.textSecondary)
                     .multilineTextAlignment(.center)
@@ -703,10 +680,10 @@ struct ScreenTimePage: View {
     
     private var timeColor: Color {
         switch authManager.dailyScreenTimeMinutes {
-        case 0...60: return .green
-        case 61...120: return .yellow
-        case 121...180: return .orange
-        default: return .red
+        case 0...60: return .white.opacity(0.45)
+        case 61...120: return .white.opacity(0.65)
+        case 121...180: return .white.opacity(0.85)
+        default: return .white
         }
     }
     
@@ -739,10 +716,10 @@ struct FiltersPage: View {
     @State private var selectedFilters: Set<String> = []
     
     let filters: [(id: String, icon: String, title: String, timeSaved: Int, color: Color)] = [
-        ("reels", "film.fill", "Reels", 45, .pink),
-        ("explore", "safari.fill", "Explore", 20, .orange),
-        ("stories", "circle.dashed", "Stories", 15, .purple),
-        ("likes", "heart.fill", "Likes", 10, .red)
+        ("reels", "film.fill", "Reels", 45, .white),
+        ("explore", "safari.fill", "Explore", 20, .white),
+        ("stories", "circle.dashed", "Stories", 15, .white),
+        ("likes", "heart.fill", "Likes", 10, .white)
     ]
     
     var body: some View {
@@ -750,7 +727,7 @@ struct FiltersPage: View {
             Spacer()
                 .frame(height: 40)
             
-            // Header with mascot
+            // Header
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
                     if !authManager.userName.isEmpty {
@@ -764,16 +741,7 @@ struct FiltersPage: View {
                     Text("onboarding.filters.forYou".localized)
                         .font(AppFonts.title2())
                         .foregroundColor(OnboardingColors.textPrimary)
-                }
-                
-                Spacer()
-                
-                // Mascot thumbs up
-                Image("mascott pouce")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 80, height: 80)
-            }
+                }            }
             .padding(.horizontal, 24)
             .opacity(animateContent ? 1 : 0)
             .offset(y: animateContent ? 0 : 20)
@@ -820,7 +788,7 @@ struct FiltersPage: View {
                 VStack(spacing: 8) {
                     HStack(spacing: 8) {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
+                            .foregroundColor(.white)
                         Text(String(format: "filter.filtersBlocked".localized, selectedFilters.count))
                             .font(AppFonts.subheadline())
                             .foregroundColor(OnboardingColors.textSecondary)
@@ -831,7 +799,7 @@ struct FiltersPage: View {
                             .foregroundColor(OnboardingColors.textSecondary)
                         Text("\(totalTimeSaved) min")
                             .font(AppFonts.headline())
-                            .foregroundColor(.green)
+                            .foregroundColor(.white)
                         Text(String(format: "filter.minSavedPerDay".localized, totalTimeSaved))
                             .foregroundColor(OnboardingColors.textSecondary)
                     }
@@ -874,7 +842,7 @@ struct FilterCard: View {
                     
                     Image(systemName: isSelected ? "xmark" : icon)
                         .font(.system(size: 20, weight: .semibold))
-                        .foregroundColor(isSelected ? .white : color)
+                        .foregroundColor(isSelected ? OnboardingColors.background : color)
                 }
                 
                 Text(title)
@@ -956,7 +924,7 @@ struct ProjectionPage: View {
             VStack(spacing: 8) {
                 Text("\(displayedHours)h")
                     .font(AppFonts.title(72))
-                    .foregroundColor(.green)
+                    .foregroundColor(.white)
                     .contentTransition(.numericText())
                 
                 Text("onboarding.projection.ofYourLife".localized)
@@ -1065,7 +1033,7 @@ struct SocialProofPage: View {
                     .font(AppFonts.title(40))
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [.green, .blue],
+                            colors: [.white, .white.opacity(0.6)],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
@@ -1082,7 +1050,7 @@ struct SocialProofPage: View {
             HStack(spacing: 4) {
                 ForEach(0..<5, id: \.self) { index in
                     Image(systemName: "star.fill")
-                        .foregroundColor(.yellow)
+                        .foregroundColor(.white)
                         .font(.system(size: 20))
                         .opacity(animateContent ? 1 : 0)
                         .scaleEffect(animateContent ? 1 : 0.5)
@@ -1111,8 +1079,8 @@ struct SocialProofPage: View {
             
             // Trust badges
             HStack(spacing: 16) {
-                TrustBadge(icon: "lock.shield.fill", text: "onboarding.social.privacy".localized, color: .green)
-                TrustBadge(icon: "checkmark.seal.fill", text: "onboarding.social.noAds".localized, color: .blue)
+                TrustBadge(icon: "lock.shield.fill", text: "onboarding.social.privacy".localized, color: .white)
+                TrustBadge(icon: "checkmark.seal.fill", text: "onboarding.social.noAds".localized, color: .white)
             }
             .opacity(animateContent ? 1 : 0)
             .animation(.easeOut(duration: 0.5).delay(0.5), value: animateContent)
@@ -1133,7 +1101,7 @@ struct TestimonialCard: View {
                 ForEach(0..<5, id: \.self) { _ in
                     Image(systemName: "star.fill")
                         .font(.system(size: 12))
-                        .foregroundColor(.yellow)
+                        .foregroundColor(.white)
                 }
             }
             
@@ -1188,15 +1156,15 @@ struct PremiumCTAPage: View {
                 // Premium badge
                 HStack(spacing: 8) {
                     Image(systemName: "crown.fill")
-                        .foregroundColor(.yellow)
+                        .foregroundColor(.white)
                     Text("onboarding.premium.badge".localized)
                         .font(AppFonts.caption())
                         .fontWeight(.bold)
-                        .foregroundColor(.yellow)
+                        .foregroundColor(.white)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
-                .background(Color.yellow.opacity(0.2))
+                .background(Color.white.opacity(0.12))
                 .cornerRadius(20)
                 .opacity(animateContent ? 1 : 0)
                 .scaleEffect(animateContent ? 1 : 0.8)
@@ -1224,10 +1192,10 @@ struct PremiumCTAPage: View {
                 
                 // Features
                 VStack(spacing: 14) {
-                    PremiumFeatureRow(icon: "checkmark.circle.fill", text: "onboarding.premium.allFilters".localized, color: .green)
-                    PremiumFeatureRow(icon: "bolt.circle.fill", text: "onboarding.premium.instantActivation".localized, color: .orange)
-                    PremiumFeatureRow(icon: "arrow.triangle.2.circlepath.circle.fill", text: "onboarding.premium.multiDevice".localized, color: .blue)
-                    PremiumFeatureRow(icon: "heart.circle.fill", text: "onboarding.premium.prioritySupport".localized, color: .pink)
+                    PremiumFeatureRow(icon: "checkmark.circle.fill", text: "onboarding.premium.allFilters".localized, color: .white)
+                    PremiumFeatureRow(icon: "bolt.circle.fill", text: "onboarding.premium.instantActivation".localized, color: .white)
+                    PremiumFeatureRow(icon: "arrow.triangle.2.circlepath.circle.fill", text: "onboarding.premium.multiDevice".localized, color: .white)
+                    PremiumFeatureRow(icon: "heart.circle.fill", text: "onboarding.premium.prioritySupport".localized, color: .white)
                 }
                 .padding(.vertical, 20)
                 .padding(.horizontal, 20)
@@ -1241,13 +1209,7 @@ struct PremiumCTAPage: View {
                 .offset(y: animateContent ? 0 : 30)
                 .animation(.easeOut(duration: 0.5).delay(0.2), value: animateContent)
                 
-                Spacer()
-                
-                // Mascot with crown
-                LessyMascotContainer(size: 120, showGlow: true, glowColor: .yellow)
-                    .opacity(animateContent ? 1 : 0)
-                    .animation(.easeOut(duration: 0.5).delay(0.3), value: animateContent)
-                
+                Spacer()                
                 Spacer()
                 
                 // CTA Button
@@ -1354,7 +1316,7 @@ struct NotificationPermissionPage: View {
             // Bell icon - simple and big
             Image(systemName: "bell.badge.fill")
                 .font(.system(size: 100))
-                .foregroundStyle(OnboardingColors.primary, .red)
+                .foregroundStyle(OnboardingColors.primary, .white)
                 .rotationEffect(.degrees(bellRotation))
                 .opacity(animateContent ? 1 : 0)
                 .scaleEffect(animateContent ? 1 : 0.8)
@@ -1380,7 +1342,7 @@ struct NotificationPermissionPage: View {
                     icon: "moon.fill",
                     title: "onboarding.notifications.benefit1.title".localized,
                     description: "onboarding.notifications.benefit1.desc".localized,
-                    color: .purple
+                    color: .white
                 )
                 .opacity(animateContent ? 1 : 0)
                 .offset(y: animateContent ? 0 : 20)
@@ -1390,7 +1352,7 @@ struct NotificationPermissionPage: View {
                     icon: "sun.max.fill",
                     title: "onboarding.notifications.benefit2.title".localized,
                     description: "onboarding.notifications.benefit2.desc".localized,
-                    color: .orange
+                    color: .white
                 )
                 .opacity(animateContent ? 1 : 0)
                 .offset(y: animateContent ? 0 : 20)
@@ -1400,7 +1362,7 @@ struct NotificationPermissionPage: View {
                     icon: "bed.double.fill",
                     title: "onboarding.notifications.benefit3.title".localized,
                     description: "onboarding.notifications.benefit3.desc".localized,
-                    color: .blue
+                    color: .white
                 )
                 .opacity(animateContent ? 1 : 0)
                 .offset(y: animateContent ? 0 : 20)
@@ -1541,7 +1503,7 @@ struct LetsGoPage: View {
                         Text("onboarding.final.recover".localized)
                             .foregroundColor(OnboardingColors.textSecondary)
                         Text(String(format: "onboarding.final.minPerDay".localized, authManager.estimatedTimeSavedMinutes))
-                            .foregroundColor(.green)
+                            .foregroundColor(.white)
                             .fontWeight(.bold)
                     }
                     .font(AppFonts.title3())
@@ -1556,26 +1518,7 @@ struct LetsGoPage: View {
                 .opacity(animateContent ? 1 : 0)
                 .animation(.easeOut(duration: 0.5).delay(0.1), value: animateContent)
                 
-                Spacer()
-                
-                // Mascot saluting
-                Image("mascott salut")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 180, height: 180)
-                    .opacity(animateContent ? 1 : 0)
-                    .scaleEffect(animateContent ? 1 : 0.8)
-                    .animation(.spring(response: 0.6, dampingFraction: 0.7).delay(0.2), value: animateContent)
-                
-                // Message
-                Text("onboarding.final.mascotMessage".localized)
-                    .font(AppFonts.subheadline())
-                    .foregroundColor(OnboardingColors.textSecondary)
-                    .italic()
-                    .padding(.top, 16)
-                    .opacity(animateContent ? 1 : 0)
-                    .animation(.easeOut(duration: 0.5).delay(0.3), value: animateContent)
-                
+                Spacer()                
                 // Premium users see a completion button here (since no paywall follows)
                 if isPremium {
                     Spacer()
@@ -1641,7 +1584,7 @@ struct ConfettiView: View {
     }
     
     private func createParticles(in size: CGSize) {
-        let colors: [Color] = [.pink, .purple, .blue, .green, .yellow, .orange, OnboardingColors.primary]
+        let colors: [Color] = [.white, .white.opacity(0.8), .white.opacity(0.6), Color(hex: "8E8E93"), .white.opacity(0.4)]
         
         for i in 0..<50 {
             let particle = ConfettiParticle(
