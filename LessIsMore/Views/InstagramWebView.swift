@@ -117,13 +117,24 @@ struct InstagramWebViewContainer: View {
     @ObservedObject var subscriptionManager: SubscriptionManager
     @State private var showControlPanel = false
     @State private var showSwipeTutorial = false
+    @State private var themeRefreshId = UUID()
     @Environment(\.colorScheme) var colorScheme
+    
+    // Couleur de fond basée sur le thème
+    private var backgroundColor: Color {
+        let currentTheme = InstagramTheme.current
+        if currentTheme != .default {
+            return Color(hex: currentTheme.backgroundColor) ?? (colorScheme == .dark ? Color(red: 11/255, green: 16/255, blue: 20/255) : Color.white)
+        }
+        return colorScheme == .dark ? Color(red: 11/255, green: 16/255, blue: 20/255) : Color.white
+    }
 
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
                 // Header avec indicateur pour ouvrir le panneau
                 HeaderSwipeZone(showControlPanel: $showControlPanel)
+                    .id(themeRefreshId) // Force refresh on theme change
 
                 // Barre de progression
                 if webViewManager.isLoading {
@@ -163,8 +174,12 @@ struct InstagramWebViewContainer: View {
                 showSwipeTutorial = false
                 PersistenceService.shared.hasSeenSwipeTutorial = true
             }
+            // Quand on ferme le control panel, forcer le rafraîchissement pour le thème
+            if !isOpen {
+                themeRefreshId = UUID()
+            }
         }
-        .background(colorScheme == .dark ? Color(red: 11/255, green: 16/255, blue: 20/255) : Color.white)
+        .background(backgroundColor)
         .ignoresSafeArea(edges: .bottom)
         .sheet(isPresented: $showControlPanel) {
             ControlPanelView(
@@ -207,6 +222,35 @@ struct HeaderSwipeZone: View {
 
     // Couleur exacte du background Instagram dark mode (#0b1014)
     private let instagramDarkBg = Color(red: 11/255, green: 16/255, blue: 20/255)
+    
+    // Thème actuel
+    private var currentTheme: InstagramTheme {
+        InstagramTheme.current
+    }
+    
+    // Couleur de fond basée sur le thème
+    private var backgroundColor: Color {
+        if currentTheme != .default {
+            // Convertir hex en Color
+            let hex = currentTheme.cardColor
+            return Color(hex: hex) ?? (colorScheme == .dark ? instagramDarkBg : Color.white)
+        }
+        return colorScheme == .dark ? instagramDarkBg : Color.white
+    }
+    
+    // Couleur de la poignée basée sur le thème
+    private var handleColor: Color {
+        if currentTheme != .default {
+            let hex = currentTheme.accentColor
+            return (Color(hex: hex) ?? Color.white).opacity(0.5)
+        }
+        return colorScheme == .dark ? Color.white.opacity(0.25) : Color.black.opacity(0.15)
+    }
+
+    // Detect iPad
+    private var isIPad: Bool {
+        UIDevice.current.userInterfaceIdiom == .pad
+    }
 
     var body: some View {
         // Zone en haut avec indicateur
@@ -214,13 +258,13 @@ struct HeaderSwipeZone: View {
             Spacer()
 
             Capsule()
-                .fill(colorScheme == .dark ? Color.white.opacity(0.25) : Color.black.opacity(0.15))
-                .frame(width: 36, height: 4)
-                .padding(.bottom, 6)
+                .fill(handleColor)
+                .frame(width: isIPad ? 56 : 36, height: isIPad ? 6 : 4)
+                .padding(.bottom, isIPad ? 8 : 6)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 28)
-        .background(colorScheme == .dark ? instagramDarkBg : Color.white)
+        .frame(height: isIPad ? 36 : 28)
+        .background(backgroundColor)
         .contentShape(Rectangle())
         .onTapGesture {
             openPanel()

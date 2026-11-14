@@ -54,8 +54,7 @@ struct ShareStatsPreviewSheet: View {
     var body: some View {
         ZStack {
             // Background - Same as ControlPanel
-            VisualEffectView(effect: UIBlurEffect(style: colorScheme == .dark ? .systemUltraThinMaterialDark : .systemUltraThinMaterialLight))
-                .opacity(0.4)
+            Color(uiColor: .systemBackground)
                 .ignoresSafeArea()
             
             VStack(spacing: 24) {
@@ -78,7 +77,7 @@ struct ShareStatsPreviewSheet: View {
                     Button(action: shareStats) {
                         Text("common.share".localized)
                             .font(AppFonts.headline(16))
-                            .foregroundColor(.blue)
+                            .foregroundColor(Theme.ink)
                     }
                 }
                 .padding(.horizontal, 20)
@@ -94,6 +93,7 @@ struct ShareStatsPreviewSheet: View {
                         percentageChange: percentageChange,
                         monthName: monthName
                     )
+                    .environment(\.colorScheme, .dark) // card is always exported dark
                     .clipShape(RoundedRectangle(cornerRadius: 24))
                     .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
                     .padding(.horizontal, 30)
@@ -103,6 +103,7 @@ struct ShareStatsPreviewSheet: View {
                         todayUsage: todayUsage,
                         percentageChange: percentageChange
                     )
+                    .environment(\.colorScheme, .dark) // card is always exported dark
                     .clipShape(RoundedRectangle(cornerRadius: 24))
                     .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
                     .padding(.horizontal, 30)
@@ -121,37 +122,27 @@ struct ShareStatsPreviewSheet: View {
                             Text("shareStats.shareToStory".localized)
                                 .font(AppFonts.headline(16))
                         }
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.inkInverse)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(
-                            LinearGradient(
-                                colors: [
-                                    Color(red: 0.98, green: 0.05, blue: 0.44),
-                                    Color(red: 0.73, green: 0.20, blue: 0.82)
-                                ],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                        .background(Capsule().fill(Theme.ink))
                     }
                     
                     // Save to Photos Button
                     Button(action: saveToPhotos) {
                         Image(systemName: showSaveConfirmation ? "checkmark" : "arrow.down.to.line")
                             .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(showSaveConfirmation ? .green : .white)
+                            .foregroundColor(Theme.ink)
                             .frame(width: 56, height: 56)
                             .background(
-                                showSaveConfirmation 
-                                    ? Color.green.opacity(0.2)
-                                    : Color.white.opacity(0.15)
+                                showSaveConfirmation
+                                    ? Theme.cardSelected
+                                    : Theme.card
                             )
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 14)
-                                    .stroke(showSaveConfirmation ? Color.green.opacity(0.5) : Color.white.opacity(0.2), lineWidth: 1)
+                                    .stroke(Theme.hairline, lineWidth: 1)
                             )
                     }
                     .animation(.easeInOut(duration: 0.2), value: showSaveConfirmation)
@@ -171,9 +162,6 @@ struct ShareStatsPreviewSheet: View {
     private func shareStats() {
         let haptic = UIImpactFeedbackGenerator(style: .medium)
         haptic.impactOccurred()
-        
-        // Track share event
-        TelemetryManager.shared.trackShareStats()
         
         // Create the share card at full resolution
         if isMonthlyMode, let monthlyData = monthlyData, let weekUsage = weekUsage, let monthName = monthName {
@@ -314,55 +302,13 @@ struct ShareStatsCard: View {
         return (comparison.icon, "≈ \(count) \(text)")
     }
     
-    // Mascot image based on weekly usage
-    private var mascotImage: Image {
-        let totalHours = totalWeekSeconds / 3600
-        
-        if totalHours < 3 {
-            // Great usage - thumbs up
-            return Image("mascott pouce")
-        } else if totalHours < 7 {
-            // Medium usage - wave
-            return Image("mascott bonjour")
-        } else {
-            // High usage - tired
-            return Image("mascotte tired")
-        }
-    }
     
     private let chartHeight: CGFloat = 100
     
     var body: some View {
         ZStack {
             // Background - using onboarding colors
-            Color(hex: "111111")
-            
-            // Ambient glow effects with onboarding pink
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [Color(hex: "ffb3cf").opacity(0.15), Color.clear],
-                        center: .center,
-                        startRadius: 0,
-                        endRadius: 120
-                    )
-                )
-                .frame(width: 240, height: 240)
-                .offset(x: -60, y: -120)
-                .blur(radius: 30)
-            
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [Color(hex: "ffb3cf").opacity(0.2), Color.clear],
-                        center: .center,
-                        startRadius: 0,
-                        endRadius: 140
-                    )
-                )
-                .frame(width: 280, height: 280)
-                .offset(x: 80, y: 160)
-                .blur(radius: 40)
+            Color.black
             
             // Content with fixed positioning
             VStack(spacing: 0) {
@@ -397,24 +343,14 @@ struct ShareStatsCard: View {
                                 Text(String(format: "shareStats.vsYesterday".localized, abs(Int(percentageChange))))
                                     .font(AppFonts.caption(11))
                             }
-                            .foregroundColor(percentageChange < 0 ? .green : .red)
+                            .foregroundColor(.white)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 5)
                             .background(
                                 Capsule()
-                                    .fill((percentageChange < 0 ? Color.green : Color.red).opacity(0.15))
+                                    .fill(Color.white.opacity(0.12))
                             )
                         }
-                    }
-                    
-                    // Mascot on the left
-                    HStack {
-                        mascotImage
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 60, height: 60)
-                            .padding(.leading, 20)
-                        Spacer()
                     }
                 }
                 .padding(.bottom, 16)
@@ -486,18 +422,7 @@ struct ShareStatsCard: View {
                 // Branding - LessIsMore badge with Instagram gradient
                 Text("LessIsMore")
                     .font(AppFonts.headline(12))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [
-                                Color(red: 1.0, green: 0.55, blue: 0.0),
-                                Color(red: 0.98, green: 0.22, blue: 0.42),
-                                Color(red: 0.83, green: 0.18, blue: 0.62),
-                                Color(red: 0.55, green: 0.23, blue: 0.85)
-                            ],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .foregroundColor(.white)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 6)
                     .background(
@@ -634,34 +559,7 @@ struct ShareStatsCardMonthly: View {
     var body: some View {
         ZStack {
             // Background - using onboarding colors
-            Color(hex: "111111")
-            
-            // Ambient glow effects with onboarding pink
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [Color(hex: "ffb3cf").opacity(0.15), Color.clear],
-                        center: .center,
-                        startRadius: 0,
-                        endRadius: 120
-                    )
-                )
-                .frame(width: 240, height: 240)
-                .offset(x: -60, y: -120)
-                .blur(radius: 30)
-            
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [Color(hex: "ffb3cf").opacity(0.2), Color.clear],
-                        center: .center,
-                        startRadius: 0,
-                        endRadius: 140
-                    )
-                )
-                .frame(width: 280, height: 280)
-                .offset(x: 80, y: 160)
-                .blur(radius: 40)
+            Color.black
             
             // Content with fixed positioning
             VStack(spacing: 0) {
@@ -693,12 +591,12 @@ struct ShareStatsCardMonthly: View {
                             Text(String(format: "shareStats.vsLastWeek".localized, abs(Int(percentageChange))))
                                 .font(AppFonts.caption(11))
                         }
-                        .foregroundColor(percentageChange < 0 ? .green : .red)
+                        .foregroundColor(.white)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
                         .background(
                             Capsule()
-                                .fill((percentageChange < 0 ? Color.green : Color.red).opacity(0.15))
+                                .fill(Color.white.opacity(0.12))
                         )
                     }
                 }
@@ -771,18 +669,7 @@ struct ShareStatsCardMonthly: View {
                 // Branding - LessIsMore badge with Instagram gradient
                 Text("LessIsMore")
                     .font(AppFonts.headline(12))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [
-                                Color(red: 1.0, green: 0.55, blue: 0.0),
-                                Color(red: 0.98, green: 0.22, blue: 0.42),
-                                Color(red: 0.83, green: 0.18, blue: 0.62),
-                                Color(red: 0.55, green: 0.23, blue: 0.85)
-                            ],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .foregroundColor(.white)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 6)
                     .background(

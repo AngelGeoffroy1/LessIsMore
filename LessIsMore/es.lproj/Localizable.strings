@@ -1,0 +1,221 @@
+/* 
+  Localizable.strings (Spanish)
+  LessIsMore
+
+  Spanish localization
+*/
+
+// MARK: - Common
+"common.continue" = "Continuar";
+"common.cancel" = "Cancelar";
+"common.share" = "Compartir";
+"common.save" = "Guardar";
+"common.done" = "Hecho";
+"common.back" = "Atrás";
+"common.day" = "día";
+"common.days" = "días";
+"common.saved" = "ahorrado";
+
+// MARK: - Control Panel
+"controlPanel.todayUse" = "HOY";
+"controlPanel.thisWeekUse" = "ESTA SEMANA";
+"controlPanel.thisWeek" = "Esta semana";
+"controlPanel.content" = "Contenido";
+"controlPanel.algorithm" = "Algoritmo";
+"controlPanel.style" = "Estilo";
+"controlPanel.activity" = "Actividad";
+"controlPanel.themes" = "Temas";
+"controlPanel.pro" = "Pro";
+
+// MARK: - Filters
+"filter.hideShorts" = "Ocultar Shorts";
+"filter.hideReels" = "Ocultar Reels";
+"filter.hideStories" = "Ocultar Stories";
+"filter.followingOnly" = "Solo seguidos";
+"filter.hideExplore" = "Ocultar Explorar";
+"filter.hideSuggestions" = "Ocultar Sugerencias";
+"filter.hideSuggestedPosts" = "Ocultar Posts Sugeridos";
+"filter.hideMessages" = "Ocultar Mensajes";
+"filter.hideLikes" = "Ocultar Likes";
+"filter.perDaySaved" = "~%@/día ahorrado";
+"filter.perDaySavedIfActivated" = "~%@/día ahorrado si activado";
+"filter.filtersBlocked" = "%d filtro(s) bloqueado(s)";
+"filter.minSavedPerDay" = "≈ %d min ahorrados/día";
+
+// MARK: - Streak
+"streak.breakTitle" = "¿Romper tu racha?";
+"streak.freeFor" = "No has usado %@ desde";
+"streak.keepMyStreak" = "Mantener mi racha";
+"streak.disableReset" = "Desactivar y reiniciar";
+"streak.bestStreak" = "MEJOR RACHA";
+"streak.noFilter" = "Sin %@";
+"streak.timeSaved" = "~%@ ahorrado";
+
+// MARK: - Time Saved Explanation
+"timeSaved.title" = "Cómo se calcula";
+"timeSaved.analyzeTitle" = "Analizamos tu uso";
+"timeSaved.analyzeDesc" = "Observamos tu tiempo promedio diario en cada categoría (Reels, Stories, etc.) durante los últimos 7 días.";
+"timeSaved.trackTitle" = "Seguimos tu progreso";
+"timeSaved.trackDesc" = "Multiplicamos los días de tu racha activa por tu promedio personal de uso diario.";
+"timeSaved.realTimeTitle" = "Tiempo realmente recuperado";
+"timeSaved.realTimeDesc" = "Esto representa el tiempo real que has ganado para ti mismo manteniendo tus filtros activos.";
+"timeSaved.gotIt" = "Entendido";
+
+// MARK: - Settings
+"settings.title" = "Ajustes";
+"settings.appSettings" = "AJUSTES DE LA APP";
+"settings.support" = "SOPORTE";
+"settings.account" = "CUENTA";
+"settings.language" = "IDIOMA";
+"settings.reloadInstagram" = "Recargar Instagram";
+"settings.resetFilters" = "Restablecer filtros";
+"settings.resetOnboarding" = "Restablecer introducción";
+"settings.aboutApp" = "Acerca de LessIsMore";
+"settings.contact" = "Contacto";
+"settings.contactTitle" = "Contacto";
+"settings.contactDescription" = "¿Tienes una pregunta, sugerencia o simplemente quieres charlar? ¡Escríbenos un email!";
+"settings.copyEmail" = "Copiar email";
+"settings.aboutDescription" = "LessIsMore te ayuda a recuperar el control de tu tiempo en Instagram bloqueando las distracciones.";
+"settings.madeWith" = "Hecho con ❤️";
+"settings.logOut" = "Cerrar sesión";
+"settings.logOutConfirm" = "¿Estás seguro de que quieres cerrar sesión? Tendrás que volver a iniciar sesión para usar la app.";
+"settings.upgradeToPro" = "Actualizar a Pro";
+"settings.upgradeDesc" = "Desbloquea todas las funciones y estadísticas detalladas.";
+"settings.version" = "Versión %@";
+
+// MARK: - Share Stats
+"shareStats.preview" = "Vista previa";
+"shareStats.shareToStory" = "Compartir en Story";
+"shareStats.myInstagram" = "MI INSTAGRAM";
+"shareStats.thisWeek" = "esta semana";
+"shareStats.vsYesterday" = "%d%% vs ayer";
+"shareStats.vsLastWeek" = "%d%% vs semana pasada";
+"shareStats.withThisTime" = "CON ESTE TIEMPO...";
+"shareStats.takeBackControl" = "Recupera el control";
+
+// MARK: - Impact Comparisons
+"impact.bookChapter" = "capítulo de libro leído";
+"impact.bookChapters" = "capítulos de libros leídos";
+"impact.movie" = "película vista";
+"impact.movies" = "películas vistas";
+"impact.workout" = "sesión de ejercicio";
+"impact.workouts" = "sesiones de ejercicio";
+"impact.meditation" = "meditación";
+"impact.meditations" = "meditaciones";
+"impact.book" = "libro leído completo";
+"impact.books" = "libros leídos completos";
+"impact.podcast" = "episodio de podcast";
+"impact.podcasts" = "episodios de podcast";
+"impact.recipe" = "nueva receta cocinada";
+"impact.recipes" = "nuevas recetas cocinadas";
+"impact.musicLesson" = "lección de música";
+"impact.musicLessons" = "lecciones de música";
+"impact.kmWalked" = "km caminados";
+"impact.workoutHour" = "hora de ejercicio";
+"impact.workoutHours" = "horas de ejercicio";
+
+// MARK: - Onboarding Welcome
+"onboarding.back" = "Atrás";
+"onboarding.welcome.greeting" = "Tu feed,";
+"onboarding.welcome.line1" = "a tu manera.";
+"onboarding.welcome.line2" = "Instagram y YouTube,";
+"onboarding.welcome.line3" = "sin el scroll infinito.";
+
+// MARK: - Onboarding Name
+"onboarding.name.question" = "¿Cómo puedo llamarte? 😊";
+"onboarding.name.charCount" = "%d / 50";
+
+// MARK: - Onboarding Problem
+"onboarding.problem.questionPart1" = "¿qué te molesta";
+"onboarding.problem.questionPart2" = "más de Instagram? 🤔";
+"problem.tooMuchTime" = "Pierdo demasiado tiempo";
+"problem.mindlessScrolling" = "Hago scroll sin darme cuenta";
+"problem.comparison" = "Me comparo con los demás";
+"problem.poorSleep" = "Duermo mal por el scroll nocturno";
+
+// MARK: - Onboarding Goals
+"onboarding.goals.question" = "¿Qué quieres lograr? 🎯";
+"onboarding.goals.selectAll" = "(selecciona todo lo que aplique)";
+"goal.reduceScreenTime" = "Reducir mi tiempo de pantalla";
+"goal.stopScrolling" = "Detener el scroll infinito";
+"goal.blockReels" = "Bloquear Reels";
+"goal.removeAlgorithm" = "Eliminar el algoritmo del feed";
+"goal.lessAnxiety" = "Menos ansiedad social";
+
+// MARK: - Onboarding Screen Time
+"onboarding.screenTime.question1" = "¿Cuánto tiempo pasas";
+"onboarding.screenTime.question2" = "en Instagram al día? 📱";
+"onboarding.screenTime.perDay" = "por día";
+"onboarding.screenTime.reaction1" = "¡No está mal! Aún podemos mejorar 💪";
+"onboarding.screenTime.reaction2" = "Es común, ¡vamos a solucionarlo juntos!";
+"onboarding.screenTime.reaction3" = "¡No te preocupes, estoy aquí para ayudarte! 🤗";
+"onboarding.screenTime.reaction4" = "¡Wow, pero no hay problema, vamos a transformar esto! 🚀";
+
+// MARK: - Onboarding Filters
+"onboarding.filters.myRecommendations" = "aquí están mis recomendaciones";
+"onboarding.filters.forYou" = "para ti! ✨";
+"onboarding.filters.tapToBlock" = "Toca para bloquear";
+"onboarding.filters.recommended" = "Recomendado";
+
+// MARK: - Onboarding Projection
+"onboarding.projection.in30Days" = "en 30 días,";
+"onboarding.projection.youWillRecover" = "habrás recuperado... 🔮";
+"onboarding.projection.ofYourLife" = "de tu vida";
+"onboarding.projection.equivalent" = "💡 Eso equivale a:";
+"onboarding.projection.booksRead" = "%d libros leídos";
+"onboarding.projection.workoutSessions" = "%d sesiones de ejercicio";
+"onboarding.projection.extraNights" = "%d noches extra de sueño";
+
+// MARK: - Onboarding Social Proof
+"onboarding.social.notAlone" = "¡No estás solo/a! 🤝";
+"onboarding.social.join" = "Únete a";
+"onboarding.social.users" = "usuarios";
+"onboarding.social.testimonial1" = "¡Ahorro 1h30 por día!";
+"onboarding.social.author1" = "María, 24";
+"onboarding.social.testimonial2" = "Ya no hago scroll nocturno";
+"onboarding.social.author2" = "Tomás, 31";
+"onboarding.social.privacy" = "Privacidad";
+"onboarding.social.noAds" = "Sin anuncios";
+"onboarding.social.joinTeam" = "Unirse al equipo";
+
+// MARK: - Onboarding Premium
+"onboarding.premium.badge" = "PREMIUM";
+"onboarding.premium.unlockAll" = "desbloquea todo";
+"onboarding.premium.potential" = "el potencial! ✨";
+"onboarding.premium.allFilters" = "Todos los filtros ilimitados";
+"onboarding.premium.instantActivation" = "Activación instantánea";
+"onboarding.premium.multiDevice" = "Sincronización multi-dispositivo";
+"onboarding.premium.prioritySupport" = "Soporte prioritario";
+"onboarding.premium.freeTrial" = "Prueba gratis de 3 días";
+"onboarding.premium.cancelAnytime" = "Cancelable en cualquier momento";
+
+// MARK: - Onboarding Final
+"onboarding.final.ready" = "Estás listo/a,";
+"onboarding.final.yourGoal" = "Tu objetivo:";
+"onboarding.final.recover" = "Recuperar";
+"onboarding.final.minPerDay" = "%d min/día";
+"onboarding.final.mascotMessage" = "\"¡Siempre estaré aquí para animarte!\"";
+"onboarding.final.start" = "¡Comenzar!";
+
+// MARK: - Chart Labels
+"chart.weekLabel" = "Sem %d";
+
+// MARK: - Onboarding Notifications
+"onboarding.notifications.title" = "Mantente enfocado con recordatorios inteligentes 🔔";
+"onboarding.notifications.subtitle" = "Notificaciones suaves para ayudarte a mantener hábitos saludables";
+"onboarding.notifications.benefit1.title" = "Desconexión nocturna";
+"onboarding.notifications.benefit1.desc" = "Un recordatorio a las 21h para una noche más tranquila";
+"onboarding.notifications.benefit2.title" = "Detox de fin de semana";
+"onboarding.notifications.benefit2.desc" = "Disfruta el fin de semana bloqueando los Reels";
+"onboarding.notifications.benefit3.title" = "Recordatorio nocturno";
+"onboarding.notifications.benefit3.desc" = "Un recordatorio suave para dormir mejor";
+"onboarding.notifications.enable" = "Activar notificaciones";
+"onboarding.notifications.skip" = "Quizás más tarde";
+
+// MARK: - Notification Messages
+"notification.evening.title" = "🌙 Desconexión nocturna";
+"notification.evening.body" = "Son las 21h. Activa el modo 'Solo seguidos' para una noche más tranquila";
+"notification.weekend.title" = "☀️ Detox de fin de semana";
+"notification.weekend.body" = "¡Es fin de semana! Bloquea los Reels y disfruta del mundo real";
+"notification.night.title" = "😴 Recordatorio nocturno";
+"notification.night.body" = "Es tarde. ¡Cierra Instagram y descansa!";

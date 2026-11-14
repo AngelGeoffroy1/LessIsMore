@@ -23,14 +23,10 @@ class UsageTracker: ObservableObject {
         case other = "Other"
         
         var color: Color {
-            switch self {
-            case .feed: return .blue
-            case .reels: return Color(red: 0.98, green: 0.05, blue: 0.44) // Rose Insta
-            case .stories: return Color(red: 1.0, green: 0.60, blue: 0.0) // Orange Insta
-            case .messages: return .purple
-            case .explore: return .green
-            case .other: return .gray
-            }
+            // Monochrome DA: categories are told apart by grey shade, darkest = most important
+            let index = UsageCategory.allCases.firstIndex(of: self) ?? 0
+            let step = 0.75 / Double(UsageCategory.allCases.count - 1)
+            return Color.primary.opacity(1.0 - Double(index) * step)
         }
     }
 
@@ -72,6 +68,7 @@ class UsageTracker: ObservableObject {
     @Published var todayUsageSeconds: Int = 0
     @Published var weeklyUsage: [WeeklyUsageData] = []
     @Published var monthlyUsage: [MonthlyWeekData] = []
+    @Published var activityDates: Set<String> = []
 
     private var timer: Timer?
     private var isTracking = false
@@ -79,15 +76,40 @@ class UsageTracker: ObservableObject {
 
     private let usageSecondsKey = "usage_today_seconds"
     private let lastDateKey = "usage_last_date"
+    private let activityDatesKey = "activity_dates"
 
     private init() {
         initializeWeeklyUsage()
         initializeMonthlyUsage()
+        loadActivityDates()
         loadUsage()
+        recordTodayActivity()
         updateTodayInWeekly()
         updateCurrentWeekInMonthly()
         setupNotifications()
         startTracking()
+    }
+
+    // MARK: - Activity Calendar
+
+    private func loadActivityDates() {
+        if let saved = userDefaults.stringArray(forKey: activityDatesKey) {
+            activityDates = Set(saved)
+        }
+    }
+
+    func recordTodayActivity() {
+        let today = currentDateString()
+        if !activityDates.contains(today) {
+            activityDates.insert(today)
+            userDefaults.set(Array(activityDates), forKey: activityDatesKey)
+        }
+    }
+
+    func hasActivity(on date: Date) -> Bool {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return activityDates.contains(formatter.string(from: date))
     }
 
     private func initializeWeeklyUsage() {
@@ -344,7 +366,9 @@ class UsageTracker: ObservableObject {
         case .messages: return .messages
         case .following: return .feed  // Following mode affects Feed usage
         case .suggestions: return nil   // Not directly trackable
+        case .suggestedPosts: return nil // Not directly trackable
         case .likes: return nil         // Not directly trackable
+        case .youtubeShorts: return nil // YouTube time is not split by category
         }
     }
     
@@ -454,12 +478,16 @@ class UsageTracker: ObservableObject {
         // Calculate weekly total
         let weeklyTotal = weeklyUsage.reduce(0) { $0 + $1.totalSeconds }
         
+        // Encode weekly data for widget chart
+        let weeklyDataJSON = try? JSONEncoder().encode(weeklyUsage)
+        
         // Update shared data
         SharedDataManager.shared.updateUsageData(
             todaySeconds: todayUsageSeconds,
             yesterdaySeconds: yesterdaySeconds,
             weeklyTotal: weeklyTotal,
-            percentageChange: getComparisonToYesterday()
+            percentageChange: getComparisonToYesterday(),
+            weeklyDataJSON: weeklyDataJSON
         )
     }
     
@@ -493,6 +521,7 @@ class UsageTracker: ObservableObject {
 
     @objc private func appDidBecomeActive() {
         loadUsage() // Recharger au cas où le jour a changé
+        recordTodayActivity()
         startTracking()
     }
 

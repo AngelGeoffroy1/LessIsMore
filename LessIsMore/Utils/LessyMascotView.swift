@@ -77,6 +77,12 @@ extension Color {
             opacity: Double(a) / 255
         )
     }
+    
+    // Optional initializer for safe hex parsing
+    init?(hex: String?) {
+        guard let hexString = hex, !hexString.isEmpty else { return nil }
+        self.init(hex: hexString)
+    }
 }
 
 #Preview {

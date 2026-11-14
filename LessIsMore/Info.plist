@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>LessIsMore uses notifications to help you maintain healthy Instagram habits with timely reminders.</string>
 	<key>SUPERWALL_API_KEY</key>
 	<string>pk_RyjdqJMj414PB37Pgr5GF</string>
 	<key>UIAppFonts</key>

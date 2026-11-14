@@ -25,7 +25,7 @@ class LanguageManager: ObservableObject {
     // MARK: - Private Properties
     
     private let languageKey = "app_language"
-    private let supportedLanguages = ["en", "fr", "de"]
+    private let supportedLanguages = ["en", "fr", "de", "es", "pt-BR"]
     
     // MARK: - Computed Properties
     
@@ -44,12 +44,24 @@ class LanguageManager: ObservableObject {
         currentLanguage == "de"
     }
     
+    /// Returns whether the current language is Spanish
+    var isSpanish: Bool {
+        currentLanguage == "es"
+    }
+    
+    /// Returns whether the current language is Portuguese
+    var isPortuguese: Bool {
+        currentLanguage == "pt-BR"
+    }
+    
     /// Display name for current language
     var currentLanguageDisplayName: String {
         switch currentLanguage {
         case "fr": return "Français"
         case "en": return "English"
         case "de": return "Deutsch"
+        case "es": return "Español"
+        case "pt-BR": return "Português"
         default: return "English"
         }
     }
@@ -59,7 +71,9 @@ class LanguageManager: ObservableObject {
         [
             ("en", "English"),
             ("fr", "Français"),
-            ("de", "Deutsch")
+            ("de", "Deutsch"),
+            ("es", "Español"),
+            ("pt-BR", "Português")
         ]
     }
     
@@ -72,10 +86,39 @@ class LanguageManager: ObservableObject {
             self.currentLanguage = savedLanguage
         } else {
             // Fall back to device language
-            let deviceLanguage = Locale.current.language.languageCode?.identifier ?? "en"
-            self.currentLanguage = supportedLanguages.contains(deviceLanguage) ? deviceLanguage : "en"
+            self.currentLanguage = Self.detectDeviceLanguage(supportedLanguages: supportedLanguages)
         }
     }
+    
+    /// Detect the device language and match it to supported languages
+    private static func detectDeviceLanguage(supportedLanguages: [String]) -> String {
+        // Get the device's preferred language
+        let preferredLanguages = Locale.preferredLanguages
+        
+        for preferredLang in preferredLanguages {
+            // Check for exact match first (e.g., "pt-BR")
+            if supportedLanguages.contains(preferredLang) {
+                return preferredLang
+            }
+            
+            // Extract base language code (e.g., "pt-BR" -> "pt")
+            let baseLanguage = preferredLang.components(separatedBy: "-").first ?? preferredLang
+            
+            // Check for exact match with base language
+            if supportedLanguages.contains(baseLanguage) {
+                return baseLanguage
+            }
+            
+            // Check if any supported language starts with this base (e.g., "pt" matches "pt-BR")
+            if let match = supportedLanguages.first(where: { $0.hasPrefix(baseLanguage + "-") || $0 == baseLanguage }) {
+                return match
+            }
+        }
+        
+        // Default to English
+        return "en"
+    }
+
     
     // MARK: - Public Methods
     
@@ -86,7 +129,7 @@ class LanguageManager: ObservableObject {
         currentLanguage = languageCode
         
         // Track language change
-        TelemetryManager.shared.trackLanguageChanged(from: previousLanguage, to: languageCode)
+        MixpanelManager.shared.trackLanguageChanged(from: previousLanguage, to: languageCode)
     }
     
     /// Get the bundle for the current language

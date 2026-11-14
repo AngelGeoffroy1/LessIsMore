@@ -77,6 +77,18 @@ final class PersistenceService: PersistenceServiceProtocol {
     func setFilterEnabled(_ enabled: Bool, for filterType: String) {
         setBool(enabled, forKey: PersistenceKey.filter(filterType))
     }
+    
+    // MARK: - Theme persistence
+    
+    private let themeKey = "selected_instagram_theme"
+    
+    func getSelectedTheme() -> String {
+        return getString(forKey: themeKey) ?? "default"
+    }
+    
+    func setSelectedTheme(_ theme: String) {
+        setString(theme, forKey: themeKey)
+    }
 
     // MARK: - Reset toutes les données
 

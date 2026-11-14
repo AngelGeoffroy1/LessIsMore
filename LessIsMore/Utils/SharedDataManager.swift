@@ -18,6 +18,7 @@ enum SharedDataKey: String {
     case weeklyUsageTotal = "weekly_usage_total"
     case usagePercentageChange = "usage_percentage_change"
     case lastUpdateDate = "last_update_date"
+    case weeklyUsageData = "weekly_usage_data" // JSON encoded weekly chart data
     
     // Streak data
     case bestStreakDays = "best_streak_days"
@@ -89,13 +90,19 @@ class SharedDataManager {
         todaySeconds: Int,
         yesterdaySeconds: Int,
         weeklyTotal: Int,
-        percentageChange: Double
+        percentageChange: Double,
+        weeklyDataJSON: Data? = nil
     ) {
         setInt(todaySeconds, forKey: .todayUsageSeconds)
         setInt(yesterdaySeconds, forKey: .yesterdayUsageSeconds)
         setInt(weeklyTotal, forKey: .weeklyUsageTotal)
         setDouble(percentageChange, forKey: .usagePercentageChange)
         setDate(Date(), forKey: .lastUpdateDate)
+        
+        // Store weekly chart data if provided
+        if let jsonData = weeklyDataJSON {
+            sharedDefaults?.set(jsonData, forKey: SharedDataKey.weeklyUsageData.rawValue)
+        }
         
         // Request widget refresh
         refreshWidgets()

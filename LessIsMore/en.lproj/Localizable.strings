@@ -23,14 +23,18 @@
 "controlPanel.content" = "Content";
 "controlPanel.algorithm" = "Algorithm";
 "controlPanel.style" = "Style";
+"controlPanel.activity" = "Activity";
+"controlPanel.themes" = "Themes";
 "controlPanel.pro" = "Pro";
 
 // MARK: - Filters
+"filter.hideShorts" = "Hide Shorts";
 "filter.hideReels" = "Hide Reels";
 "filter.hideStories" = "Hide Stories";
 "filter.followingOnly" = "Following only";
 "filter.hideExplore" = "Hide Explore Feed";
 "filter.hideSuggestions" = "Hide Suggestions";
+"filter.hideSuggestedPosts" = "Hide Suggested Posts";
 "filter.hideMessages" = "Hide Messages";
 "filter.hideLikes" = "Hide Likes";
 "filter.perDaySaved" = "~%@/day saved";
@@ -112,10 +116,10 @@
 
 // MARK: - Onboarding Welcome
 "onboarding.back" = "Back";
-"onboarding.welcome.greeting" = "Hi! 👋 I'm Lessy,";
-"onboarding.welcome.line1" = "your companion to take back";
-"onboarding.welcome.line2" = "control of your time";
-"onboarding.welcome.line3" = "on Instagram!";
+"onboarding.welcome.greeting" = "Your feed,";
+"onboarding.welcome.line1" = "your way.";
+"onboarding.welcome.line2" = "Instagram and YouTube,";
+"onboarding.welcome.line3" = "without the endless scroll.";
 
 // MARK: - Onboarding Name
 "onboarding.name.question" = "What can I call you? 😊";
@@ -195,3 +199,23 @@
 
 // MARK: - Chart Labels
 "chart.weekLabel" = "Wk %d";
+
+// MARK: - Onboarding Notifications
+"onboarding.notifications.title" = "Stay focused with smart reminders 🔔";
+"onboarding.notifications.subtitle" = "Gentle notifications to help you maintain healthy habits";
+"onboarding.notifications.benefit1.title" = "Evening disconnect";
+"onboarding.notifications.benefit1.desc" = "A reminder at 9 PM for a calmer evening";
+"onboarding.notifications.benefit2.title" = "Weekend detox";
+"onboarding.notifications.benefit2.desc" = "Enjoy your weekend by blocking Reels";
+"onboarding.notifications.benefit3.title" = "Night reminder";
+"onboarding.notifications.benefit3.desc" = "A gentle reminder for better sleep";
+"onboarding.notifications.enable" = "Enable notifications";
+"onboarding.notifications.skip" = "Maybe later";
+
+// MARK: - Notification Messages
+"notification.evening.title" = "🌙 Evening disconnect";
+"notification.evening.body" = "It's 9 PM. Consider enabling 'Following Only' mode for a calmer evening";
+"notification.weekend.title" = "☀️ Weekend detox";
+"notification.weekend.body" = "It's the weekend! Block Reels and enjoy the real world";
+"notification.night.title" = "😴 Night reminder";
+"notification.night.body" = "It's late. Close Instagram and get some rest!";

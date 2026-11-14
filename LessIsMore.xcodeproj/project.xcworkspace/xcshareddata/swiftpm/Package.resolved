@@ -1,13 +1,22 @@
 {
-  "originHash" : "f5121ecd77203e2b49ef959dfe54fdde6cc963c506eefe613d12f6c484f165bc",
+  "originHash" : "24ffdbecfc0268089d17b070465ccae481786c582ba8eb986f7e452f8b43dd14",
   "pins" : [
     {
-      "identity" : "superscript-ios",
+      "identity" : "mixpanel-swift",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/superwall/Superscript-iOS",
+      "location" : "https://github.com/mixpanel/mixpanel-swift",
       "state" : {
-        "revision" : "bde42f1c7652a69a469677978ed97cba92c4dd2c",
-        "version" : "1.0.10"
+        "branch" : "master",
+        "revision" : "5ecded282e1468a5b6ac60e16569cc074f814db3"
+      }
+    },
+    {
+      "identity" : "superscript-ios-next",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/superwall/superscript-ios-next",
+      "state" : {
+        "revision" : "6388170521587bdad417485ba82bffe05d4d2a30",
+        "version" : "1.0.18"
       }
     },
     {
@@ -15,17 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/superwall/Superwall-iOS",
       "state" : {
-        "revision" : "886c35c556bdac8f8fda6c765239aa908c16e4e5",
-        "version" : "4.10.6"
-      }
-    },
-    {
-      "identity" : "swiftsdk",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/TelemetryDeck/SwiftSDK",
-      "state" : {
-        "revision" : "8f332c1c256ba26cc46f74c9e5af94f7b1c37a9c",
-        "version" : "2.11.0"
+        "revision" : "035d7d093b4f7ae837ae9b80b4ab9fd2b72f1e92",
+        "version" : "4.19.1"
       }
     }
   ],

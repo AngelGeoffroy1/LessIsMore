@@ -8,13 +8,17 @@
 import SwiftUI
 import AuthenticationServices
 import SuperwallKit
+import StoreKit
 
 @main
 struct LessIsMoreApp: App {
     init() {
-        // Configuration de TelemetryDeck
-        TelemetryManager.shared.configure()
-        TelemetryManager.shared.trackAppLaunch()
+        // Configuration de Mixpanel
+        MixpanelManager.shared.configure()
+        MixpanelManager.shared.trackAppLaunch()
+        
+        // Demande de notation au 2ème lancement
+        AppRatingManager.shared.incrementLaunchCountAndRequestReviewIfNeeded()
         
         // Configuration de Superwall avec la clé depuis Info.plist
         if let apiKey = Bundle.main.object(forInfoDictionaryKey: "SUPERWALL_API_KEY") as? String {
@@ -29,6 +33,7 @@ struct LessIsMoreApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .preferredColorScheme(.dark)
         }
     }
 }

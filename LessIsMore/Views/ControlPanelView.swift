@@ -24,12 +24,13 @@ struct ControlPanelView: View {
     @State private var showBreakStreakModal = false
     @State private var showTimeSavedExplanation = false
     @State private var pendingFilterToDisable: FilterType? = nil
+    @State private var selectedTheme: InstagramTheme = InstagramTheme.current
+    @State private var platform: Platform = Platform.current
 
     var body: some View {
         ZStack {
             // Force Glassmorphism - Extreme transparency
-            VisualEffectView(effect: UIBlurEffect(style: colorScheme == .dark ? .systemUltraThinMaterialDark : .systemUltraThinMaterialLight))
-                .opacity(0.4)
+            Color(uiColor: .systemBackground)
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
@@ -42,17 +43,31 @@ struct ControlPanelView: View {
 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 20) {
+                        // Instagram / YouTube
+                        platformPicker
+
                         // Header avec graphique
                         usageHeader
+                        
+                        // Section Calendrier d'activité
+                        ActivityCalendarView(usageTracker: usageTracker)
 
-                        // Section filtres basiques
-                        basicFiltersSection
+                        switch platform {
+                        case .instagram:
+                            // Section Thèmes Instagram
+                            themesSection
 
-                        // Section Algorithm (Premium)
-                        algorithmSection
+                            // Section filtres basiques
+                            basicFiltersSection
 
-                        // Section Style (Premium)
-                        styleSection
+                            // Section Algorithm (Premium)
+                            algorithmSection
+
+                            // Section Style (Premium)
+                            styleSection
+                        case .youtube:
+                            youtubeSection
+                        }
 
                         Spacer()
                             .frame(height: 40)
@@ -153,6 +168,55 @@ struct ControlPanelView: View {
         }
     }
 
+    // MARK: - Platform Picker
+
+    private var platformPicker: some View {
+        HStack(spacing: 4) {
+            ForEach(Platform.allCases) { option in
+                let isSelected = option == platform
+                Button(action: {
+                    guard option != platform else { return }
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    withAnimation(.easeInOut(duration: 0.2)) { platform = option }
+                    webViewManager.switchPlatform(to: option)
+                }) {
+                    Text(option.displayName)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(isSelected ? Theme.inkInverse : Theme.ink)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 40)
+                        .background(Capsule().fill(isSelected ? Theme.ink : Color.clear))
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+        }
+        .padding(4)
+        .background(Capsule().fill(Theme.card))
+    }
+
+    // MARK: - YouTube Section
+
+    private var youtubeSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("controlPanel.content".localized)
+                .font(AppFonts.subheadline())
+                .foregroundColor(.secondary)
+                .padding(.leading, 4)
+
+            VStack(spacing: 0) {
+                FilterRow(
+                    title: "filter.hideShorts".localized,
+                    isEnabled: binding(for: .youtubeShorts),
+                    isLocked: false, // Gratuit, comme les Reels
+                    streakDays: streakTracker.getCurrentStreakDays(for: .youtubeShorts),
+                    onLockedTap: showPaywall
+                )
+            }
+            .themeCard()
+        }
+    }
+
     // MARK: - Usage Header
 
     private var usageHeader: some View {
@@ -209,17 +273,7 @@ struct ControlPanelView: View {
                         
                         Text("\(best.days)")
                             .font(AppFonts.headline(15))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [
-                                        Color(red: 1.0, green: 0.60, blue: 0.0),
-                                        Color(red: 0.98, green: 0.05, blue: 0.44),
-                                        Color(red: 0.73, green: 0.20, blue: 0.82)
-                                    ],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
+                            .foregroundColor(Theme.ink)
                         
                         Text(best.days == 1 ? "common.day".localized : "common.days".localized)
                             .font(AppFonts.body(13))
@@ -245,7 +299,7 @@ struct ControlPanelView: View {
                         HStack(spacing: 4) {
                             Image(systemName: "clock.arrow.circlepath")
                                 .font(.system(size: 11))
-                                .foregroundColor(.green.opacity(0.8))
+                                .foregroundColor(.secondary)
                             
                             Text("~\(estimatedTimeSaved(for: best.filterType, days: best.days))")
                                 .font(AppFonts.caption(12))
@@ -274,6 +328,7 @@ struct ControlPanelView: View {
             // Fallback for types not directly trackable by category
             switch filterType {
             case .suggestions: avgMinutes = 10
+            case .suggestedPosts: avgMinutes = 15
             case .likes: avgMinutes = 5
             default: avgMinutes = 15
             }
@@ -298,7 +353,7 @@ struct ControlPanelView: View {
         let isZero = Int(diff) == 0
         let isLower = diff < 0
         
-        let color: Color = isZero ? .secondary : (isLower ? .green : .red)
+        let color: Color = isZero ? .secondary : .primary
         let icon = isZero ? "minus" : (isLower ? "arrow.down" : "arrow.up")
         
         return HStack(spacing: 6) {
@@ -322,6 +377,55 @@ struct ControlPanelView: View {
         .padding(.bottom, 6)
         .animation(.easeInOut(duration: 0.2), value: chartMode)
     }
+    
+    // MARK: - Themes Section
+    
+    private var themesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("controlPanel.themes".localized)
+                    .font(AppFonts.subheadline())
+                    .foregroundColor(.secondary)
+                
+                if !subscriptionManager.isPremium {
+                    ProBadge()
+                }
+            }
+            .padding(.leading, 4)
+            
+            HStack(spacing: 12) {
+                ForEach(InstagramTheme.allCases, id: \.self) { theme in
+                    ThemeCard(
+                        theme: theme,
+                        isSelected: selectedTheme == theme,
+                        isLocked: theme.isPremium && !subscriptionManager.isPremium,
+                        onTap: {
+                            selectTheme(theme)
+                        }
+                    )
+                }
+            }
+        }
+    }
+    
+    private func selectTheme(_ theme: InstagramTheme) {
+        // Check if premium is required
+        if theme.isPremium && !subscriptionManager.isPremium {
+            showPaywall()
+            return
+        }
+        
+        // Haptic feedback
+        let haptic = UIImpactFeedbackGenerator(style: .light)
+        haptic.impactOccurred()
+        
+        // Update state and persist
+        selectedTheme = theme
+        InstagramTheme.current = theme
+        
+        // Apply theme to WebView
+        webViewManager.applyTheme(theme)
+    }
 
     // MARK: - Basic Filters Section
 
@@ -331,26 +435,6 @@ struct ControlPanelView: View {
                 Text("controlPanel.content".localized)
                     .font(AppFonts.subheadline())
                     .foregroundColor(.secondary)
-
-                if !subscriptionManager.isPremium {
-                    Text("controlPanel.pro".localized)
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(
-                            LinearGradient(
-                                colors: [
-                                    Color(red: 0.98, green: 0.05, blue: 0.44), // Rose
-                                    Color(red: 0.73, green: 0.20, blue: 0.82), // Violet
-                                    Color(red: 1.0, green: 0.60, blue: 0.0)    // Orange
-                                ],
-                                startPoint: .topTrailing,
-                                endPoint: .bottomLeading
-                            )
-                        )
-                        .cornerRadius(6)
-                }
                 
                 Spacer()
                 
@@ -380,30 +464,13 @@ struct ControlPanelView: View {
                 FilterRow(
                     title: "filter.hideReels".localized,
                     isEnabled: binding(for: .reels),
-                    isLocked: !subscriptionManager.isPremium,
+                    isLocked: false, // Gratuit pour tous les utilisateurs
                     streakDays: streakTracker.getCurrentStreakDays(for: .reels),
                     avgTimePerDay: usageTracker.formattedAveragePerDay(for: .reels),
                     onLockedTap: showPaywall
                 )
-
-                Divider()
-                    .padding(.leading, 16)
-
-                FilterRow(
-                    title: "filter.hideStories".localized,
-                    isEnabled: binding(for: .stories),
-                    isLocked: !subscriptionManager.isPremium,
-                    streakDays: streakTracker.getCurrentStreakDays(for: .stories),
-                    avgTimePerDay: usageTracker.formattedAveragePerDay(for: .stories),
-                    onLockedTap: showPaywall
-                )
             }
-            .background(Color.primary.opacity(0.06))
-            .cornerRadius(14)
-            .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(Color.primary.opacity(0.05), lineWidth: 0.5)
-            )
+            .themeCard()
         }
     }
 
@@ -417,28 +484,24 @@ struct ControlPanelView: View {
                     .foregroundColor(.secondary)
 
                 if !subscriptionManager.isPremium {
-                    Text("Pro")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(
-                            LinearGradient(
-                                colors: [
-                                    Color(red: 0.98, green: 0.05, blue: 0.44),
-                                    Color(red: 0.73, green: 0.20, blue: 0.82),
-                                    Color(red: 1.0, green: 0.60, blue: 0.0)
-                                ],
-                                startPoint: .topTrailing,
-                                endPoint: .bottomLeading
-                            )
-                        )
-                        .cornerRadius(6)
+                    ProBadge()
                 }
             }
             .padding(.leading, 4)
 
             VStack(spacing: 0) {
+                FilterRow(
+                    title: "filter.hideStories".localized,
+                    isEnabled: binding(for: .stories),
+                    isLocked: !subscriptionManager.isPremium,
+                    streakDays: streakTracker.getCurrentStreakDays(for: .stories),
+                    avgTimePerDay: usageTracker.formattedAveragePerDay(for: .stories),
+                    onLockedTap: showPaywall
+                )
+
+                Divider()
+                    .padding(.leading, 16)
+
                 FilterRow(
                     title: "filter.followingOnly".localized,
                     isEnabled: binding(for: .following),
@@ -476,6 +539,18 @@ struct ControlPanelView: View {
                     .padding(.leading, 16)
 
                 FilterRow(
+                    title: "filter.hideSuggestedPosts".localized,
+                    isEnabled: binding(for: .suggestedPosts),
+                    isLocked: !subscriptionManager.isPremium,
+                    streakDays: streakTracker.getCurrentStreakDays(for: .suggestedPosts),
+                    avgTimePerDay: "15m",
+                    onLockedTap: showPaywall
+                )
+
+                Divider()
+                    .padding(.leading, 16)
+
+                FilterRow(
                     title: "filter.hideMessages".localized,
                     isEnabled: binding(for: .messages),
                     isLocked: !subscriptionManager.isPremium,
@@ -484,12 +559,7 @@ struct ControlPanelView: View {
                     onLockedTap: showPaywall
                 )
             }
-            .background(Color.primary.opacity(0.06))
-            .cornerRadius(14)
-            .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(Color.primary.opacity(0.05), lineWidth: 0.5)
-            )
+            .themeCard()
         }
     }
 
@@ -503,23 +573,7 @@ struct ControlPanelView: View {
                     .foregroundColor(.secondary)
 
                 if !subscriptionManager.isPremium {
-                    Text("Pro")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(
-                            LinearGradient(
-                                colors: [
-                                    Color(red: 0.98, green: 0.05, blue: 0.44),
-                                    Color(red: 0.73, green: 0.20, blue: 0.82),
-                                    Color(red: 1.0, green: 0.60, blue: 0.0)
-                                ],
-                                startPoint: .topTrailing,
-                                endPoint: .bottomLeading
-                            )
-                        )
-                        .cornerRadius(6)
+                    ProBadge()
                 }
             }
             .padding(.leading, 4)
@@ -534,12 +588,7 @@ struct ControlPanelView: View {
                     onLockedTap: showPaywall
                 )
             }
-            .background(Color.primary.opacity(0.06))
-            .cornerRadius(14)
-            .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(Color.primary.opacity(0.05), lineWidth: 0.5)
-            )
+            .themeCard()
         }
     }
 
@@ -732,7 +781,7 @@ struct FilterRow: View {
             if isLocked {
                 Toggle("", isOn: .constant(false))
                     .labelsHidden()
-                    .toggleStyle(SwitchToggleStyle(tint: .blue))
+                    .toggleStyle(SwitchToggleStyle(tint: .green))
                     .disabled(true)
                     .scaleEffect(0.9)
                     .fixedSize()
@@ -746,7 +795,7 @@ struct FilterRow: View {
             } else {
                 Toggle("", isOn: $isEnabled)
                     .labelsHidden()
-                    .toggleStyle(SwitchToggleStyle(tint: .white))
+                    .toggleStyle(SwitchToggleStyle(tint: .green))
                     .scaleEffect(0.9)
                     .fixedSize()
             }
@@ -927,6 +976,244 @@ struct MonthlyUsageChart: View {
                 .padding(.horizontal, 4)
             }
         }
+    }
+}
+
+// MARK: - Activity Calendar Component (GitHub-style)
+
+struct ActivityCalendarView: View {
+    @ObservedObject var usageTracker: UsageTracker
+
+    private let rows = 7
+    private let spacing: CGFloat = 3
+    private let labelWidth: CGFloat = 14
+    private let dayLabels = ["M", "T", "W", "T", "F", "S", "S"]
+
+    /// Calculate columns to fill available width
+    private func columnsAndSize(for totalWidth: CGFloat) -> (columns: Int, squareSize: CGFloat) {
+        let availableForGrid = totalWidth - labelWidth - spacing
+        // Solve: columns * size + (columns - 1) * spacing = availableForGrid
+        // Try increasing columns until squares get too small
+        var bestColumns = 15
+        for c in 12...22 {
+            let size = (availableForGrid - CGFloat(c - 1) * spacing) / CGFloat(c)
+            if size >= 11 {
+                bestColumns = c
+            }
+        }
+        let size = (availableForGrid - CGFloat(bestColumns - 1) * spacing) / CGFloat(bestColumns)
+        return (bestColumns, size)
+    }
+
+    /// First date the user ever used the app
+    private var firstActivityDate: Date? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return usageTracker.activityDates
+            .compactMap { formatter.date(from: $0) }
+            .min()
+    }
+
+    /// Grid: columns = weeks (oldest left, newest right), rows = weekdays (Mon=0..Sun=6)
+    private func calendarDates(columns: Int) -> [[Date?]] {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+
+        var grid: [[Date?]] = Array(repeating: Array(repeating: nil, count: rows), count: columns)
+
+        let todayWeekday = calendar.component(.weekday, from: today) // 1=Sun..7=Sat
+        let todayRow = todayWeekday == 1 ? 6 : todayWeekday - 2
+
+        for col in 0..<columns {
+            let maxRow = (col == columns - 1) ? todayRow : rows - 1
+            for row in 0...maxRow {
+                let weekOffset = (columns - 1) - col
+                let dayOffset = todayRow - row + (weekOffset * 7)
+                if let date = calendar.date(byAdding: .day, value: -dayOffset, to: today) {
+                    grid[col][row] = date
+                }
+            }
+        }
+
+        return grid
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("controlPanel.activity".localized)
+                    .font(AppFonts.subheadline())
+                    .foregroundColor(.secondary)
+
+                Spacer()
+
+                let totalDays = usageTracker.activityDates.count
+                Text("\(totalDays) \(totalDays == 1 ? "common.day".localized : "common.days".localized)")
+                    .font(AppFonts.caption(11))
+                    .foregroundColor(.secondary.opacity(0.6))
+            }
+            .padding(.leading, 4)
+
+            GeometryReader { geometry in
+                let layout = columnsAndSize(for: geometry.size.width)
+                let grid = calendarDates(columns: layout.columns)
+                let sq = layout.squareSize
+
+                HStack(alignment: .top, spacing: spacing) {
+                    // Day labels column
+                    VStack(spacing: spacing) {
+                        ForEach(0..<rows, id: \.self) { i in
+                            Text(dayLabels[i])
+                                .font(.system(size: 9, weight: .medium))
+                                .foregroundColor(.secondary.opacity(0.5))
+                                .frame(width: labelWidth, height: sq)
+                        }
+                    }
+
+                    // Grid
+                    ForEach(0..<layout.columns, id: \.self) { col in
+                        VStack(spacing: spacing) {
+                            ForEach(0..<rows, id: \.self) { row in
+                                if let date = grid[col][row] {
+                                    RoundedRectangle(cornerRadius: 3)
+                                        .fill(colorForDate(date))
+                                        .frame(width: sq, height: sq)
+                                } else {
+                                    Color.clear
+                                        .frame(width: sq, height: sq)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .frame(height: CGFloat(rows) * 13 + CGFloat(rows - 1) * spacing)
+        }
+    }
+
+    private func colorForDate(_ date: Date) -> Color {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let dateStart = calendar.startOfDay(for: date)
+        let isToday = calendar.isDateInToday(date)
+        let hasActivity = usageTracker.hasActivity(on: date)
+
+        if hasActivity {
+            return isToday ? Theme.ink : Theme.ink.opacity(0.55)
+        }
+
+        // Future → neutral
+        if dateStart > today {
+            return Color.primary.opacity(0.06)
+        }
+
+        // Before first activity → neutral
+        if let first = firstActivityDate, dateStart < calendar.startOfDay(for: first) {
+            return Color.primary.opacity(0.06)
+        }
+
+        // Today (already recorded via hasActivity above, so this is just-opened state)
+        if isToday {
+            return Theme.ink
+        }
+
+        // Past day after first use, missed → red
+        return Theme.ink.opacity(0.15)
+    }
+}
+
+// MARK: - Theme Card Component
+
+struct ThemeCard: View {
+    let theme: InstagramTheme
+    let isSelected: Bool
+    let isLocked: Bool
+    let onTap: () -> Void
+    
+    private var primaryColor: Color {
+        let colors = theme.previewColors.primary
+        return Color(red: colors.r, green: colors.g, blue: colors.b)
+    }
+    
+    private var secondaryColor: Color {
+        let colors = theme.previewColors.secondary
+        return Color(red: colors.r, green: colors.g, blue: colors.b)
+    }
+    
+    var body: some View {
+        Button(action: onTap) {
+            VStack(spacing: 6) {
+                // Theme preview square
+                ZStack {
+                    // Background gradient
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(
+                            LinearGradient(
+                                colors: [primaryColor, secondaryColor],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 70, height: 70)
+                    
+                    // Simulated content lines
+                    VStack(spacing: 4) {
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Color.white.opacity(0.2))
+                            .frame(width: 40, height: 4)
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Color.white.opacity(0.15))
+                            .frame(width: 30, height: 4)
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Color.white.opacity(0.1))
+                            .frame(width: 35, height: 4)
+                    }
+                    
+                    // Selection/Lock overlay
+                    if isSelected {
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(
+                                Theme.ink,
+                                lineWidth: 3
+                            )
+                            .frame(width: 70, height: 70)
+                        
+                        // Checkmark
+                        ZStack {
+                            Circle()
+                                .fill(
+                                    Theme.ink
+                                )
+                                .frame(width: 22, height: 22)
+                            
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundColor(Theme.inkInverse)
+                        }
+                        .offset(x: 28, y: -28)
+                    } else if isLocked {
+                        // Lock overlay
+                        ZStack {
+                            Circle()
+                                .fill(.ultraThinMaterial)
+                                .frame(width: 26, height: 26)
+                            
+                            Image(systemName: "lock.fill")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundColor(.primary.opacity(0.7))
+                        }
+                    }
+                }
+                
+                // Theme name
+                Text(theme.displayName)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(isSelected ? .primary : .secondary)
+            }
+        }
+        .buttonStyle(PlainButtonStyle())
+        .scaleEffect(isSelected ? 1.05 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
     }
 }
 

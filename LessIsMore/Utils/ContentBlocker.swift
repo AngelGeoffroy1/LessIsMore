@@ -12,19 +12,31 @@ enum FilterType: String, CaseIterable {
     case explore = "explore"
     case stories = "stories"
     case suggestions = "suggestions"
+    case suggestedPosts = "suggestedPosts"
     case likes = "likes"
     case following = "following"
     case messages = "messages"
-    
+    case youtubeShorts = "youtubeShorts"
+
+    /// Platform whose page this filter acts on.
+    var platform: Platform {
+        switch self {
+        case .youtubeShorts: return .youtube
+        default: return .instagram
+        }
+    }
+
     var displayName: String {
         switch self {
         case .reels: return "Reels"
         case .explore: return "Explore"
         case .stories: return "Stories"
         case .suggestions: return "Suggestions"
+        case .suggestedPosts: return "Suggested Posts"
         case .likes: return "Like Counter"
         case .following: return "Following Only Mode"
         case .messages: return "Messages"
+        case .youtubeShorts: return "YouTube Shorts"
         }
     }
     
@@ -39,18 +51,102 @@ enum FilterType: String, CaseIterable {
 
     func setEnabled(_ enabled: Bool) {
         PersistenceService.shared.setFilterEnabled(enabled, for: self.rawValue)
-        
-        // Track filter toggle
-        TelemetryManager.shared.trackFilterToggled(filterType: self.rawValue, enabled: enabled)
+    }
+}
+
+// MARK: - Instagram Theme
+enum InstagramTheme: String, CaseIterable {
+    case `default` = "default"
+    case midnightPurple = "midnightPurple"
+    case pinkGlow = "pinkGlow"
+    case amoledBlack = "amoledBlack"
+    
+    var displayName: String {
+        switch self {
+        case .default: return "Default"
+        case .midnightPurple: return "Midnight"
+        case .pinkGlow: return "Pink"
+        case .amoledBlack: return "Amoled"
+        }
+    }
+    
+    var isPremium: Bool {
+        switch self {
+        case .default: return false
+        case .midnightPurple, .pinkGlow, .amoledBlack: return true
+        }
+    }
+    
+    // Primary background color (hex)
+    var backgroundColor: String {
+        switch self {
+        case .default: return "" // No custom color
+        case .midnightPurple: return "#1a1a2e"
+        case .pinkGlow: return "#1a0a14" // Dark pink/magenta base
+        case .amoledBlack: return "#000000"
+        }
+    }
+    
+    // Secondary/card background color (hex)
+    var cardColor: String {
+        switch self {
+        case .default: return ""
+        case .midnightPurple: return "#16213e"
+        case .pinkGlow: return "#2d1a24" // Slightly lighter pink
+        case .amoledBlack: return "#0a0a0a"
+        }
+    }
+    
+    // Accent color for highlights (hex)
+    var accentColor: String {
+        switch self {
+        case .default: return ""
+        case .midnightPurple: return "#e94560"
+        case .pinkGlow: return "#fa0d70" // Bright pink like onboarding
+        case .amoledBlack: return "#ffffff"
+        }
+    }
+    
+    // Preview colors for the UI cards (SwiftUI Color)
+    var previewColors: (primary: (r: Double, g: Double, b: Double), secondary: (r: Double, g: Double, b: Double)) {
+        switch self {
+        case .default:
+            return (primary: (0.1, 0.1, 0.1), secondary: (0.2, 0.2, 0.2))
+        case .midnightPurple:
+            return (primary: (0.10, 0.10, 0.18), secondary: (0.086, 0.129, 0.243))
+        case .pinkGlow:
+            return (primary: (0.10, 0.04, 0.08), secondary: (0.18, 0.10, 0.14)) // Pink preview
+        case .amoledBlack:
+            return (primary: (0.0, 0.0, 0.0), secondary: (0.04, 0.04, 0.04))
+        }
+    }
+    
+    // Persistence
+    static var current: InstagramTheme {
+        get {
+            let rawValue = PersistenceService.shared.getSelectedTheme()
+            return InstagramTheme(rawValue: rawValue) ?? .default
+        }
+        set {
+            PersistenceService.shared.setSelectedTheme(newValue.rawValue)
+        }
     }
 }
 
 class ContentBlocker {
     
     static func getBlockingScript() -> String {
+        // Injecter les valeurs actuelles des filtres directement dans le script
+        let filtersJson = FilterType.allCases.map { "\"\($0.rawValue)\": \($0.isEnabled)" }.joined(separator: ", ")
+
         return """
         (function() {
+            // Instagram-only script: do nothing on other sites (e.g. YouTube)
+            if (!/(^|\\.)instagram\\.com$/.test(location.hostname)) { return; }
             console.log('LessIsMore: Initialisation du bloqueur de contenu');
+
+            // Filtres initiaux injectés depuis l'app iOS
+            window.__lessIsMoreInitialFilters = {\(filtersJson)};
             
             // Style CSS pour masquer les éléments
             const style = document.createElement('style');
@@ -107,8 +203,14 @@ class ContentBlocker {
                 /* Masquer les suggestions de la sidebar */
                 .lessismore-hidden-suggestions aside,
                 .lessismore-hidden-suggestions [data-testid*="suggestion"],
-                .lessismore-hidden-suggestions div[style*="position: sticky"],
-                .lessismore-hidden-suggestions div:has(> div > div > span:contains("Suggestions pour vous")) {
+                .lessismore-hidden-suggestions div[style*="position: sticky"] {
+                    display: none !important;
+                }
+                
+                /* Masquer les posts suggérés dans le feed */
+                /* Note: ":contains()" is not valid CSS and would invalidate the whole rule; text matching is done in JS */
+                .lessismore-hidden-suggestedPosts article:has([data-testid*="suggested"]),
+                .lessismore-hidden-suggestedPosts [data-lessismore-suggested-post="true"] {
                     display: none !important;
                 }
                 
@@ -172,6 +274,14 @@ class ContentBlocker {
                             window.lessIsMoreHideForYou();
                         }, 50);
                     }
+                    
+                    
+                    // Pour les posts suggérés dans le feed
+                    if (filterType === 'suggestedPosts') {
+                        setTimeout(() => {
+                            window.lessIsMoreHideSuggestedPosts();
+                        }, 50);
+                    }
                 } else {
                     document.body.classList.remove(className);
                     
@@ -193,6 +303,14 @@ class ContentBlocker {
                     if (filterType === 'following') {
                         setTimeout(() => {
                             window.lessIsMoreShowForYou();
+                        }, 50);
+                    }
+                    
+                    
+                    // Pour les posts suggérés, restaurer l'affichage
+                    if (filterType === 'suggestedPosts') {
+                        setTimeout(() => {
+                            window.lessIsMoreShowSuggestedPosts();
                         }, 50);
                     }
                 }
@@ -306,7 +424,7 @@ class ContentBlocker {
                         if (el.style.display !== 'none') {
                             el.style.setProperty('display', 'none', 'important');
                             // Marquer l'élément comme masqué par LessIsMore
-                            el.setAttribute('data-lessismore-hidden', 'true');
+                            el.setAttribute('data-lessismore-hidden-stories', 'true');
                         }
                     });
                 });
@@ -327,7 +445,7 @@ class ContentBlocker {
                             el.offsetWidth > 50 && el.offsetHeight > 50) {
                             el.style.setProperty('display', 'none', 'important');
                             // Marquer l'élément comme masqué par LessIsMore
-                            el.setAttribute('data-lessismore-hidden', 'true');
+                            el.setAttribute('data-lessismore-hidden-stories', 'true');
                         }
                     });
                 });
@@ -339,7 +457,7 @@ class ContentBlocker {
                     if (firstChild.style.overflowX === 'auto' || 
                         firstChild.style.overflowX === 'scroll') {
                         firstChild.style.setProperty('display', 'none', 'important');
-                        firstChild.setAttribute('data-lessismore-hidden', 'true');
+                        firstChild.setAttribute('data-lessismore-hidden-stories', 'true');
                     }
                 }
             };
@@ -347,10 +465,10 @@ class ContentBlocker {
             // Fonction pour restaurer l'affichage des stories
             window.lessIsMoreShowStories = function() {
                 // Restaurer tous les éléments masqués par LessIsMore
-                const hiddenElements = document.querySelectorAll('[data-lessismore-hidden="true"]');
+                const hiddenElements = document.querySelectorAll('[data-lessismore-hidden-stories="true"]');
                 hiddenElements.forEach(el => {
                     el.style.removeProperty('display');
-                    el.removeAttribute('data-lessismore-hidden');
+                    el.removeAttribute('data-lessismore-hidden-stories');
                 });
                 
                 console.log('Stories restaurées:', hiddenElements.length, 'éléments');
@@ -358,73 +476,40 @@ class ContentBlocker {
             
             // Fonction pour masquer les compteurs de likes - très précise
             window.lessIsMoreHideLikes = function() {
-                const likeSelectors = [
-                    '[data-testid="like-count"]',
-                    '[data-testid="likes-count"]',
-                    '[data-testid="likes"]'
-                ];
-                
-                // Masquer avec CSS - sélecteurs très précis
-                likeSelectors.forEach(selector => {
-                    const elements = document.querySelectorAll(selector);
-                    elements.forEach(el => {
-                        if (el.style.display !== 'none') {
-                            el.style.setProperty('display', 'none', 'important');
-                            el.setAttribute('data-lessismore-hidden', 'true');
-                        }
-                    });
-                });
-                
-                // Masquer les liens vers les likes (plus précis)
-                const likeLinks = document.querySelectorAll('a[href*="/liked_by/"], a[href*="/likes/"]');
-                likeLinks.forEach(link => {
-                    if (link.style.display !== 'none') {
-                        link.style.setProperty('display', 'none', 'important');
-                        link.setAttribute('data-lessismore-hidden', 'true');
+                const markHidden = el => {
+                    if (el && el.getAttribute('data-lessismore-hidden-likes') !== 'true') {
+                        el.style.setProperty('display', 'none', 'important');
+                        el.setAttribute('data-lessismore-hidden-likes', 'true');
+                    }
+                };
+
+                // Legacy selectors (older Instagram markup)
+                document.querySelectorAll('[data-testid="like-count"], [data-testid="likes-count"], a[href*="/liked_by/"]').forEach(markHidden);
+
+                // Current markup: in each post's action bar the first child is the like button
+                // and the element right after it is the like counter (a numeric span[role="button"]).
+                // Language-independent: relies on structure, not on labels.
+                const counterPattern = /^[\\d\\s.,\\u00a0\\u202f]+\\s*[A-Za-z\\u00c0-\\u00ff.]{0,4}$/;
+                document.querySelectorAll('article').forEach(article => {
+                    const firstCount = Array.from(article.querySelectorAll('span[role="button"]'))
+                        .find(s => counterPattern.test((s.textContent || '').trim()));
+                    if (!firstCount) { return; }
+                    const actionBar = firstCount.parentElement;
+                    const likeButton = actionBar && actionBar.firstElementChild;
+                    const likeCounter = likeButton && likeButton.nextElementSibling;
+                    if (likeButton && likeButton.querySelector('svg') && likeCounter &&
+                        counterPattern.test((likeCounter.textContent || '').trim())) {
+                        markHidden(likeCounter);
                     }
                 });
-                
-                // Masquer les aria-label très spécifiques aux compteurs de likes
-                const ariaLabels = document.querySelectorAll('[aria-label]');
-                ariaLabels.forEach(el => {
-                    const ariaLabel = el.getAttribute('aria-label') || '';
-                    // Seulement masquer si c'est vraiment un compteur de likes
-                    if ((ariaLabel.includes('like') || ariaLabel.includes('Like') || ariaLabel.includes('LIKES')) &&
-                        ariaLabel.includes('person') && 
-                        (ariaLabel.includes('other') || ariaLabel.includes('person') || ariaLabel.includes('people'))) {
-                        if (el.style.display !== 'none') {
-                            el.style.setProperty('display', 'none', 'important');
-                            el.setAttribute('data-lessismore-hidden', 'true');
-                        }
-                    }
-                });
-                
-                // Masquer les spans qui sont clairement des compteurs de likes
-                const allSpans = document.querySelectorAll('span');
-                allSpans.forEach(span => {
-                    const text = span.textContent || span.innerText || '';
-                    // Seulement masquer si c'est un nombre suivi de "like" ou "likes"
-                    if (text.match(/^\\d+\\s*(like|likes|Like|Likes)$/i)) {
-                        if (span.style.display !== 'none') {
-                            span.style.setProperty('display', 'none', 'important');
-                            span.setAttribute('data-lessismore-hidden', 'true');
-                        }
-                    }
-                });
-                
-                console.log('Filtre likes appliqué - éléments masqués:', document.querySelectorAll('[data-lessismore-hidden="true"]').length);
             };
-            
+
             // Fonction pour restaurer l'affichage des likes
             window.lessIsMoreShowLikes = function() {
-                // Restaurer tous les éléments masqués par LessIsMore
-                const hiddenElements = document.querySelectorAll('[data-lessismore-hidden="true"]');
-                hiddenElements.forEach(el => {
+                document.querySelectorAll('[data-lessismore-hidden-likes="true"]').forEach(el => {
                     el.style.removeProperty('display');
-                    el.removeAttribute('data-lessismore-hidden');
+                    el.removeAttribute('data-lessismore-hidden-likes');
                 });
-                
-                console.log('Likes restaurés:', hiddenElements.length, 'éléments');
             };
             
             // Fonction de débogage simplifiée pour analyser la structure des boutons For you/Following
@@ -435,8 +520,13 @@ class ContentBlocker {
             // Fonction pour masquer le bouton "For you" et forcer le mode Following
             window.lessIsMoreHideForYou = function() {
                 try {
-                    // D'abord, rediriger vers la page Following si on n'y est pas déjà
+                    // Skip on login/account pages to prevent login loop on iPad
                     const currentUrl = window.location.href;
+                    if (currentUrl.includes('/accounts/') || currentUrl.includes('/login') || currentUrl.includes('/challenge/') || currentUrl.includes('/consent/') || currentUrl.includes('/oauth/') || currentUrl.includes('/onetap/')) {
+                        console.log('LessIsMore: Skip HideForYou on login page');
+                        return;
+                    }
+                    // D'abord, rediriger vers la page Following si on n'y est pas déjà
                     if (!currentUrl.includes('variant=following')) {
                         console.log('Redirection vers Following');
                         // Essayer d'abord de cliquer sur le bouton Following
@@ -456,7 +546,7 @@ class ContentBlocker {
                     forYouElements.forEach(function(el) {
                         if (el && el.style) {
                             el.style.setProperty('display', 'none', 'important');
-                            el.setAttribute('data-lessismore-hidden', 'true');
+                            el.setAttribute('data-lessismore-hidden-following', 'true');
                         }
                     });
                     
@@ -465,7 +555,7 @@ class ContentBlocker {
                     homeLinks.forEach(function(link) {
                         if (link && link.style) {
                             link.style.setProperty('display', 'none', 'important');
-                            link.setAttribute('data-lessismore-hidden', 'true');
+                            link.setAttribute('data-lessismore-hidden-following', 'true');
                         }
                     });
                     
@@ -474,7 +564,7 @@ class ContentBlocker {
                     tabs.forEach(function(tab) {
                         if (tab && tab.getAttribute('aria-selected') === 'false') {
                             tab.style.setProperty('display', 'none', 'important');
-                            tab.setAttribute('data-lessismore-hidden', 'true');
+                            tab.setAttribute('data-lessismore-hidden-following', 'true');
                         }
                     });
                     
@@ -487,8 +577,13 @@ class ContentBlocker {
             // Fonction pour restaurer l'affichage du bouton "For you"
             window.lessIsMoreShowForYou = function() {
                 try {
-                    // D'abord, rediriger vers la page For you si on n'y est pas déjà
+                    // Skip on login/account pages to prevent login loop on iPad
                     const currentUrl = window.location.href;
+                    if (currentUrl.includes('/accounts/') || currentUrl.includes('/login') || currentUrl.includes('/challenge/') || currentUrl.includes('/consent/') || currentUrl.includes('/oauth/') || currentUrl.includes('/onetap/')) {
+                        console.log('LessIsMore: Skip ShowForYou on login page');
+                        return;
+                    }
+                    // D'abord, rediriger vers la page For you si on n'y est pas déjà
                     if (!currentUrl.includes('variant=foryou')) {
                         console.log('Redirection vers For you');
                         // Essayer d'abord de cliquer sur le bouton For you
@@ -504,17 +599,63 @@ class ContentBlocker {
                     }
                     
                     // Restaurer tous les éléments masqués par LessIsMore
-                    const hiddenElements = document.querySelectorAll('[data-lessismore-hidden="true"]');
+                    const hiddenElements = document.querySelectorAll('[data-lessismore-hidden-following="true"]');
                     hiddenElements.forEach(function(el) {
                         if (el && el.style) {
                             el.style.removeProperty('display');
-                            el.removeAttribute('data-lessismore-hidden');
+                            el.removeAttribute('data-lessismore-hidden-following');
                         }
                     });
                     
                     console.log('Bouton "For you" restauré');
                 } catch (error) {
                     console.log('Erreur dans lessIsMoreShowForYou:', error.message);
+                }
+            };
+            
+            // Fonction pour masquer les posts suggérés dans le feed
+            window.lessIsMoreHideSuggestedPosts = function() {
+                try {
+                    // Exact header labels Instagram shows above a suggested post (one per UI language).
+                    // Matched against whole leaf text only, so captions mentioning these words are not hidden.
+                    const suggestionLabels = new Set([
+                        'Suggested for you', 'Suggestions for you',
+                        'Suggestions pour vous', 'Suggéré pour vous',
+                        'Sugerencias para ti', 'Sugerido para ti', 'Suggerido para ti',
+                        'Vorschläge für dich', 'Für dich vorgeschlagen',
+                        'Suggerimenti per te', 'Consigliato per te',
+                        'Sugestões para você', 'Sugestões para ti',
+                        'Suggesties voor jou', 'Voor jou aanbevolen'
+                    ]);
+
+                    document.querySelectorAll('article').forEach(article => {
+                        if (article.getAttribute('data-lessismore-suggested-post') === 'true') { return; }
+                        const header = article.querySelectorAll('span, div');
+                        for (const el of header) {
+                            if (el.childElementCount === 0 && suggestionLabels.has((el.textContent || '').trim())) {
+                                article.style.setProperty('display', 'none', 'important');
+                                article.setAttribute('data-lessismore-suggested-post', 'true');
+                                break;
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.log('Erreur dans lessIsMoreHideSuggestedPosts:', error.message);
+                }
+            };
+            
+            // Fonction pour restaurer l'affichage des posts suggérés
+            window.lessIsMoreShowSuggestedPosts = function() {
+                try {
+                    const hiddenPosts = document.querySelectorAll('[data-lessismore-suggested-post="true"]');
+                    hiddenPosts.forEach(el => {
+                        el.style.removeProperty('display');
+                        el.removeAttribute('data-lessismore-suggested-post');
+                    });
+                    
+                    console.log('LessIsMore: Posts suggérés restaurés:', hiddenPosts.length);
+                } catch (error) {
+                    console.log('Erreur dans lessIsMoreShowSuggestedPosts:', error.message);
                 }
             };
             
@@ -525,10 +666,10 @@ class ContentBlocker {
                 console.log('Application des filtres:', filters);
                 
                 // D'abord, restaurer tous les éléments masqués
-                const hiddenElements = document.querySelectorAll('[data-lessismore-hidden="true"]');
+                const hiddenElements = document.querySelectorAll('[data-lessismore-hidden-stories="true"], [data-lessismore-hidden-likes="true"], [data-lessismore-hidden-following="true"]');
                 hiddenElements.forEach(el => {
                     el.style.removeProperty('display');
-                    el.removeAttribute('data-lessismore-hidden');
+                    el.removeAttribute('data-lessismore-hidden-stories'); el.removeAttribute('data-lessismore-hidden-likes'); el.removeAttribute('data-lessismore-hidden-following');
                 });
                 
                 // Ensuite, appliquer les filtres actifs
@@ -549,9 +690,16 @@ class ContentBlocker {
                         window.lessIsMoreHideForYou();
                     }, 100);
                 }
+                
+                // Appliquer un masquage supplémentaire des posts suggérés si activé
+                if (filters.suggestedPosts) {
+                    setTimeout(() => {
+                        window.lessIsMoreHideSuggestedPosts();
+                    }, 100);
+                }
             };
             
-            // Observer les mutations DOM pour détecter les nouvelles stories
+            // Observer les mutations DOM pour détecter les nouvelles stories et posts suggérés
             const observer = new MutationObserver(function(mutations) {
                 mutations.forEach(function(mutation) {
                     if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
@@ -559,6 +707,13 @@ class ContentBlocker {
                         if (document.body.classList.contains('lessismore-hidden-stories')) {
                             setTimeout(() => {
                                 window.lessIsMoreHideStories();
+                            }, 25);
+                        }
+                        
+                        // Vérifier si le filtre suggestedPosts est activé
+                        if (document.body.classList.contains('lessismore-hidden-suggestedPosts')) {
+                            setTimeout(() => {
+                                window.lessIsMoreHideSuggestedPosts();
                             }, 25);
                         }
                     }
@@ -573,12 +728,17 @@ class ContentBlocker {
             
             // Nettoyage continu des stories, likes et following si les filtres sont activés
             setInterval(function() {
+                // Skip on login/account pages to prevent login loop on iPad
+                var currentHref = window.location.href;
+                if (currentHref.includes('/accounts/') || currentHref.includes('/login') || currentHref.includes('/challenge/') || currentHref.includes('/consent/') || currentHref.includes('/oauth/') || currentHref.includes('/onetap/')) {
+                    return;
+                }
                 // Gestion des stories
                 if (document.body.classList.contains('lessismore-hidden-stories')) {
                     window.lessIsMoreHideStories();
                 } else {
                     // Si le filtre stories est désactivé, s'assurer que les stories sont visibles
-                    const hiddenStories = document.querySelectorAll('[data-lessismore-hidden="true"]');
+                    const hiddenStories = document.querySelectorAll('[data-lessismore-hidden-stories="true"]');
                     if (hiddenStories.length > 0) {
                         window.lessIsMoreShowStories();
                     }
@@ -589,7 +749,7 @@ class ContentBlocker {
                     window.lessIsMoreHideLikes();
                 } else {
                     // Si le filtre likes est désactivé, s'assurer que les likes sont visibles
-                    const hiddenLikes = document.querySelectorAll('[data-lessismore-hidden="true"]');
+                    const hiddenLikes = document.querySelectorAll('[data-lessismore-hidden-likes="true"]');
                     if (hiddenLikes.length > 0) {
                         window.lessIsMoreShowLikes();
                     }
@@ -600,37 +760,77 @@ class ContentBlocker {
                     window.lessIsMoreHideForYou();
                 } else {
                     // Si le filtre following est désactivé, s'assurer que le bouton "For you" est visible
-                    const hiddenForYou = document.querySelectorAll('[data-lessismore-hidden="true"]');
+                    const hiddenForYou = document.querySelectorAll('[data-lessismore-hidden-following="true"]');
                     if (hiddenForYou.length > 0) {
                         window.lessIsMoreShowForYou();
                     }
                 }
+                
+                // Gestion des posts suggérés dans le feed
+                if (document.body.classList.contains('lessismore-hidden-suggestedPosts')) {
+                    window.lessIsMoreHideSuggestedPosts();
+                } else {
+                    // Si le filtre suggestedPosts est désactivé, s'assurer que les posts suggérés sont visibles
+                    const hiddenSuggestions = document.querySelectorAll('[data-lessismore-suggested-post="true"]');
+                    if (hiddenSuggestions.length > 0) {
+                        window.lessIsMoreShowSuggestedPosts();
+                    }
+                }
             }, 1000);
             
-            // Préchargement des filtres actifs pour une application plus rapide
-            const activeFilters = {
-                reels: document.body.classList.contains('lessismore-hidden-reels'),
-                explore: document.body.classList.contains('lessismore-hidden-explore'),
-                stories: document.body.classList.contains('lessismore-hidden-stories'),
-                suggestions: document.body.classList.contains('lessismore-hidden-suggestions'),
-                likes: document.body.classList.contains('lessismore-hidden-likes'),
-                following: document.body.classList.contains('lessismore-hidden-following'),
-                messages: document.body.classList.contains('lessismore-hidden-messages')
+            // Préchargement des filtres actifs depuis l'app iOS (injectés au démarrage)
+            const activeFilters = window.__lessIsMoreInitialFilters || {
+                reels: false,
+                explore: false,
+                stories: false,
+                suggestions: false,
+                suggestedPosts: false,
+                likes: false,
+                following: false,
+                messages: false
             };
-            
-            // Redirection automatique si le filtre Following est activé et qu'on est sur la page d'accueil
-            if (activeFilters.following && !window.location.href.includes('variant=following')) {
-                console.log('Redirection automatique vers Following');
-                window.location.href = 'https://www.instagram.com/?variant=following';
-                return; // Sortir pour éviter l'application des autres filtres
-            }
-            
-            // Application immédiate des filtres préchargés
-            Object.keys(activeFilters).forEach(filterType => {
-                if (activeFilters[filterType]) {
-                    window.lessIsMoreToggleFilter(filterType, true);
+
+            // Fonction pour appliquer les filtres dès que le body est disponible
+            const applyFiltersWhenReady = () => {
+                if (!document.body) {
+                    // Attendre que le body soit disponible
+                    requestAnimationFrame(applyFiltersWhenReady);
+                    return;
                 }
-            });
+
+                // Skip on login/account pages to prevent login loop on iPad
+                var pageUrl = window.location.href;
+                if (pageUrl.includes('/accounts/') || pageUrl.includes('/login') || pageUrl.includes('/challenge/') || pageUrl.includes('/consent/') || pageUrl.includes('/oauth/') || pageUrl.includes('/onetap/')) {
+                    console.log('LessIsMore: Skip filters on login page');
+                    return;
+                }
+
+                // Redirection automatique si le filtre Following est activé
+                // Skip redirect on login/account pages to prevent login loop on iPad
+                var isLoginPage = window.location.href.includes('/accounts/') ||
+                                  window.location.href.includes('/login') ||
+                                  window.location.href.includes('/challenge/') ||
+                                  window.location.href.includes('/consent/') ||
+                                  window.location.href.includes('/oauth/') ||
+                                  window.location.href.includes('/onetap/');
+                if (activeFilters.following && !window.location.href.includes('variant=following') && !isLoginPage) {
+                    console.log('Redirection automatique vers Following');
+                    window.location.href = 'https://www.instagram.com/?variant=following';
+                    return;
+                }
+
+                // Application immédiate des filtres préchargés
+                Object.keys(activeFilters).forEach(filterType => {
+                    if (activeFilters[filterType]) {
+                        window.lessIsMoreToggleFilter(filterType, true);
+                    }
+                });
+
+                console.log('LessIsMore: Filtres initiaux appliqués:', activeFilters);
+            };
+
+            // Lancer l'application des filtres
+            applyFiltersWhenReady();
             
             // --- Tracker de catégorie ---
             (function() {
@@ -703,6 +903,254 @@ class ContentBlocker {
         if (window.lessIsMoreApplyAllFilters) {
             window.lessIsMoreApplyAllFilters({\(filters)});
         }
+        """
+    }
+    
+    // MARK: - Theme Application
+    
+    static func getApplyThemeScript(theme: InstagramTheme) -> String {
+        // Remove theme if default
+        if theme == .default {
+            return """
+            (function() {
+                const existingStyle = document.getElementById('lessismore-theme-style');
+                if (existingStyle) {
+                    existingStyle.remove();
+                }
+                document.body.classList.remove('lessismore-themed');
+                console.log('LessIsMore: Thème par défaut restauré');
+            })();
+            """
+        }
+        
+        let bgColor = theme.backgroundColor
+        let cardColor = theme.cardColor
+        let accentColor = theme.accentColor
+        
+        return """
+        (function() {
+            // Supprimer l'ancien style de thème si présent
+            const existingStyle = document.getElementById('lessismore-theme-style');
+            if (existingStyle) {
+                existingStyle.remove();
+            }
+            
+            // Créer le nouveau style de thème
+            const themeStyle = document.createElement('style');
+            themeStyle.id = 'lessismore-theme-style';
+            themeStyle.textContent = `
+                /* LessIsMore Custom Theme: \(theme.rawValue) */
+                
+                /* ===== BACKGROUNDS PRINCIPAUX ===== */
+                body,
+                html,
+                #react-root,
+                #react-root > div,
+                #react-root > section,
+                main,
+                div[role="main"],
+                ._aa_i,
+                ._aagu,
+                ._aak0,
+                ._aak1 {
+                    background-color: \(bgColor) !important;
+                    background: \(bgColor) !important;
+                }
+                
+                /* ===== HEADERS ET NAVIGATION / TAB BAR ===== */
+                nav,
+                header,
+                ._aak5,
+                ._aak6,
+                ._aak4,
+                ._ab8w,
+                div[role="banner"],
+                div[role="navigation"],
+                /* Bottom Tab Bar Instagram - AGGRESSIVE SELECTORS */
+                ._acao,
+                ._acaq,
+                ._acar,
+                ._acat,
+                ._acau,
+                div[role="tablist"],
+                [role="tablist"],
+                [role="tablist"] > div,
+                /* Fixed/Sticky bottom bar */
+                div[style*="position: fixed"],
+                div[style*="position:fixed"],
+                div[style*="bottom: 0"],
+                div[style*="bottom:0"],
+                /* Mobile footer navigation */
+                footer,
+                ._abl-,
+                ._ablz,
+                ._abm0,
+                ._abm1,
+                ._abn_,
+                /* All fixed positioning elements at bottom */
+                div[style*="z-index"][style*="bottom"] {
+                    background-color: \(cardColor) !important;
+                    background: \(cardColor) !important;
+                }
+                
+                /* ===== STORIES CONTAINER ===== */
+                /* Zone derrière les stories - SAME COLOR AS POSTS */
+                section > div:first-child,
+                div[style*="overflow-x: auto"],
+                div[style*="overflow-x:auto"],
+                div[style*="overflow: auto"],
+                div[style*="scrollbar-width"],
+                ._aac4,
+                ._aac5,
+                ._aacl,
+                ._aack,
+                /* Container des stories circulaires */
+                div:has(> canvas),
+                div:has(> div > canvas) {
+                    background-color: \(cardColor) !important;
+                    background: \(cardColor) !important;
+                }
+                
+                /* ===== POSTS ET ARTICLES ===== */
+                article,
+                article > div,
+                ._aatb,
+                ._aam1,
+                ._acan,
+                ._acap,
+                ._acas,
+                ._acav,
+                ._ae1h,
+                ._ae1i {
+                    background-color: \(cardColor) !important;
+                    background: \(cardColor) !important;
+                }
+                
+                /* ===== DESCRIPTIONS ET TEXTES (zone derrière le texte) ===== */
+                /* Conteneurs de texte de description */
+                article span,
+                article div,
+                ._a9zs,
+                ._a9zt,
+                ._a9zu,
+                ._aade,
+                ._aacl > div,
+                /* Zone de légende/description */
+                div[style*="padding-left: 16px"],
+                div[style*="padding: 0 16px"],
+                h2 + div,
+                a + span,
+                /* Arrière-plan des textes */
+                ._aagv,
+                ._aagw {
+                    background-color: transparent !important;
+                    background: transparent !important;
+                }
+                
+                /* ===== TOUS LES FONDS BLANCS ===== */
+                div[style*="background-color: rgb(255, 255, 255)"],
+                div[style*="background-color:rgb(255, 255, 255)"],
+                div[style*="background-color: white"],
+                div[style*="background-color:white"],
+                div[style*="background: white"],
+                div[style*="background:white"],
+                div[style*="background: rgb(255, 255, 255)"],
+                div[style*="background:rgb(255, 255, 255)"],
+                span[style*="background-color: rgb(255, 255, 255)"],
+                section[style*="background"],
+                /* Classes courantes de fond blanc */
+                ._aa61,
+                ._ab8w {
+                    background-color: \(cardColor) !important;
+                    background: \(cardColor) !important;
+                }
+                
+                /* ===== SIDEBAR ===== */
+                aside,
+                ._aal_,
+                div[style*="position: sticky"]:not([style*="bottom"]) {
+                    background-color: \(bgColor) !important;
+                    background: \(bgColor) !important;
+                }
+                
+                /* ===== MODALS ET OVERLAYS ===== */
+                div[role="dialog"],
+                div[role="dialog"] > div,
+                div[role="dialog"] > div:first-child,
+                ._aaz6,
+                ._ab8s {
+                    background-color: \(cardColor) !important;
+                    background: \(cardColor) !important;
+                }
+                
+                /* ===== INPUT FIELDS ===== */
+                input,
+                textarea,
+                [contenteditable="true"] {
+                    background-color: \(cardColor) !important;
+                    background: \(cardColor) !important;
+                    border-color: \(accentColor)33 !important;
+                }
+                
+                /* ===== POIGNÉE/SWIPE INDICATOR (si visible) ===== */
+                div[style*="border-radius: 2.5px"],
+                div[style*="border-radius:2.5px"],
+                ._abm0 {
+                    background-color: \(accentColor)66 !important;
+                }
+                
+                /* ===== COMMENTAIRES ===== */
+                ul,
+                li,
+                ._a9ym,
+                ._a9yn {
+                    background-color: transparent !important;
+                }
+                
+                /* ===== CARROUSEL INFÉRIEUR ===== */
+                div[style*="flex-direction: row"][style*="overflow"],
+                ._aahi,
+                ._aahj {
+                    background-color: \(bgColor) !important;
+                    background: \(bgColor) !important;
+                }
+                
+                /* ===== SCROLLBAR ===== */
+                ::-webkit-scrollbar {
+                    width: 8px;
+                    background-color: \(bgColor) !important;
+                }
+                ::-webkit-scrollbar-thumb {
+                    background-color: \(accentColor)44 !important;
+                    border-radius: 4px;
+                }
+                ::-webkit-scrollbar-track {
+                    background-color: \(bgColor) !important;
+                }
+                
+                /* ===== UNIVERSAL CATCH-ALL ===== */
+                /* Forcer les div enfants directs du body */
+                body > div,
+                body > div > div,
+                body > div > div > div {
+                    background-color: \(bgColor) !important;
+                }
+                
+                /* ===== MARKER ===== */
+                body.lessismore-themed {
+                    /* Theme active marker */
+                }
+            `;
+            
+            document.head.appendChild(themeStyle);
+            document.body.classList.add('lessismore-themed');
+            
+            // Forcer l'application sur le body inline style
+            document.body.style.backgroundColor = '\(bgColor)';
+            document.documentElement.style.backgroundColor = '\(bgColor)';
+            
+            console.log('LessIsMore: Thème appliqué - \(theme.rawValue)');
+        })();
         """
     }
 }

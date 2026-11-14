@@ -12,8 +12,7 @@
 		11C82C882F0FF3600080CD3C /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 11C82C872F0FF3600080CD3C /* WidgetKit.framework */; };
 		11C82C8A2F0FF3600080CD3C /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 11C82C892F0FF3600080CD3C /* SwiftUI.framework */; };
 		11C82C972F0FF3630080CD3C /* LessIsMoreWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 11C82C862F0FF3600080CD3C /* LessIsMoreWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		11FCD86C2F16DD7F00DACBDA /* TelemetryClient in Frameworks */ = {isa = PBXBuildFile; productRef = 11FCD86B2F16DD7F00DACBDA /* TelemetryClient */; };
-		11FCD86E2F16DD7F00DACBDA /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = 11FCD86D2F16DD7F00DACBDA /* TelemetryDeck */; };
+		11FCD8BC2F16F16F00DACBDA /* Mixpanel in Frameworks */ = {isa = PBXBuildFile; productRef = 11FCD8BB2F16F16F00DACBDA /* Mixpanel */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -116,10 +115,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				11FCD8BC2F16F16F00DACBDA /* Mixpanel in Frameworks */,
 				111EF8FE2E698EFC004B0CFE /* StoreKit.framework in Frameworks */,
-				11FCD86C2F16DD7F00DACBDA /* TelemetryClient in Frameworks */,
 				1163F4552EE0737A0046FFAC /* SuperwallKit in Frameworks */,
-				11FCD86E2F16DD7F00DACBDA /* TelemetryDeck in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -206,8 +204,7 @@
 			name = LessIsMore;
 			packageProductDependencies = (
 				1163F4542EE0737A0046FFAC /* SuperwallKit */,
-				11FCD86B2F16DD7F00DACBDA /* TelemetryClient */,
-				11FCD86D2F16DD7F00DACBDA /* TelemetryDeck */,
+				11FCD8BB2F16F16F00DACBDA /* Mixpanel */,
 			);
 			productName = LessIsMore;
 			productReference = 111EF8C62E68B4DC004B0CFE /* LessIsMore.app */;
@@ -315,12 +312,14 @@
 				Base,
 				fr,
 				de,
+				es,
+				"pt-BR",
 			);
 			mainGroup = 111EF8BD2E68B4DC004B0CFE;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				1163F4532EE0737A0046FFAC /* XCRemoteSwiftPackageReference "Superwall-iOS" */,
-				11FCD86A2F16DD7F00DACBDA /* XCRemoteSwiftPackageReference "SwiftSDK" */,
+				11FCD8BA2F16F16E00DACBDA /* XCRemoteSwiftPackageReference "mixpanel-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 111EF8C72E68B4DC004B0CFE /* Products */;
@@ -420,7 +419,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "";
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -486,7 +487,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "";
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -544,8 +547,10 @@
 		111EF8E82E68B4DE004B0CFE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon-02";
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-Default";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = LessIsMore/LessIsMore.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -567,7 +572,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.9;
+				MARKETING_VERSION = 2.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lessismore.com;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -584,8 +589,10 @@
 		111EF8E92E68B4DE004B0CFE /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon-02";
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-Default";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = LessIsMore/LessIsMore.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -607,7 +614,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.9;
+				MARKETING_VERSION = 2.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lessismore.com;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -713,7 +720,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.9;
+				MARKETING_VERSION = 2.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lessismore.com.LessIsMoreWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -746,7 +753,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.9;
+				MARKETING_VERSION = 2.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lessismore.com.LessIsMoreWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -818,12 +825,12 @@
 				minimumVersion = 4.10.6;
 			};
 		};
-		11FCD86A2F16DD7F00DACBDA /* XCRemoteSwiftPackageReference "SwiftSDK" */ = {
+		11FCD8BA2F16F16E00DACBDA /* XCRemoteSwiftPackageReference "mixpanel-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/TelemetryDeck/SwiftSDK";
+			repositoryURL = "https://github.com/mixpanel/mixpanel-swift";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.11.0;
+				branch = master;
+				kind = branch;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -834,15 +841,10 @@
 			package = 1163F4532EE0737A0046FFAC /* XCRemoteSwiftPackageReference "Superwall-iOS" */;
 			productName = SuperwallKit;
 		};
-		11FCD86B2F16DD7F00DACBDA /* TelemetryClient */ = {
+		11FCD8BB2F16F16F00DACBDA /* Mixpanel */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 11FCD86A2F16DD7F00DACBDA /* XCRemoteSwiftPackageReference "SwiftSDK" */;
-			productName = TelemetryClient;
-		};
-		11FCD86D2F16DD7F00DACBDA /* TelemetryDeck */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 11FCD86A2F16DD7F00DACBDA /* XCRemoteSwiftPackageReference "SwiftSDK" */;
-			productName = TelemetryDeck;
+			package = 11FCD8BA2F16F16E00DACBDA /* XCRemoteSwiftPackageReference "mixpanel-swift" */;
+			productName = Mixpanel;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

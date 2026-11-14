@@ -59,8 +59,39 @@ class WebViewManager: NSObject, ObservableObject {
 
     weak var webView: WKWebView?
 
+    /// Flag pour éviter les chargements multiples
+    private var hasInitiallyLoaded = false
+
+    /// Flag pour éviter les doubles injections lors des redirections
+    private var hasInjectedFilters = false
+
+    /// URL de la dernière navigation pour détecter les vraies navigations vs redirections
+    private var lastNavigationURL: String?
+
     override init() {
         super.init()
+        
+        // Observer la désactivation des filtres lors de l'expiration de l'abonnement
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleFiltersDisabled),
+            name: SubscriptionManager.filtersDisabledNotification,
+            object: nil
+        )
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    /// Appelé quand tous les filtres sont désactivés suite à l'expiration de l'abonnement
+    @objc private func handleFiltersDisabled() {
+        print("WebViewManager: Réception de la notification - Réapplication des filtres désactivés")
+        
+        // Réappliquer tous les filtres (maintenant tous désactivés) dans le WebView
+        DispatchQueue.main.async { [weak self] in
+            self?.applyAllSavedFilters()
+        }
     }
 
     // MARK: - Gestion des erreurs
@@ -78,60 +109,96 @@ class WebViewManager: NSObject, ObservableObject {
 
     func retryAfterError() {
         dismissError()
-        loadInstagram()
+        loadInstagram(force: true)
     }
     
     func setupWebView() -> WKWebView {
+        // Retourner la WebView existante si elle existe déjà (évite les recréations par SwiftUI)
+        if let existingWebView = webView {
+            return existingWebView
+        }
+
         let configuration = WKWebViewConfiguration()
-        
+
         // Configuration pour permettre l'injection de JavaScript
         let userContentController = WKUserContentController()
         userContentController.add(self, name: "lessIsMoreTracker")
         configuration.userContentController = userContentController
-        
-        // Injection du script dès le début du chargement (plus rapide)
-        let contentBlockerScript = WKUserScript(
-            source: ContentBlocker.getBlockingScript(),
-            injectionTime: .atDocumentStart,
-            forMainFrameOnly: false
-        )
-        userContentController.addUserScript(contentBlockerScript)
-        
+
+        // Injection des scripts dès le début du chargement (plus rapide)
+        Self.installFilterScripts(in: userContentController)
+
         // Permettre la lecture des médias
         configuration.allowsInlineMediaPlayback = true
         configuration.mediaTypesRequiringUserActionForPlayback = []
-        
-        let webView = WKWebView(frame: .zero, configuration: configuration)
-        webView.navigationDelegate = self
-        webView.uiDelegate = self
-        webView.allowsBackForwardNavigationGestures = true
+
+        let newWebView = WKWebView(frame: .zero, configuration: configuration)
+        newWebView.navigationDelegate = self
+        newWebView.uiDelegate = self
+        newWebView.allowsBackForwardNavigationGestures = true
+        #if DEBUG
+        // Allow Safari Web Inspector on debug builds (Develop menu > Simulator)
+        newWebView.isInspectable = true
+        startDebugEvalWatcher()
+        #endif
+
+        // Force mobile User-Agent on iPad to prevent Instagram desktop login loop
+        // Use a recent iOS version to avoid Instagram detecting a mismatch with device capabilities
+        newWebView.customUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Mobile/15E148 Safari/604.1"
 
         // Masquer les indicateurs de scroll natifs
-        webView.scrollView.showsVerticalScrollIndicator = false
-        webView.scrollView.showsHorizontalScrollIndicator = false
+        newWebView.scrollView.showsVerticalScrollIndicator = false
+        newWebView.scrollView.showsHorizontalScrollIndicator = false
 
-        self.webView = webView
-        return webView
+        self.webView = newWebView
+        return newWebView
     }
     
-    func loadInstagram() {
+    func loadInstagram(force: Bool = false) {
         guard let webView = webView else { return }
-        
+
+        // Éviter les chargements multiples lors du lancement
+        if hasInitiallyLoaded && !force {
+            return
+        }
+        hasInitiallyLoaded = true
+
+        if Platform.current == .youtube {
+            webView.load(URLRequest(url: Platform.youtube.homeURL))
+            return
+        }
+
         // Vérifier si le filtre Following est activé
         let followingFilterEnabled = FilterType.following.isEnabled
-        
-        let urlString = followingFilterEnabled ? 
-            "https://www.instagram.com/?variant=following" : 
-            "https://www.instagram.com"
-        
+
+        // Toujours spécifier le variant pour éviter la redirection automatique d'Instagram
+        // Instagram redirige instagram.com vers instagram.com/?variant=foryou, ce qui cause un double chargement
+        let urlString = followingFilterEnabled ?
+            "https://www.instagram.com/?variant=following" :
+            "https://www.instagram.com/?variant=foryou"
+
         if let url = URL(string: urlString) {
             let request = URLRequest(url: url)
             webView.load(request)
         }
     }
     
+    /// Switches the web view to another platform and remembers the choice.
+    func switchPlatform(to platform: Platform) {
+        guard platform != Platform.current else { return }
+        Platform.current = platform
+        loadInstagram(force: true)
+    }
+
     func injectContentBlocker() {
         guard let webView = webView else { return }
+
+        // The YouTube script is injected at document start and stays alive across
+        // in-app navigation; only (re)apply the saved filters there.
+        if Platform.youtube.owns(host: webView.url?.host) {
+            applyAllSavedFilters()
+            return
+        }
 
         // Vérifier d'abord si le script est déjà injecté
         let checkScript = """
@@ -174,8 +241,26 @@ class WebViewManager: NSObject, ObservableObject {
         }
     }
     
+    /// Adds the Instagram and YouTube filter scripts, built with the filters' current state.
+    /// forMainFrameOnly: true to avoid injecting into login/auth iframes which causes "Something went wrong" on iPad.
+    /// Each script does nothing outside its own site.
+    private static func installFilterScripts(in controller: WKUserContentController) {
+        controller.removeAllUserScripts()
+        for source in [ContentBlocker.getBlockingScript(), YouTubeBlocker.getBlockingScript()] {
+            controller.addUserScript(WKUserScript(
+                source: source,
+                injectionTime: .atDocumentStart,
+                forMainFrameOnly: true
+            ))
+        }
+    }
+
     func toggleFilter(_ filterType: FilterType) {
         guard let webView = webView else { return }
+
+        // Rebuild the injected scripts so the next full page load starts with the new state
+        // (otherwise e.g. a shared /shorts/ link would play before filters are re-applied).
+        Self.installFilterScripts(in: webView.configuration.userContentController)
 
         let script = ContentBlocker.getToggleScript(for: filterType)
         webView.evaluateJavaScript(script) { [weak self] result, error in
@@ -189,12 +274,16 @@ class WebViewManager: NSObject, ObservableObject {
     func applyAllSavedFilters() {
         guard let webView = webView else { return }
 
+        Self.installFilterScripts(in: webView.configuration.userContentController)
+
         let script = ContentBlocker.getApplyAllFiltersScript()
-        webView.evaluateJavaScript(script) { _, error in
+        webView.evaluateJavaScript(script) { [weak self] _, error in
             if let error = error {
                 print("Erreur application des filtres: \(error.localizedDescription)")
             } else {
                 print("Tous les filtres appliqués avec succès")
+                // Appliquer le thème après les filtres
+                self?.applyCurrentTheme()
             }
         }
     }
@@ -225,28 +314,119 @@ class WebViewManager: NSObject, ObservableObject {
             }
         }
     }
+    
+    #if DEBUG
+    // MARK: - Debug JS evaluation (debug builds only)
+    /// Every 2s, if `tmp/debug_eval.js` exists in the app container, evaluates it in the
+    /// Instagram page, prints the result as `DEBUG_EVAL_RESULT:` and deletes the file.
+    /// Lets a developer inspect the live DOM from a terminal without the Web Inspector.
+    private func startDebugEvalWatcher() {
+        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("debug_eval.js")
+        Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
+            guard let self, let webView = self.webView,
+                  let source = try? String(contentsOf: fileURL, encoding: .utf8) else { return }
+            try? FileManager.default.removeItem(at: fileURL)
+            webView.evaluateJavaScript(source) { result, error in
+                if let error {
+                    print("DEBUG_EVAL_ERROR: \(error)")
+                } else {
+                    print("DEBUG_EVAL_RESULT: \(result ?? "nil")")
+                }
+            }
+        }
+    }
+    #endif
+
+    // MARK: - Theme Application
+    
+    func applyTheme(_ theme: InstagramTheme) {
+        // Themes restyle Instagram's markup only
+        guard let webView = webView, Platform.instagram.owns(host: webView.url?.host) else { return }
+        
+        let script = ContentBlocker.getApplyThemeScript(theme: theme)
+        webView.evaluateJavaScript(script) { _, error in
+            if let error = error {
+                print("Erreur application du thème: \(error.localizedDescription)")
+            } else {
+                print("Thème '\(theme.rawValue)' appliqué avec succès")
+            }
+        }
+    }
+    
+    func applyCurrentTheme() {
+        let currentTheme = InstagramTheme.current
+        if currentTheme != .default {
+            applyTheme(currentTheme)
+        }
+    }
 }
 
 // MARK: - WKNavigationDelegate
 extension WebViewManager: WKNavigationDelegate {
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
         isLoading = true
-        url = webView.url?.absoluteString ?? ""
+        let currentURL = webView.url?.absoluteString ?? ""
+        url = currentURL
+
+        // Détecter si c'est une nouvelle navigation (pas une redirection)
+        let isNewNavigation = lastNavigationURL == nil ||
+            !currentURL.hasPrefix("https://www.instagram.com") ||
+            currentURL.contains("/p/") ||
+            currentURL.contains("/reels/") ||
+            currentURL.contains("/stories/") ||
+            currentURL.contains("/accounts/")  // Login/onetap nécessite une réinjection
+
+        if isNewNavigation {
+            // Réinitialiser le flag pour les nouvelles navigations
+            hasInjectedFilters = false
+        }
+
+        lastNavigationURL = currentURL
+        print("WebViewManager: didStart - URL: \(currentURL), isNewNavigation: \(isNewNavigation)")
     }
-    
+
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         isLoading = false
         canGoBack = webView.canGoBack
         canGoForward = webView.canGoForward
-        url = webView.url?.absoluteString ?? ""
-        
-        // Injection intelligente du script
-        self.injectContentBlocker()
-        
-        // Vérification rapide en parallèle
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.reapplyFiltersIfNeeded()
+        let currentURL = webView.url?.absoluteString ?? ""
+        url = currentURL
+
+        print("WebViewManager: didFinish - URL: \(currentURL), hasInjectedFilters: \(hasInjectedFilters)")
+
+        // Vérifier si les fonctions JavaScript sont disponibles avant de skip
+        if hasInjectedFilters {
+            let checkScript = """
+            if (typeof window.lessIsMoreApplyAllFilters === 'function') {
+                'functions_available';
+            } else {
+                'functions_missing';
+            }
+            """
+
+            webView.evaluateJavaScript(checkScript) { [weak self] result, error in
+                guard let self = self else { return }
+
+                if let resultString = result as? String, resultString == "functions_available" {
+                    print("WebViewManager: Filtres déjà injectés et fonctionnels, skip")
+                } else {
+                    print("WebViewManager: Filtres marqués comme injectés mais fonctions manquantes, réinjection")
+                    self.injectContentBlocker()
+                }
+            }
+            return
         }
+
+        hasInjectedFilters = true
+
+        // Skip content blocker injection on login/account pages to prevent login loop on iPad
+        if currentURL.contains("/accounts/") || currentURL.contains("/login") || currentURL.contains("/challenge/") || currentURL.contains("/consent/") || currentURL.contains("/oauth/") || currentURL.contains("/onetap/") {
+            print("WebViewManager: Page de login/compte détectée, skip injection des filtres")
+            return
+        }
+
+        // Injection intelligente du script (applique déjà les filtres)
+        self.injectContentBlocker()
     }
     
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
